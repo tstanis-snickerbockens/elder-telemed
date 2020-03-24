@@ -39,7 +39,7 @@ document.getElementById('callButton').addEventListener('click', function() {
     pc.createOffer()
       .then(offer => pc.setLocalDescription(offer) )
       .then(() => sendRemoteMessage(yourId, JSON.stringify({'sdp': pc.localDescription})) );
-    setTimeout(readRemoteMessage, 1000);
+    setInterval(readRemoteMessage, 1000);
   }
 });
 
@@ -59,30 +59,33 @@ function sendRemoteMessage(senderId, data) {
 }
 
 function readRemoteMessage() {
-  console.log("checking messages");
+  console.log("checking messages2");
   var readMessage = firebase.functions().httpsCallable('readMessage');
   readMessage({'id': yourId}).then(function(response) {
     var data = response.data;
     var found = false;
-    for (var sender in response.data) {
-      var msg = JSON.parse(response.data[sender].data);
-      if (sender != yourId) {
-        console.log(JSON.stringify(msg));
-        if (msg.ice != undefined) {
-          console.log('addIceCandidate');
-          pc.addIceCandidate(new RTCIceCandidate(msg.ice));
-        } else if (msg.sdp.type == "offer") {
-          console.log('sdp offer')
-          pc.setRemoteDescription(new RTCSessionDescription(msg.sdp))
-            .then(() => pc.createAnswer())
-            .then(answer => pc.setLocalDescription(answer))
-            .then(() => sendRemoteMessage(yourId, JSON.stringify({'sdp': pc.localDescription})));
-        } else if (msg.sdp.type == "answer") {
-          console.log('sdp answer')
-          pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
-        }
+    console.log(JSON.stringify(data));
+    if (data == null) {
+      return;
+    }
+    var msg = JSON.parse(data.data);
+    var sender = data.id;
+    console.log(JSON.stringify(msg));
+    if (sender != yourId) {
+      console.log(JSON.stringify(msg));
+      if (msg.ice != undefined) {
+        console.log('addIceCandidate');
+        pc.addIceCandidate(new RTCIceCandidate(msg.ice));
+      } else if (msg.sdp.type == "offer") {
+        console.log('sdp offer')
+        pc.setRemoteDescription(new RTCSessionDescription(msg.sdp))
+          .then(() => pc.createAnswer())
+          .then(answer => pc.setLocalDescription(answer))
+          .then(() => sendRemoteMessage(yourId, JSON.stringify({'sdp': pc.localDescription})));
+      } else if (msg.sdp.type == "answer") {
+        console.log('sdp answer')
+        pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
       }
-      break;
     }
   });
 };
