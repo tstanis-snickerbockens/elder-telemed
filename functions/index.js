@@ -11,15 +11,29 @@ const app = express();
 app.use(cors);
 
 exports.sendMessage = functions.https.onRequest((request, response) => {
-  const payload = {
-    notification: {
-      title: 'You have a new message!',
-      body: 'message body here',
-      icon: 'none'
-    }
-  };
+    const payload = {
+        notification: {
+            title: 'You have a new message!',
+            body: 'message body here',
+            icon: 'none'
+        }
+    };
 
-  return cors(request, response, () => {
-    response.status(200).send({'data': {'text':"Hello from Firebase!"}});
-  });
+    return cors(request, response, () => {
+        response.status(200).send({'data': {'text':"Hello from Firebase!"}});
+    });
+});
+
+exports.readMessage = functions.https.onRequest((request, response) => {
+    const payload = {
+        notification: {
+        title: 'You have a new message!',
+        body: 'message body here',
+        icon: 'none'
+        }
+    };
+
+    return cors(request, response, () => {
+        response.status(200).send({'data': {'text':"Hello from Firebase!"}});
+    });
 });
