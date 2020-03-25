@@ -39,7 +39,7 @@ document.getElementById('callButton').addEventListener('click', function() {
     pc.createOffer()
       .then(offer => pc.setLocalDescription(offer) )
       .then(() => sendRemoteMessage(yourId, JSON.stringify({'sdp': pc.localDescription})) );
-    setInterval(readRemoteMessage, 1000);
+    setInterval(readRemoteMessage, 5000);
   }
 });
 

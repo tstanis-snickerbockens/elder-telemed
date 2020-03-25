@@ -17,3 +17,11 @@ Produce a working demo of a telemedicine app aimed at the elderly and their care
 - [Slack](https://join.slack.com/t/snickerbockens/shared_invite/zt-cua073nq-RiXmgxqbWuXAFXcED47uWg)
 - Zoom
 - [Google Docs](https://docs.google.com/document/d/1J8fRQK_VLuflq340FZ_hyTNnvMxWi_nKyj1Xv7EVaos/edit)
+
+## Run Locally
+
+- git pull
+- Install firebase CLI
+- Run firebase login
+- Run firebase emulators:start
+- Goto localhost:5000/client.html
