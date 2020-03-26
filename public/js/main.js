@@ -89,3 +89,57 @@ function readRemoteMessage() {
     }
   });
 };
+
+function signOutAction() {
+    console.log('Signing out');
+    firebase.auth().signOut();
+    document.getElementById('signIn').innerHTML = 'SignIn';
+    document.getElementById('login').innerHTML = 'Signed out';
+    document.getElementById('signIn').removeEventListener('click', signOutAction);
+    document.getElementById('signIn').addEventListener('click', signInAction);
+    document.getElementById('startButton').disabled = true;
+    document.getElementById('callButton').disabled = true;
+    document.getElementById('hangupButton').disabled = true;
+}
+
+function signInAction() {
+    var provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithRedirect(provider);
+    document.getElementById('signIn').removeEventListener('click', signInAction);
+    document.getElementById('signIn').addEventListener('click', signOutAction);
+}
+
+function performSignedInDisplay(user) {
+    document.getElementById('signIn').innerHTML = 'SignOut';
+    document.getElementById('login').innerHTML = 'Signed in as ' + user.displayName;
+    document.getElementById('signIn').addEventListener('click', signOutAction);
+    document.getElementById('startButton').disabled = false;
+    document.getElementById('callButton').disabled = false;
+    document.getElementById('hangupButton').disabled = false;
+}
+
+// Authentication stuff
+firebase.auth().getRedirectResult().then(function(result) {
+	if (result.user) { // User just signed in. Can get result.credential and result.credential.accessToken
+	    var user = result.user;
+	    console.log('Case 1 result.user');
+	    performSignedInDisplay(user);
+	} else if (firebase.auth().currentUser) { // User already signed in
+	    var user = firebase.auth().currentUser;
+	    console.log('Case 2 result.user');
+	    performSignedInDisplay(user);
+	} else {
+	    document.getElementById('signIn').addEventListener('click', signInAction);
+	}
+    }).catch(function(error) {
+	    // Handle Errors here.
+	    var errorCode = error.code;
+	    var errorMessage = error.message;
+	    // The email of the user's account used.
+	    var email = error.email;
+	    // The firebase.auth.AuthCredential type that was used.
+	    var credential = error.credential;
+	    // ...
+	});
+
+
