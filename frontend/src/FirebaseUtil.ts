@@ -1,5 +1,8 @@
 import * as firebaseLib from "firebase/app";
 
+/**
+ * utter hack to avoid static module loading from Firebase.
+ */
 export const firebaseInit = async () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const firebase = firebaseLib;
