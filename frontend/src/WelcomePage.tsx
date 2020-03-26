@@ -1,0 +1,26 @@
+import React from "react";
+import { Typography, makeStyles } from "@material-ui/core";
+
+const useStyles = makeStyles(() => ({
+  splashScreen: {
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: "400px",
+  },
+}));
+
+export const WelcomePage: React.FC<{}> = () => {
+  const classes = useStyles();
+
+  return (
+    <div className={classes.splashScreen}>
+      <Typography variant="h4">Welcome to</Typography>
+      <Typography variant="h2">Telemedicine for the Elderly</Typography>
+      <Typography>Please log in.</Typography>
+    </div>
+  );
+};
