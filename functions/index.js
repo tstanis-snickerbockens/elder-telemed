@@ -9,23 +9,85 @@ const cors = require('cors')({origin: true});
 const app = express();
 
 app.use(cors);
-const db = admin.database();
+let db = admin.firestore();
+
+exports.createEncounter = functions.https.onRequest((request, response) => {
+    return cors(request, response, () => {
+        console.log("createEncounter: " + JSON.stringify(request.body.data, null, 2))
+        var encounterId = request.body.data.encounterId;
+        var encounter = request.body.data.encounter;
+        let ref = db.collection('encounters').doc(encounterId);
+        let transaction = db.runTransaction(t => {
+            return t.get(ref)
+                .then(doc => {
+                    if (doc.exists) {
+                        response.status(409).send("Encounter ID already exists: " + encounterId);
+                    } else {
+                        t.set(ref, encounter);
+                    }
+                });
+        }).then(result => {
+            //ref.collection('webrtc_signal_queue').doc('queue').set({});
+            console.log('Transaction success!');
+            response.status(200);
+        }).catch(err => {
+            console.log('Transaction failure:', err);
+            response.status(500);
+        });
+    });
+});
+
+exports.getEncounter = functions.https.onRequest((request, response) => {
+    var encounterId = request.body.data.id;
+    return cors(request, response, () => {
+        let ref = db.collection('encounters').doc('encounterId');
+        ref.get().then(doc => {
+            if (!doc.exists) {
+                console.log('No such document!');
+                response.status(404);
+              } else {
+                console.log('Document data:', doc.data());
+                response.status(200).send(doc.data());
+              }
+            })
+            .catch(err => {
+              console.log('Error getting document', err);
+            });
+    });
+});
+
+exports.listEncounters = functions.https.onRequest((request, response) => {
+    return cors(request, response, () => {
+        var userId = request.body.data.userId;
+    });
+});
 
 exports.sendMessage = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         console.log("Saving: " + JSON.stringify(request.body.data, null, 2));
         var requesterId = request.body.data.id;
-        var ref = db.ref("messages");
-        ref.transaction(function (current_value) {
-            console.log("Current Value: " + JSON.stringify(current_value, null, 2))
-            if (current_value == null) {
-                current_value = {'queue': []}
-            }
-            console.log("Write to " + requesterId);
-            current_value.queue.push(request.body.data);
-            return current_value;
+        var encounterId = request.body.data.encounterId;
+        let ref = db.collection('encounters').doc(encounterId).collection('webrtc_signal_queue').doc(requesterId);
+        let transaction = db.runTransaction(t => {
+            return t.get(ref)
+                .then(doc => {
+                    console.log("Current Value: " + JSON.stringify(doc.data(), null, 2));
+                    if (!doc.exists) {
+                        data = {'queue':request.body.data};
+                        t.set(ref, data);
+                    } else {
+                        data = doc.data();
+                        data['queue'].append(request.body.data);
+                        t.update(ref, data);
+                    }
+                });
+        }).then(result => {
+            console.log('Transaction success!');
+            esponse.status(200).send({'data': {'text':"Hello from Firebase!"}});
+        }).catch(err => {
+            console.log('Transaction failure:', err);
+            esponse.status(500);
         });
-        response.status(200).send({'data': {'text':"Hello from Firebase!"}});
     });
 });
 
