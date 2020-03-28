@@ -8,12 +8,13 @@ function refreshEncounters() {
     let listEncounters = firebase.functions().httpsCallable('listEncounters');
     listEncounters({'userId': 'myid'})
         .then(response => {
-            var html = Object.keys(response.data).map(function(encounterId) {
-                var encounter = response.data[encounterId].encounter;
-                console.log("Encounter: " + JSON.stringify(encounter));
+            var html = response.data.map(function(entry) {
+                var encounterId = entry.encounterId;
+                var encounter = entry.encounter;
+                console.log("Encounter("+encounterId+": " + JSON.stringify(encounter));
                 // TODO(tstanis): BEFORE LAUNCH sanitize
                 return "<tr><td>" + encounter.patient + "</td><td></td><td>" + encounter.when + 
-                    "</td><td></td><td></td><td><a href='clinician_visit.html?" + encounterId + "'>Join</a></td></tr>";
+                    "</td><td></td><td></td><td><a href='clinician_visit.html?encounterId=" + encounterId + "'>Join</a></td></tr>";
             });
             document.getElementById('encounter_list_body').innerHTML = html.join('');
             console.log(JSON.stringify(response));

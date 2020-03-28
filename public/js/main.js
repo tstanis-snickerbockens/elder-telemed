@@ -4,6 +4,11 @@ if (location.hostname === "localhost") {
   firebase.functions().useFunctionsEmulator("http://localhost:5001");
 }
 
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+const encounterId = urlParams.get('encounterId');
+console.log("EncounterID: " + encounterId);
+
 // On this codelab, you will be streaming only video (video: true).
 const mediaStreamConstraints = {
   video: true,
@@ -51,8 +56,9 @@ pc.onicecandidate = (event => event.candidate?sendRemoteMessage(yourId, JSON.str
 pc.onaddstream = (event => remoteVideo.srcObject = event.stream);
 
 function sendRemoteMessage(senderId, data) {
+  console.log("sendMessage");
   var sendMessage = firebase.functions().httpsCallable('sendMessage');
-  sendMessage({'id': senderId, 'data': data}).then(function(result) {
+  sendMessage({'id': senderId, 'encounterId': encounterId, 'data': data}).then(function(result) {
       // Read result of the Cloud Function.
       console.log(result.data.text)
   });
@@ -61,7 +67,7 @@ function sendRemoteMessage(senderId, data) {
 function readRemoteMessage() {
   console.log("checking messages2");
   var readMessage = firebase.functions().httpsCallable('readMessage');
-  readMessage({'id': yourId}).then(function(response) {
+  readMessage({'id': yourId, 'encounterId': encounterId}).then(function(response) {
     var data = response.data;
     var found = false;
     console.log(JSON.stringify(data));
@@ -74,7 +80,7 @@ function readRemoteMessage() {
     if (sender != yourId) {
       console.log(JSON.stringify(msg));
       if (msg.ice != undefined) {
-        console.log('addIceCandidate');
+        console.log('addIceCandidate ' + JSON.stringify(msg.ice));
         pc.addIceCandidate(new RTCIceCandidate(msg.ice));
       } else if (msg.sdp.type == "offer") {
         console.log('sdp offer')
