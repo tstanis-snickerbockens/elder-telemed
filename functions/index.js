@@ -21,18 +21,23 @@ exports.createEncounter = functions.https.onRequest((request, response) => {
             return t.get(ref)
                 .then(doc => {
                     if (doc.exists) {
-                        response.status(409).send("Encounter ID already exists: " + encounterId);
+                        return Promise.reject({code: 409, msg:"Encounter ID already exists: " + encounterId});
                     } else {
                         t.set(ref, encounter);
+                        return Promise.resolve("Saved");
                     }
                 });
         }).then(result => {
             //ref.collection('webrtc_signal_queue').doc('queue').set({});
             console.log('Transaction success!');
-            response.status(200);
+            response.status(200).send({data:'ok'});
         }).catch(err => {
-            console.log('Transaction failure:', err);
-            response.status(500);
+            console.log('Transaction failure:', err.msg?err.msg:err);
+            if (err.code) {
+                response.status(err.code).send(err.msg);
+            } else {
+                response.status(500).send();
+            }
         });
     });
 });
@@ -56,9 +61,24 @@ exports.getEncounter = functions.https.onRequest((request, response) => {
     });
 });
 
+// TODO(tstanis): paging.  userId where clause.
 exports.listEncounters = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         var userId = request.body.data.userId;
+        let encountersRef = db.collection('encounters');
+        let allEncounters = encountersRef.get()
+            .then(encounters => {
+                var returnEncounters = []
+                encounters.forEach(doc => {
+                    console.log(doc.id, '=>', doc.data());
+                    returnEncounters.push({'encounterId' : doc.id, 'encounter': doc.data()});
+                });
+                response.status(200).send({'data':returnEncounters});
+            })
+            .catch(err => {
+                console.log('Error getting documents', err);
+                response.status(500).send();
+            });
     });
 });
 
