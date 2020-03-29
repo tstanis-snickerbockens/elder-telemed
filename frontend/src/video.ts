@@ -13,8 +13,9 @@ const servers = {
 };
 
 export async function startVideo(
-  localVideo: HTMLMediaElement
-  //   remoteVideo: HTMLMediaElement
+  localVideo: HTMLVideoElement,
+  remoteVideo: HTMLVideoElement,
+  encounterId: string | undefined,
 ) {
   const mediaStream = await navigator.mediaDevices.getUserMedia({
     audio: false,
@@ -24,45 +25,45 @@ export async function startVideo(
   console.log("mediaStream", mediaStream);
 
   localVideo.srcObject = mediaStream;
-  //   pc.addStream(mediaStream);
-
+  
   const yourId = Math.floor(Math.random() * 1000000000);
   const pc = new RTCPeerConnection(servers);
 
-  let calling = false;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  function call() {
-    if (!calling) {
-      pc.createOffer()
-        .then(offer => pc.setLocalDescription(offer))
-        .then(() =>
-          sendRemoteMessage(
-            yourId,
-            JSON.stringify({ sdp: pc.localDescription })
-          )
-        );
-      setInterval(readRemoteMessage, 5000);
-    }
-  }
+  mediaStream.getTracks().forEach(function(track) {
+    pc.addTrack(track, mediaStream);
+  });
+  
+  pc.createOffer()
+    .then(offer => pc.setLocalDescription(offer))
+    .then(() =>
+      sendRemoteMessage(
+        yourId,
+        encounterId,
+        JSON.stringify({ sdp: pc.localDescription })
+      )
+    );
+  setInterval(readRemoteMessage, 5000);
 
-  async function sendRemoteMessage(senderId: number, data: string) {
+  async function sendRemoteMessage(senderId: number, encounterId: string | undefined, data: string) {
     const sendMessage = firebase.functions().httpsCallable("sendMessage");
-    const result = await sendMessage({ id: senderId, data: data });
+    var msg = { 'id': senderId, 'encounterId': encounterId, 'data': data };
+    console.log("Sending: " + JSON.stringify(msg))
+    const result = await sendMessage(msg);
     console.log(result.data.text);
   }
 
   pc.onicecandidate = event =>
     event.candidate
-      ? sendRemoteMessage(yourId, JSON.stringify({ ice: event.candidate }))
+      ? sendRemoteMessage(yourId, encounterId, JSON.stringify({ ice: event.candidate }))
       : console.log("Sent All Ice");
-  // pc.onaddstream = event => (remoteVideo.srcObject = event.stream);
+  pc.ontrack = event => (remoteVideo.srcObject = event.streams[0]);
 
-  async function readRemoteMessage() {
+  async function readRemoteMessage(encounterId: string | undefined) {
     console.log("checking messages2");
     const readMessage = firebase.functions().httpsCallable("readMessage");
-    const { data } = await readMessage({ id: yourId });
+    const { data } = await readMessage({ 'id': yourId, 'encounterId': encounterId });
 
-    console.log(JSON.stringify(data));
+    console.log("Read Message: " + JSON.stringify(data));
     if (data == null) {
       return;
     }
@@ -79,7 +80,7 @@ export async function startVideo(
         await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-        sendRemoteMessage(yourId, JSON.stringify({ sdp: pc.localDescription }));
+        sendRemoteMessage(yourId, encounterId, JSON.stringify({ sdp: pc.localDescription }));
       } else if (msg.sdp.type === "answer") {
         console.log("sdp answer");
         pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));

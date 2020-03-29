@@ -19,7 +19,7 @@ export const WelcomePage: React.FC<{}> = () => {
   return (
     <div className={classes.splashScreen}>
       <Typography variant="h4">Welcome to</Typography>
-      <Typography variant="h2">Telemedicine for the Elderly</Typography>
+      <Typography variant="h2">Stealth Health : Telemedicine for the Elderly</Typography>
       <Typography>Please log in.</Typography>
     </div>
   );
