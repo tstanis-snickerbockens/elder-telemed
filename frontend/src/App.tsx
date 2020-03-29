@@ -14,10 +14,10 @@ function App() {
         {/* A <Switch> looks through its children <Route>s and
             renders the first one that matches the current URL. */}
         <Switch>
-          <Route path="/p">
+          <Route path="/p/:encounterId">
             <PatientApp />
           </Route>
-          <Route path="/c">
+          <Route path="/c/:encounterId">
             <ClinicianApp />
           </Route>
         </Switch>

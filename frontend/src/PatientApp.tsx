@@ -90,7 +90,7 @@ export const PatientApp: React.FC<{}> = () => {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" className={classes.title}>
-            Telemedicine for the Elderly
+            Stealth Health - Patient App
           </Typography>
           <Button onClick={toggleSignIn} color="inherit">
             {onUserStatus(

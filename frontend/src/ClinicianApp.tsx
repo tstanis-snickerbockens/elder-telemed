@@ -90,7 +90,7 @@ export const ClinicianApp: React.FC<{}> = () => {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" className={classes.title}>
-            Stealth Health
+            Stealth Health - Clinician App
           </Typography>
           <Button onClick={toggleSignIn} color="inherit">
             {onUserStatus(

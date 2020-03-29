@@ -17,6 +17,7 @@ export async function startVideo(
   remoteVideo: HTMLVideoElement,
   encounterId: string | undefined,
 ) {
+  console.log("Encounter: " + encounterId);
   const mediaStream = await navigator.mediaDevices.getUserMedia({
     audio: false,
     video: true,
@@ -32,7 +33,7 @@ export async function startVideo(
   mediaStream.getTracks().forEach(function(track) {
     pc.addTrack(track, mediaStream);
   });
-  
+
   pc.createOffer()
     .then(offer => pc.setLocalDescription(offer))
     .then(() =>
