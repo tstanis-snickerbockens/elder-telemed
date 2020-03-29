@@ -13,6 +13,7 @@ import MenuIcon from "@material-ui/icons/Menu";
 import firebase from "firebase";
 import { UserPage } from "./UserPage";
 import { WelcomePage } from "./WelcomePage";
+import { EncounterList } from "./EncounterList";
 
 const styles = (theme: Theme) => createStyles({
   root: {
@@ -34,13 +35,14 @@ interface ClinicianAppProps extends RouteComponentProps<{}>, WithStyles<typeof s
 
 interface ClinicianAppState {
   user: firebase.User | null;
+  encounterId: string | null;
 }
 
 class ClinicianAppImpl extends React.Component<ClinicianAppProps, ClinicianAppState>  {
   state: ClinicianAppState;
   constructor(props: ClinicianAppProps) {
     super(props);
-    this.state = {user: null};
+    this.state = {user: null, encounterId: null};
   }
 
   componentDidMount() {
@@ -74,7 +76,11 @@ class ClinicianAppImpl extends React.Component<ClinicianAppProps, ClinicianAppSt
   render() {
     let page;
     if (this.state.user) {
-      page = <UserPage user={this.state.user}></UserPage>;
+      if (this.state.encounterId) {
+        page = <UserPage user={this.state.user}></UserPage>;
+      } else {
+        page = <EncounterList user={this.state.user} orderBy="" order=""></EncounterList>;
+      }
     } else {
       page = <WelcomePage></WelcomePage>;
     }

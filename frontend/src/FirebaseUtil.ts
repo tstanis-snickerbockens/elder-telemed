@@ -19,4 +19,7 @@ export function firebaseInit() {
   if (firebaseConfig) {
     firebase.initializeApp(firebaseConfig);
   }
+  if (window.location.hostname === "localhost") {
+    firebase.functions().useFunctionsEmulator("http://localhost:5001");
+  }
 };
