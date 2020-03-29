@@ -1,5 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { makeStyles } from "@material-ui/core/styles";
+import React from "react";
+import {
+  RouteComponentProps,
+  withRouter
+} from "react-router-dom";
+import { createStyles, Theme, WithStyles, withStyles } from "@material-ui/core/styles";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
@@ -9,9 +13,8 @@ import MenuIcon from "@material-ui/icons/Menu";
 import firebase from "firebase";
 import { UserPage } from "./UserPage";
 import { WelcomePage } from "./WelcomePage";
-import { firebaseInit } from "./FirebaseUtil";
 
-const useStyles = makeStyles(theme => ({
+const styles = (theme: Theme) => createStyles({
   root: {
     flexGrow: 1,
   },
@@ -21,97 +24,84 @@ const useStyles = makeStyles(theme => ({
   title: {
     flexGrow: 1,
   },
-}));
+});
 
 type UserStatus = firebase.User | "signedout" | null;
 
-export const ClinicianApp: React.FC<{}> = () => {
-  const [userStatus, setUserStatus] = useState<UserStatus>(null);
+interface ClinicianAppProps extends RouteComponentProps<{}>, WithStyles<typeof styles> {
 
-  useEffect(() => {
-    async function initialize() {
-      await firebaseInit();
+}
 
+interface ClinicianAppState {
+  user: firebase.User | null;
+}
+
+class ClinicianAppImpl extends React.Component<ClinicianAppProps, ClinicianAppState>  {
+  state: ClinicianAppState;
+  constructor(props: ClinicianAppProps) {
+    super(props);
+    this.state = {user: null};
+  }
+
+  componentDidMount() {
+    (async() => {
       const result = await firebase.auth().getRedirectResult();
       if (result.user) {
         // User just signed in. Can get result.credential and result.credential.accessToken
         console.log("Case 1 result.user");
-        setUserStatus(result.user);
+        this.setState({user: result.user});
       } else if (firebase.auth().currentUser) {
         // User already signed in
         console.log("Case 2 result.user");
-        setUserStatus(firebase.auth().currentUser);
+        this.setState({user: firebase.auth().currentUser});
       } else {
-        setUserStatus("signedout");
+        this.setState({user: null});
       }
-    }
-    initialize();
-  }, []);
-
-  const classes = useStyles();
-
-  const toggleSignIn = () => {
-    if (userStatus) {
-      if (userStatus === "signedout") {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        firebase.auth().signInWithRedirect(provider);
-      } else {
-        firebase.auth().signOut();
-
-        setUserStatus("signedout");
-      }
-    }
-  };
-
-  function onUserStatus<T>(
-    onSignedIn: (u: firebase.User) => T,
-    onSignedOut: () => T,
-    onWaiting: () => T
-  ): T {
-    if (userStatus === "signedout") {
-      return onSignedOut();
-    }
-    if (userStatus) {
-      return onSignedIn(userStatus);
-    }
-    return onWaiting();
+    })();
   }
 
-  return (
-    <div className={classes.root}>
-      <AppBar position="static">
-        <Toolbar>
-          <IconButton
-            edge="start"
-            className={classes.menuButton}
-            color="inherit"
-            aria-label="menu"
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" className={classes.title}>
-            Stealth Health - Clinician App
-          </Typography>
-          <Button onClick={toggleSignIn} color="inherit">
-            {onUserStatus(
-              () => "Logout",
-              () => "Login",
-              () => ""
-            )}
-          </Button>
-        </Toolbar>
-      </AppBar>
-      {onUserStatus(
-        user => (
-          <UserPage user={user}></UserPage>
-        ),
-        () => (
-          <WelcomePage></WelcomePage>
-        ),
-        () => (
-          <></>
-        )
-      )}
-    </div>
-  );
+  toggleSignIn() {
+    console.log("toggleSignIn")
+    if (!this.state.user) {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithRedirect(provider);
+    } else {
+        firebase.auth().signOut();
+        this.setState({user: null});
+    }
+  }
+
+  render() {
+    let page;
+    if (this.state.user) {
+      page = <UserPage user={this.state.user}></UserPage>;
+    } else {
+      page = <WelcomePage></WelcomePage>;
+    }
+      return (
+        <div className={this.props.classes.root}>
+          <AppBar position="static">
+            <Toolbar>
+              <IconButton
+                edge="start"
+                className={this.props.classes.menuButton}
+                color="inherit"
+                aria-label="menu"
+              >
+                <MenuIcon />
+              </IconButton>
+              <Typography variant="h6" className={this.props.classes.title}>
+                Stealth Health - Clinician App
+              </Typography>
+              <Button onClick={() => {this.toggleSignIn()}} color="inherit">
+              {!this.state.user?"Login":"Logout"}
+            </Button>
+          </Toolbar>
+        </AppBar>
+        {page}
+      </div>
+    );
+  }
 };
+
+export const ClinicianApp = withStyles(styles)(withRouter(ClinicianAppImpl));

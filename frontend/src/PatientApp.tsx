@@ -9,7 +9,6 @@ import MenuIcon from "@material-ui/icons/Menu";
 import firebase from "firebase";
 import { UserPage } from "./UserPage";
 import { WelcomePage } from "./WelcomePage";
-import { firebaseInit } from "./FirebaseUtil";
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -30,7 +29,6 @@ export const PatientApp: React.FC<{}> = () => {
 
   useEffect(() => {
     async function initialize() {
-      await firebaseInit();
 
       const result = await firebase.auth().getRedirectResult();
       if (result.user) {

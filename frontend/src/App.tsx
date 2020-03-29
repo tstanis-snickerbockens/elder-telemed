@@ -7,17 +7,24 @@ import {
 } from "react-router-dom";
 import { PatientApp } from "./PatientApp";
 import { ClinicianApp } from "./ClinicianApp";
+import firebase from "firebase";
+import { firebaseInit } from "./FirebaseUtil";
 
 function App() {
+  async function initialize() {
+    if (!firebase.apps.length) {
+      await firebaseInit();
+    }
+  }
+  initialize();
+
   return (
     <Router>
-        {/* A <Switch> looks through its children <Route>s and
-            renders the first one that matches the current URL. */}
         <Switch>
           <Route path="/p/:encounterId">
             <PatientApp />
           </Route>
-          <Route path="/c/:encounterId">
+          <Route path="/c">
             <ClinicianApp />
           </Route>
         </Switch>
