@@ -52,6 +52,8 @@ interface EncounterListProps extends RouteComponentProps<{}>, WithStyles<typeof 
     orderBy: string;
     order: string;
     user: firebase.User | null;
+    refresh: boolean; // Used to force refresh from server.
+    onVisit: (encounterId: string) => void;
 }
 
 interface EncounterListState {
@@ -60,15 +62,16 @@ interface EncounterListState {
 
 interface ListEncounterEntry {
     encounterId: string;
-    patient: string;
-    when: number;
+    encounter: {
+        patient: string;
+        when: number;
+    }
 }
 
 class EncounterListImpl extends React.Component<EncounterListProps, EncounterListState>  {
     constructor(props: EncounterListProps) {
         super(props);
         console.log("EncounterListImpl");
-        this.refreshEncounters();
         this.state = {encounters: []}
     }
 
@@ -86,30 +89,35 @@ class EncounterListImpl extends React.Component<EncounterListProps, EncounterLis
         this.refreshEncounters();
     }
 
+    componentWillReceiveProps(props: EncounterListProps) {
+        if (props.refresh !== this.props.refresh) {
+          this.refreshEncounters();
+        }
+      }
+
     refreshEncounters() {
         console.log("refreshEncounters");
         let listEncounters = firebase.functions().httpsCallable('listEncounters');
         listEncounters({'userId': 'myuser'})
             .then(response => {
                 let newEncounters = response.data.map((entry: ListEncounterEntry) => {
+                    console.log(JSON.stringify(entry))
                     return {
                         encounterId: entry.encounterId,
-                        patient: entry.patient,
+                        patient: entry.encounter.patient,
                         advocate: "",
-                        time: entry.when,
+                        time: entry.encounter.when,
                         encounter_state : "",
                         patient_connected : false,
                         advocate_connected : false
                     }
                 });
-                this.setState((state) => {return {user:this.props.user, encounters:newEncounters}});
+                this.setState((state) => {return {encounters:newEncounters}});
             }).catch(err => {
                 console.log("ERROR: " + JSON.stringify(err))
             });
     }
-
-    gotoEncounter(encounterId: string) {
-    }
+    
 
     render() {
         return (
@@ -139,7 +147,7 @@ class EncounterListImpl extends React.Component<EncounterListProps, EncounterLis
                                 <TableCell align="right">{row.encounter_state}</TableCell>
                                 <TableCell align="right">{row.patient_connected}</TableCell>
                                 <TableCell align="right">{row.advocate_connected}</TableCell>
-                                <TableCell align="right"><a href="#" onClick={()=>(this.gotoEncounter(row.encounterId))}>Go</a></TableCell>
+                                <TableCell align="right"><a href="#" onClick={(event) => (this.props.onVisit(row.encounterId))}>Go</a></TableCell>
                             </TableRow>
                         ))}
                     </TableBody>

@@ -11,9 +11,9 @@ import Button from "@material-ui/core/Button";
 import IconButton from "@material-ui/core/IconButton";
 import MenuIcon from "@material-ui/icons/Menu";
 import firebase from "firebase";
-import { UserPage } from "./UserPage";
+import { ClinicianVideo } from "./ClinicianVideo";
 import { WelcomePage } from "./WelcomePage";
-import { EncounterList } from "./EncounterList";
+import { EncounterPage } from "./EncounterPage";
 
 const styles = (theme: Theme) => createStyles({
   root: {
@@ -43,6 +43,8 @@ class ClinicianAppImpl extends React.Component<ClinicianAppProps, ClinicianAppSt
   constructor(props: ClinicianAppProps) {
     super(props);
     this.state = {user: null, encounterId: null};
+    this.beginVisit = this.beginVisit.bind(this);
+    this.onClose = this.onClose.bind(this);
   }
 
   componentDidMount() {
@@ -73,13 +75,22 @@ class ClinicianAppImpl extends React.Component<ClinicianAppProps, ClinicianAppSt
     }
   }
 
+  beginVisit(encounterId: string) {
+    console.log("Begin encounter " + encounterId);
+    this.setState(prevState => ({...prevState, encounterId: encounterId}));
+  }
+
+  onClose() {
+    this.setState(prevState => ({...prevState, encounterId: null}));
+  }
+
   render() {
     let page;
     if (this.state.user) {
       if (this.state.encounterId) {
-        page = <UserPage user={this.state.user}></UserPage>;
+        page = <ClinicianVideo user={this.state.user} encounterId={this.state.encounterId} onClose={this.onClose}></ClinicianVideo>;
       } else {
-        page = <EncounterList user={this.state.user} orderBy="" order=""></EncounterList>;
+        page = <EncounterPage onVisit={this.beginVisit} user={this.state.user}></EncounterPage>;
       }
     } else {
       page = <WelcomePage></WelcomePage>;

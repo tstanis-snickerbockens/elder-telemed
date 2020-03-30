@@ -109,6 +109,7 @@ exports.readMessage = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         var requesterId = request.body.data.id;
         var encounterId = request.body.data.encounterId;
+        console.log("Read from " + requesterId + " of " + encounterId);
         var ref = msgdb.ref("messages/" + encounterId);
         var returnVal = null;
         ref.transaction(function(data) {

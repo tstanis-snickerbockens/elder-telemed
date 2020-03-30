@@ -39,13 +39,12 @@ export async function startVideo(
     .then(() =>
       sendRemoteMessage(
         yourId,
-        encounterId,
         JSON.stringify({ sdp: pc.localDescription })
       )
     );
   setInterval(readRemoteMessage, 5000);
 
-  async function sendRemoteMessage(senderId: number, encounterId: string | undefined, data: string) {
+  async function sendRemoteMessage(senderId: number, data: string) {
     const sendMessage = firebase.functions().httpsCallable("sendMessage");
     var msg = { 'id': senderId, 'encounterId': encounterId, 'data': data };
     console.log("Sending: " + JSON.stringify(msg))
@@ -55,12 +54,12 @@ export async function startVideo(
 
   pc.onicecandidate = event =>
     event.candidate
-      ? sendRemoteMessage(yourId, encounterId, JSON.stringify({ ice: event.candidate }))
+      ? sendRemoteMessage(yourId, JSON.stringify({ ice: event.candidate }))
       : console.log("Sent All Ice");
   pc.ontrack = event => (remoteVideo.srcObject = event.streams[0]);
 
-  async function readRemoteMessage(encounterId: string | undefined) {
-    console.log("checking messages2");
+  async function readRemoteMessage() {
+    console.log("checking messages " + encounterId);
     const readMessage = firebase.functions().httpsCallable("readMessage");
     const { data } = await readMessage({ 'id': yourId, 'encounterId': encounterId });
 
@@ -76,15 +75,17 @@ export async function startVideo(
       if (msg.ice !== undefined) {
         console.log("addIceCandidate");
         pc.addIceCandidate(new RTCIceCandidate(msg.ice));
+        readRemoteMessage();
       } else if (msg.sdp.type === "offer") {
         console.log("sdp offer");
         await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-        sendRemoteMessage(yourId, encounterId, JSON.stringify({ sdp: pc.localDescription }));
+        sendRemoteMessage(yourId, JSON.stringify({ sdp: pc.localDescription }));
       } else if (msg.sdp.type === "answer") {
         console.log("sdp answer");
         pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+        readRemoteMessage();
       }
     }
   }
