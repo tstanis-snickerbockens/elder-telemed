@@ -6,17 +6,8 @@ import {
 } from "react-router-dom";
 import { PatientApp } from "./PatientApp";
 import { ClinicianApp } from "./ClinicianApp";
-import firebase from "firebase";
-import { firebaseInit } from "./FirebaseUtil";
 
 function App() {
-  async function initialize() {
-    if (!firebase.apps.length) {
-      await firebaseInit();
-    }
-  }
-  initialize();
-
   return (
     <Router>
         <Switch>
