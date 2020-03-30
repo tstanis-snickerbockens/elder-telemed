@@ -1,29 +1,85 @@
 import React from "react";
+import clsx from 'clsx';
 import {
   RouteComponentProps,
   withRouter
 } from "react-router-dom";
 import { createStyles, Theme, WithStyles, withStyles } from "@material-ui/core/styles";
 import AppBar from "@material-ui/core/AppBar";
+import Drawer from '@material-ui/core/Drawer';
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import IconButton from "@material-ui/core/IconButton";
 import MenuIcon from "@material-ui/icons/Menu";
+import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
+import ListItemText from '@material-ui/core/ListItemText';
+import List from '@material-ui/core/List';
+import Divider from '@material-ui/core/Divider';
+import ScheduleIcon from '@material-ui/icons/Schedule';
+import PeopleIcon from '@material-ui/icons/People';
 import firebase from "firebase";
 import { ClinicianVideo } from "./ClinicianVideo";
 import { WelcomePage } from "./WelcomePage";
 import { EncounterPage } from "./EncounterPage";
 
+const drawerWidth = 240;
 const styles = (theme: Theme) => createStyles({
   root: {
-    flexGrow: 1,
+    display: 'flex',
   },
   menuButton: {
     marginRight: theme.spacing(2),
   },
   title: {
     flexGrow: 1,
+  },
+  appBar: {
+    transition: theme.transitions.create(['margin', 'width'], {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.leavingScreen,
+    }),
+  },
+  appBarShift: {
+    width: `calc(100% - ${drawerWidth}px)`,
+    marginLeft: drawerWidth,
+    transition: theme.transitions.create(['margin', 'width'], {
+      easing: theme.transitions.easing.easeOut,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+  },
+  drawer: {
+    width: drawerWidth,
+    flexShrink: 0,
+  },
+  drawerPaper: {
+    width: drawerWidth,
+  },
+  drawerHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    padding: theme.spacing(0, 1),
+    // necessary for content to be below app bar
+    ...theme.mixins.toolbar,
+    justifyContent: 'flex-end',
+  },
+  content: {
+    flexGrow: 1,
+    padding: theme.spacing(3),
+    transition: theme.transitions.create('margin', {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.leavingScreen,
+    }),
+    marginLeft: -drawerWidth,
+  },
+  contentShift: {
+    transition: theme.transitions.create('margin', {
+      easing: theme.transitions.easing.easeOut,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+    marginLeft: 0,
   },
 });
 
@@ -36,13 +92,14 @@ interface ClinicianAppProps extends RouteComponentProps<{}>, WithStyles<typeof s
 interface ClinicianAppState {
   user: firebase.User | null;
   encounterId: string | null;
+  drawerOpen: boolean;
 }
 
 class ClinicianAppImpl extends React.Component<ClinicianAppProps, ClinicianAppState>  {
   state: ClinicianAppState;
   constructor(props: ClinicianAppProps) {
     super(props);
-    this.state = {user: null, encounterId: null};
+    this.state = {user: null, encounterId: null, drawerOpen: true};
     this.beginVisit = this.beginVisit.bind(this);
     this.onClose = this.onClose.bind(this);
   }
@@ -84,6 +141,10 @@ class ClinicianAppImpl extends React.Component<ClinicianAppProps, ClinicianAppSt
     this.setState(prevState => ({...prevState, encounterId: null}));
   }
 
+  handleDrawerClose() {
+
+  }
+
   render() {
     let page;
     if (this.state.user) {
@@ -97,7 +158,10 @@ class ClinicianAppImpl extends React.Component<ClinicianAppProps, ClinicianAppSt
     }
       return (
         <div className={this.props.classes.root}>
-          <AppBar position="static">
+          <AppBar position="fixed"
+            className={clsx(this.props.classes.appBar, {
+              [this.props.classes.appBarShift]: true,
+            })}>
             <Toolbar>
               <IconButton
                 edge="start"
@@ -112,11 +176,44 @@ class ClinicianAppImpl extends React.Component<ClinicianAppProps, ClinicianAppSt
               </Typography>
               <Button onClick={() => {this.toggleSignIn()}} color="inherit">
               {!this.state.user?"Login":"Logout"}
-            </Button>
-          </Toolbar>
-        </AppBar>
-        {page}
-      </div>
+              </Button>
+            </Toolbar>
+          </AppBar>
+          <Drawer
+            className={this.props.classes.drawer}
+            variant="persistent"
+            anchor='left'
+            open={this.state.drawerOpen}
+            classes={{
+              paper: this.props.classes.drawerPaper,
+            }}
+          >
+            <div className={this.props.classes.drawerHeader}>
+              <IconButton onClick={this.handleDrawerClose}>
+                <ChevronLeftIcon />
+              </IconButton>
+            </div>
+            <Divider />
+            <List>
+              <ListItem button key="Encounters">
+                <ListItemIcon><ScheduleIcon /></ListItemIcon>
+                <ListItemText primary="Encounters" />
+              </ListItem>
+              <ListItem button key="Patients">
+                <ListItemIcon><PeopleIcon /></ListItemIcon>
+                <ListItemText primary="Patients" />
+              </ListItem>
+            </List>
+          </Drawer>
+          <main
+            className={clsx(this.props.classes.content, {
+              [this.props.classes.contentShift]: this.state.drawerOpen,
+            })}
+          >
+            <div className={this.props.classes.drawerHeader} />
+            {page}
+          </main>
+        </div>
     );
   }
 };
