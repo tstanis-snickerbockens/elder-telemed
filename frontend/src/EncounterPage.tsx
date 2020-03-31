@@ -59,7 +59,7 @@ class EncounterPageImpl extends React.Component<EncounterPageProps, EncounterPag
         createEncounter({'encounterId': encounterId, 'encounter': {'patient':this.state.new_encounter_patient, 'when':this.state.new_encounter_date }})
             .then(function(response) {
                 console.log("Create Encounter Response: " + console.log(JSON.stringify(response.data)));
-                page.setState(prevState => ({...prevState, refresh_encounter_list: true}));
+                page.setState(prevState => ({...prevState, refresh_encounter_list: !prevState.refresh_encounter_list}));
             })
             .catch(err => {console.log(err)});
         this.setState({anchorEl: null, open:false});

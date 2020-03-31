@@ -82,6 +82,56 @@ exports.listEncounters = functions.https.onRequest((request, response) => {
     });
 });
 
+exports.createPatient = functions.https.onRequest((request, response) => {
+    return cors(request, response, () => {
+        console.log("createPatient: " + JSON.stringify(request.body.data, null, 2))
+        var patientEmail = request.body.data.patientEmail;
+        var patient = request.body.data.patient;
+        let ref = db.collection('patients').doc(patientEmail);
+        db.runTransaction(t => {
+            return t.get(ref)
+                .then(doc => {
+                    if (doc.exists) {
+                        return Promise.reject({code: 409, msg:"Patient already exists: " + patientEmail});
+                    } else {
+                        t.set(ref, patient);
+                        return Promise.resolve("Saved");
+                    }
+                });
+        }).then(result => {
+            //ref.collection('webrtc_signal_queue').doc('queue').set({});
+            console.log('Transaction success!');
+            response.status(200).send({data:'ok'});
+        }).catch(err => {
+            console.log('Transaction failure:', err.msg?err.msg:err);
+            if (err.code) {
+                response.status(err.code).send(err.msg);
+            } else {
+                response.status(500).send();
+            }
+        });
+    });
+});
+
+exports.listPatients = functions.https.onRequest((request, response) => {
+    return cors(request, response, () => {
+        var userId = request.body.data.userId;
+        let encountersRef = db.collection('patients');
+        let allPatients = encountersRef.get()
+            .then(patients => {
+                var returnPatients = []
+                patients.forEach(doc => {
+                    console.log(doc.id, '=>', doc.data());
+                    returnPatients.push({'patientEmail' : doc.id, 'patient': doc.data()});
+                });
+                response.status(200).send({'data':returnPatients});
+            })
+            .catch(err => {
+                console.log('Error getting documents', err);
+                response.status(500).send();
+            });
+    });
+});
 
 const msgdb = admin.database();
 

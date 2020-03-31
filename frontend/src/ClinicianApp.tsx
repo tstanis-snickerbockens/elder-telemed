@@ -24,6 +24,7 @@ import firebase from "firebase";
 import { ClinicianVideo } from "./ClinicianVideo";
 import { WelcomePage } from "./WelcomePage";
 import { EncounterPage } from "./EncounterPage";
+import { PatientPage } from "./PatientPage";
 
 const drawerWidth = 240;
 const styles = (theme: Theme) => createStyles({
@@ -89,19 +90,27 @@ interface ClinicianAppProps extends RouteComponentProps<{}>, WithStyles<typeof s
 
 }
 
+enum Panel {
+  ENCOUNTERS = 1,
+  PATIENTS = 2
+}
+
 interface ClinicianAppState {
   user: firebase.User | null;
   encounterId: string | null;
   drawerOpen: boolean;
+  activePanel: Panel;
 }
 
 class ClinicianAppImpl extends React.Component<ClinicianAppProps, ClinicianAppState>  {
   state: ClinicianAppState;
   constructor(props: ClinicianAppProps) {
     super(props);
-    this.state = {user: null, encounterId: null, drawerOpen: true};
+    this.state = {user: null, encounterId: null, drawerOpen: true, activePanel:Panel.ENCOUNTERS};
     this.beginVisit = this.beginVisit.bind(this);
     this.onClose = this.onClose.bind(this);
+
+    this.handleListItemClick = this.handleListItemClick.bind(this);
   }
 
   componentDidMount() {
@@ -145,13 +154,21 @@ class ClinicianAppImpl extends React.Component<ClinicianAppProps, ClinicianAppSt
 
   }
 
+  handleListItemClick(newActivePanel: Panel) {
+    this.setState(prevState => ({...prevState, activePanel: newActivePanel}));
+  };
+
   render() {
     let page;
     if (this.state.user) {
       if (this.state.encounterId) {
         page = <ClinicianVideo user={this.state.user} encounterId={this.state.encounterId} onClose={this.onClose}></ClinicianVideo>;
       } else {
-        page = <EncounterPage onVisit={this.beginVisit} user={this.state.user}></EncounterPage>;
+        if (this.state.activePanel === Panel.ENCOUNTERS) {
+          page = <EncounterPage onVisit={this.beginVisit} user={this.state.user}></EncounterPage>;
+        } else{
+          page = <PatientPage user={this.state.user}></PatientPage>;
+        }
       }
     } else {
       page = <WelcomePage></WelcomePage>;
@@ -194,12 +211,14 @@ class ClinicianAppImpl extends React.Component<ClinicianAppProps, ClinicianAppSt
               </IconButton>
             </div>
             <Divider />
-            <List>
-              <ListItem button key="Encounters">
+            <List component="nav">
+              <ListItem button key="Encounters" selected={this.state.activePanel === Panel.ENCOUNTERS}
+                onClick={() => {this.handleListItemClick(Panel.ENCOUNTERS)}}>
                 <ListItemIcon><ScheduleIcon /></ListItemIcon>
                 <ListItemText primary="Encounters" />
               </ListItem>
-              <ListItem button key="Patients">
+              <ListItem button key="Patients" selected={this.state.activePanel === Panel.PATIENTS}
+                onClick={() => {this.handleListItemClick(Panel.PATIENTS)}}>
                 <ListItemIcon><PeopleIcon /></ListItemIcon>
                 <ListItemText primary="Patients" />
               </ListItem>
