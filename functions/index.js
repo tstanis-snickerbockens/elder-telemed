@@ -45,7 +45,7 @@ exports.createEncounter = functions.https.onRequest((request, response) => {
 exports.getEncounter = functions.https.onRequest((request, response) => {
     var encounterId = request.body.data.id;
     return cors(request, response, () => {
-        let ref = db.collection('encounters').doc('encounterId');
+        let ref = db.collection('encounters').doc(encounterId);
         ref.get().then(doc => {
             if (!doc.exists) {
                 console.log('No such document!');
@@ -77,6 +77,26 @@ exports.listEncounters = functions.https.onRequest((request, response) => {
             })
             .catch(err => {
                 console.log('Error getting documents', err);
+                response.status(500).send();
+            });
+    });
+});
+
+exports.queryEncounters = functions.https.onRequest((request, response) => {
+    return cors(request, response, () => {
+        var patientId = request.body.data.patientId;
+        let encountersRef = db.collection('encounters');
+        let query = encountersRef.where('patient', '==', patientId).get()
+            .then(encounters => {
+                var returnEncounters = []
+                encounters.forEach(doc => {
+                    console.log(doc.id, '=>', doc.data());
+                    returnEncounters.push({'encounterId' : doc.id, 'encounter': doc.data()});
+                });
+                response.status(200).send({'data':returnEncounters});
+            })
+            .catch(err => {
+                console.log('Error getting encounters', err);
                 response.status(500).send();
             });
     });
