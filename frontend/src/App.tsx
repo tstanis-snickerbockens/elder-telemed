@@ -11,7 +11,7 @@ function App() {
   return (
     <Router>
         <Switch>
-          <Route path="/p/:encounterId">
+          <Route path="/p">
             <PatientApp />
           </Route>
           <Route path="/c">

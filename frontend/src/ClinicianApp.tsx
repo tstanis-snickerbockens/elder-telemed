@@ -84,8 +84,6 @@ const styles = (theme: Theme) => createStyles({
   },
 });
 
-type UserStatus = firebase.User | "signedout" | null;
-
 interface ClinicianAppProps extends RouteComponentProps<{}>, WithStyles<typeof styles> {
 
 }
@@ -103,7 +101,6 @@ interface ClinicianAppState {
 }
 
 class ClinicianAppImpl extends React.Component<ClinicianAppProps, ClinicianAppState>  {
-  state: ClinicianAppState;
   constructor(props: ClinicianAppProps) {
     super(props);
     this.state = {user: null, encounterId: null, drawerOpen: true, activePanel:Panel.ENCOUNTERS};
@@ -177,7 +174,7 @@ class ClinicianAppImpl extends React.Component<ClinicianAppProps, ClinicianAppSt
         <div className={this.props.classes.root}>
           <AppBar position="fixed"
             className={clsx(this.props.classes.appBar, {
-              [this.props.classes.appBarShift]: true,
+              [this.props.classes.appBarShift]: this.state.drawerOpen,
             })}>
             <Toolbar>
               <IconButton
