@@ -11,11 +11,24 @@ const app = express();
 app.use(cors);
 let db = admin.firestore();
 
+// curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/createEncounter -d '{"data": {"encounterId": "myencounter4", "encounter": {"patient":"mypatient"}}}'
 exports.createEncounter = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         console.log("createEncounter: " + JSON.stringify(request.body.data, null, 2))
         var encounterId = request.body.data.encounterId;
         var encounter = request.body.data.encounter;
+
+        // Check patient exists and rewrite it as a firebase reference
+        db.collection('patients').doc(encounter.patient).get().then(doc => {
+            console.log("Check Patient: " + doc.exists + " " + JSON.stringify(doc.data()))
+            if (!doc.exists) {
+                console.log("Rejecting!");
+                response.status(400).send("Patient doesn't exist: " + encounter.patient);
+                return;
+            } else {
+                encounter.patient = db.doc('patients/' + encounter.patient);
+            }
+        });
         let ref = db.collection('encounters').doc(encounterId);
         let transaction = db.runTransaction(t => {
             return t.get(ref)
@@ -42,6 +55,16 @@ exports.createEncounter = functions.https.onRequest((request, response) => {
     });
 });
 
+// Rewrite encounter to replace all references with actual patient Ids which
+// can be returned through the API.
+function rewriteEncounterReferences(encounter) {
+    var outEncounter = Object.assign(encounter);
+    if (encounter.patient) {
+        outEncounter.patient = encounter.patient.id;
+    }
+    return outEncounter;
+}
+
 exports.getEncounter = functions.https.onRequest((request, response) => {
     var encounterId = request.body.data.id;
     return cors(request, response, () => {
@@ -52,7 +75,7 @@ exports.getEncounter = functions.https.onRequest((request, response) => {
                 response.status(404);
               } else {
                 console.log('Document data:', doc.data());
-                response.status(200).send(doc.data());
+                response.status(200).send(rewriteEncounterReferences(doc.data()));
               }
             })
             .catch(err => {
@@ -62,6 +85,7 @@ exports.getEncounter = functions.https.onRequest((request, response) => {
 });
 
 // TODO(tstanis): paging.  userId where clause.
+// curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/listEncounters -d '{"data": {"userId": "tstanis"}}'
 exports.listEncounters = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         var userId = request.body.data.userId;
@@ -71,7 +95,7 @@ exports.listEncounters = functions.https.onRequest((request, response) => {
                 var returnEncounters = []
                 encounters.forEach(doc => {
                     console.log(doc.id, '=>', doc.data());
-                    returnEncounters.push({'encounterId' : doc.id, 'encounter': doc.data()});
+                    returnEncounters.push({'encounterId' : doc.id, 'encounter': rewriteEncounterReferences(doc.data())});
                 });
                 response.status(200).send({'data':returnEncounters});
             })
@@ -82,16 +106,19 @@ exports.listEncounters = functions.https.onRequest((request, response) => {
     });
 });
 
+// curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/queryEncounters -d '{"data": {"patientId": "mypatient"}}'
 exports.queryEncounters = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         var patientId = request.body.data.patientId;
+        console.log("Query(patiendId=" + patientId + ")")
         let encountersRef = db.collection('encounters');
-        let query = encountersRef.where('patient', '==', patientId).get()
+        let patientRef = db.collection('patients').doc(patientId);
+        let query = encountersRef.where('patient', '==', patientRef).get()
             .then(encounters => {
                 var returnEncounters = []
                 encounters.forEach(doc => {
                     console.log(doc.id, '=>', doc.data());
-                    returnEncounters.push({'encounterId' : doc.id, 'encounter': doc.data()});
+                    returnEncounters.push({'encounterId' : doc.id, 'encounter': rewriteEncounterReferences(doc.data())});
                 });
                 response.status(200).send({'data':returnEncounters});
             })
@@ -102,6 +129,7 @@ exports.queryEncounters = functions.https.onRequest((request, response) => {
     });
 });
 
+// curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/createPatient -d '{"data": {"patientEmail": "mypatient", "patient":{"name": "foo bar"}}}'
 exports.createPatient = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         console.log("createPatient: " + JSON.stringify(request.body.data, null, 2))
@@ -133,6 +161,7 @@ exports.createPatient = functions.https.onRequest((request, response) => {
     });
 });
 
+// curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/listPatients -d '{"data": {"userId": "tstanis"}}'
 exports.listPatients = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         var userId = request.body.data.userId;
