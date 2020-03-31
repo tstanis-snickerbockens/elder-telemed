@@ -6,13 +6,10 @@ import {
 import * as firebase from "firebase/app";
 import { startVideo } from "./video";
 
-interface MyProps extends RouteComponentProps<UserPageParams> {
+interface MyProps extends RouteComponentProps<{}> {
   user: firebase.User;
-};
-
-interface UserPageParams {
   encounterId: string;
-}
+};
 
 class UserPageImpl extends React.Component<MyProps> {
     private localVideoRef = React.createRef<HTMLVideoElement>();
@@ -20,7 +17,7 @@ class UserPageImpl extends React.Component<MyProps> {
 
     componentDidMount() {
         if (this.localVideoRef.current && this.remoteVideoRef.current) {
-          startVideo(this.localVideoRef.current, this.remoteVideoRef.current, this.props.match.params.encounterId);
+          startVideo(this.localVideoRef.current, this.remoteVideoRef.current, this.props.encounterId);
         }
     }
     

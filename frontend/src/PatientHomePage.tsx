@@ -30,18 +30,34 @@ interface PatientHomePageProps extends RouteComponentProps<{}>, WithStyles<typeo
   onStartAppointment: (encounterId: string) => void;
 };
 
-class PatientHomePageImpl extends React.Component<PatientHomePageProps> {
+interface PatientHomePageState {
+    encounterId: string | null;
+}
+
+class PatientHomePageImpl extends React.Component<PatientHomePageProps, PatientHomePageState> {
     constructor(props: PatientHomePageProps) {
         super(props);
+        this.state = {encounterId: null}
         this.startAppointment = this.startAppointment.bind(this);
     }
     componentDidMount() {
-        //TODO: Query for encounterId.
+        console.log("Patient: " + this.props.user.email);
+        let queryEncounters = firebase.functions().httpsCallable('queryEncounters');
+        queryEncounters({'patientId': this.props.user.email})
+            .then(response => {
+                console.log("Patient's Encounters: " + JSON.stringify(response.data));
+                if (response.data && response.data.length > 0) {
+                    this.setState({encounterId: response.data[0].encounterId});
+                }
+            });
     }
     
     startAppointment() {
-        this.props.onStartAppointment('foo')
+        if (this.state.encounterId) {
+            this.props.onStartAppointment(this.state.encounterId);
+        }
     }
+
     render() {
         return (
           <>  

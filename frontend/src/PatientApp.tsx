@@ -35,7 +35,7 @@ interface PatientAppProps extends RouteComponentProps<{}>, WithStyles<typeof sty
 enum Page {
   HOME = 1,
   WAITING_ROOM = 2,
-  VISIT = 3
+  IN_ENCOUNTER = 3
 }
 interface PatientAppState {
   user: firebase.User | null;
@@ -46,12 +46,8 @@ class PatientAppImpl extends React.Component<PatientAppProps, PatientAppState>  
   constructor(props: PatientAppProps) {
     super(props);
     this.state = {user: null, encounterId: null, page: Page.HOME};
-    this.beginVisit = this.beginVisit.bind(this);
-    this.onStartAppointment = this.onStartAppointment.bind(this);
-  }
-
-  beginVisit() {
-
+    this.startAppointment = this.startAppointment.bind(this);
+    this.enterEncounter = this.enterEncounter.bind(this);
   }
 
   componentDidMount() {
@@ -79,19 +75,23 @@ class PatientAppImpl extends React.Component<PatientAppProps, PatientAppState>  
     }
   };
 
-  onStartAppointment(encounterId: string) {
+  startAppointment(encounterId: string) {
     this.setState(prevState => ({...prevState, encounterId: encounterId, page: Page.WAITING_ROOM}));
+  }
+
+  enterEncounter() {
+    this.setState(prevState => ({...prevState, page: Page.IN_ENCOUNTER}));
   }
 
   render() {
     let page;
     if (this.state.user) {
       if (this.state.page === Page.HOME) {
-        page = <PatientHomePage onStartAppointment={this.onStartAppointment} user={this.state.user}></PatientHomePage>
-      } else if (this.state.page === Page.WAITING_ROOM) {
-        page = <PatientWaitingRoom user={this.state.user}></PatientWaitingRoom>
-      } else {
-        page = <UserPage user={this.state.user}></UserPage>
+        page = <PatientHomePage onStartAppointment={this.startAppointment} user={this.state.user}></PatientHomePage>
+      } else if (this.state.page === Page.WAITING_ROOM && this.state.encounterId) {
+        page = <PatientWaitingRoom onEnterEncounter={this.enterEncounter} user={this.state.user} encounterId={this.state.encounterId}></PatientWaitingRoom>
+      } else if (this.state.encounterId) {
+        page = <UserPage user={this.state.user} encounterId={this.state.encounterId}></UserPage>
       }
     } else {
       page = <WelcomePage></WelcomePage>;

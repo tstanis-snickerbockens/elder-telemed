@@ -19,15 +19,18 @@ exports.createEncounter = functions.https.onRequest((request, response) => {
         var encounter = request.body.data.encounter;
 
         // Check patient exists and rewrite it as a firebase reference
-        db.collection('patients').doc(encounter.patient).get().then(doc => {
+        db.collection('patients').doc(encounter.patient).get()
+        .then(doc => {
             console.log("Check Patient: " + doc.exists + " " + JSON.stringify(doc.data()))
             if (!doc.exists) {
                 console.log("Rejecting!");
-                response.status(400).send("Patient doesn't exist: " + encounter.patient);
-                return;
+                return Promise.reject({code: 400, msg:"Patient doesn't exist: " + encounter.patient});
             } else {
                 encounter.patient = db.doc('patients/' + encounter.patient);
             }
+        }).catch(err => {
+            response.status(err.code).send(err.msg);
+            return;
         });
         let ref = db.collection('encounters').doc(encounterId);
         let transaction = db.runTransaction(t => {
@@ -41,7 +44,6 @@ exports.createEncounter = functions.https.onRequest((request, response) => {
                     }
                 });
         }).then(result => {
-            //ref.collection('webrtc_signal_queue').doc('queue').set({});
             console.log('Transaction success!');
             response.status(200).send({data:'ok'});
         }).catch(err => {
