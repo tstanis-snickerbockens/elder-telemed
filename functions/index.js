@@ -216,7 +216,7 @@ exports.readMessage = functions.https.onRequest((request, response) => {
         ref.transaction(function(data) {
             console.log("Loaded: " + JSON.stringify(data, null, 2));
             if (data == null || !data.queue || data.queue.length == 0) {
-                return null;
+                return data;
             }
             console.log("Old Queue Length " + data.queue.length);
             console.log("RequesterId: " + requesterId);
@@ -233,11 +233,10 @@ exports.readMessage = functions.https.onRequest((request, response) => {
             }
             console.log("New Queue Length " + data.queue.length);
             return data;
-        }).then(()=> {
+        }).then(() => {
             console.log("Returning: " + JSON.stringify(returnVal, null, 2));
             response.status(200).send({'data': returnVal});
         });
-        
     });
 });
 
