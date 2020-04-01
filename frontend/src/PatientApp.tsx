@@ -48,6 +48,8 @@ class PatientAppImpl extends React.Component<PatientAppProps, PatientAppState>  
     this.state = {user: null, encounterId: null, page: Page.HOME};
     this.startAppointment = this.startAppointment.bind(this);
     this.enterEncounter = this.enterEncounter.bind(this);
+    let btn = document.getElementById("loginState");
+    btn?.addEventListener("click", (e:Event) => this.toggleSignIn());
   }
 
   componentDidMount() {
@@ -111,7 +113,7 @@ class PatientAppImpl extends React.Component<PatientAppProps, PatientAppState>  
             <Typography variant="h6" className={this.props.classes.title}>
               Stealth Health - Patient App
             </Typography>
-            <Button onClick={this.toggleSignIn} color="inherit">
+            <Button color="inherit" id="loginState">
               {!this.state.user?"Login":"Logout"}
             </Button>
           </Toolbar>
