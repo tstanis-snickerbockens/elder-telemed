@@ -23,6 +23,7 @@ Produce a working demo of a telemedicine app aimed at the elderly and their care
 
 - Go to the production clinician interface and setup a patient and encounter
   - https://elder-telemed.firebaseapp.com/c
+  - Login with a Google account (Login is top right).
   - Go to "Patients"
   - Click "New Patient"
   - Enter your email address.
