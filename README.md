@@ -18,6 +18,23 @@ Produce a working demo of a telemedicine app aimed at the elderly and their care
 - Zoom
 - [Google Docs](https://docs.google.com/document/d/1J8fRQK_VLuflq340FZ_hyTNnvMxWi_nKyj1Xv7EVaos/edit)
 
+
+## Production Demo Instructions
+
+- Go to the production clinician interface and setup a patient and encounter
+  - https://elder-telemed.firebaseapp.com/c
+  - Go to "Patients"
+  - Click "New Patient"
+  - Enter your email address.
+  - Go to "Encounters"
+  - "New Encounter"
+  - Use the same email address for the patient (TODO: make this a picker)
+- Start a patient session in a new tab AFTER you have setup the patient and encounter in the clinician interface.
+  - https://elder-telemed.firebaseapp.com/p
+  - Click "Start Appointment"
+  - Click "Start Appointment"
+  - Go back to your clinician tab and click "Go" next to the encounter you started.
+- You should now have a patient and a clinician tab that are connected (it may take a few 10s of seconds) (this can be flaky, try refreshing the patient experience again if it isn't connecting)
 ## Run Locally
 
 - git pull
