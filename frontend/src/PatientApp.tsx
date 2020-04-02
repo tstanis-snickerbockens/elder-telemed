@@ -67,13 +67,18 @@ class PatientAppImpl extends React.Component<PatientAppProps, PatientAppState>  
       }
     })();
   }
+
   toggleSignIn() {
     if (!this.state.user) {
-      console.log('sign in');
-      const provider = new firebase.auth.GoogleAuthProvider();
-      firebase.auth().signInWithRedirect(provider);
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        firebase.auth().signInWithRedirect(provider);
+      } catch(e) {
+        console.log(e);
+      }
     } else {
       firebase.auth().signOut();
+      this.setState({user: null});
     }
   };
 

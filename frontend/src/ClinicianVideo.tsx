@@ -7,8 +7,46 @@ import * as firebase from "firebase/app";
 import { startVideo } from "./video";
 import Speech from "./speech";
 import Button from '@material-ui/core/Button'
+import { createStyles, Theme, WithStyles, withStyles } from "@material-ui/core/styles";
 
-interface ClinicialVideoProps extends RouteComponentProps<{}> {
+const styles = (theme: Theme) => createStyles({
+    typography: {
+        padding: theme.spacing(2),
+    },
+    container: {
+        display: 'flex',
+        flexWrap: 'wrap',
+    },
+    textField: {
+        marginLeft: theme.spacing(1),
+        marginRight: theme.spacing(1),
+        width: 200,
+    },
+    localVideo: {
+        position: 'absolute',
+        bottom: '20px',
+        right: '20px',
+        width: 'calc(100% / 4)',
+        height: 'calc(100% / 4)',
+        zIndex: 1 
+    },
+    remoteVideo: {
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        height: '100%',
+        width: '100%'
+    },
+    videoContainer: {
+        position: 'relative',
+        top: 0,
+        left: 0,
+        height: 'calc(100vh - 64px)',
+        width: '100%'
+    }
+});
+
+interface ClinicialVideoProps extends RouteComponentProps<{}>, WithStyles<typeof styles> {
     encounterId: string;
     user: firebase.User;
     onClose: () => void
@@ -58,12 +96,14 @@ class ClinicianVideoImpl extends React.Component<ClinicialVideoProps, ClinicalVi
                     <div>{line}</div>
                 ))}
               </div>
-              <video ref={this.localVideoRef} playsInline autoPlay></video>
-              <video ref={this.remoteVideoRef} playsInline autoPlay></video>
+              <div className={this.props.classes.videoContainer}>
+                <video className={this.props.classes.localVideo} ref={this.localVideoRef} playsInline autoPlay></video>
+                <video className={this.props.classes.remoteVideo} ref={this.remoteVideoRef} playsInline autoPlay></video>
+              </div>
               <Button variant="contained" onClick={this.props.onClose}>Close</Button>
           </>
         );
     }
 };
 
-export const ClinicianVideo = withRouter(ClinicianVideoImpl);
+export const ClinicianVideo = withStyles(styles)(withRouter(ClinicianVideoImpl));

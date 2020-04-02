@@ -77,7 +77,8 @@ export async function startVideo(
       await pc.setLocalDescription();
       sendRemoteMessage(yourId, JSON.stringify({ sdp: pc.localDescription }));
     } catch (err) {
-      console.error(err);
+      console.log(err);
+      console.error(JSON.stringify(err));
     } finally {
       makingOffer = false;
     }
@@ -117,10 +118,15 @@ export async function startVideo(
         }
         if (msg.sdp.type === "offer") {
           console.log("sdp offer");
-          await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          sendRemoteMessage(yourId, JSON.stringify({ sdp: pc.localDescription }));
+          try {
+            await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            sendRemoteMessage(yourId, JSON.stringify({ sdp: pc.localDescription }));
+          } catch (e) {
+            console.log("Current State: " + pc.signalingState);
+            console.error(e);
+          }
         } else if (msg.sdp.type === "answer") {
           console.log("sdp answer");
           pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
