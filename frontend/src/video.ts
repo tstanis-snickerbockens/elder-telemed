@@ -28,11 +28,11 @@ export async function startVideo(
   console.log("mediaStream", mediaStream);
 
   localVideo.srcObject = mediaStream;
-  
+
   const yourId = Math.floor(Math.random() * 1000000000);
   const pc = new RTCPeerConnection(servers);
 
-  mediaStream.getTracks().forEach(function(track) {
+  mediaStream.getTracks().forEach(function (track) {
     pc.addTrack(track, mediaStream);
   });
 
@@ -44,7 +44,8 @@ export async function startVideo(
         JSON.stringify({ sdp: pc.localDescription })
       )
     );
-  var timer = setInterval(readRemoteMessage, 500);
+
+  var interval = setInterval(readRemoteMessage, 500);
 
   async function sendRemoteMessage(senderId: number, data: string) {
     const sendMessage = firebase.functions().httpsCallable("sendMessage");
@@ -62,6 +63,11 @@ export async function startVideo(
     remoteVideo.srcObject = event.streams[0];
     console.log("ontrack");
   }
+  pc.onconnectionstatechange = function (event) {
+    if (pc.connectionState === "connected") {
+      clearInterval(interval);
+    }
+  }
 
   let makingOffer = false;
   pc.onnegotiationneeded = async () => {
@@ -69,8 +75,8 @@ export async function startVideo(
       makingOffer = true;
       // @ts-ignore 
       await pc.setLocalDescription();
-      sendRemoteMessage(yourId, JSON.stringify({sdp: pc.localDescription }));
-    } catch(err) {
+      sendRemoteMessage(yourId, JSON.stringify({ sdp: pc.localDescription }));
+    } catch (err) {
       console.error(err);
     } finally {
       makingOffer = false;
@@ -96,14 +102,14 @@ export async function startVideo(
         console.log("addIceCandidate");
         try {
           pc.addIceCandidate(new RTCIceCandidate(msg.ice));
-        } catch(err) { 
+        } catch (err) {
           if (!ignoreOffer) {
             throw err;
           }
         }
       } else if (msg.sdp) {
         const offerCollision = (msg.sdp.type === "offer") &&
-            (makingOffer || pc.signalingState !== "stable");
+          (makingOffer || pc.signalingState !== "stable");
 
         ignoreOffer = !polite && offerCollision;
         if (ignoreOffer) {
@@ -115,11 +121,9 @@ export async function startVideo(
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
           sendRemoteMessage(yourId, JSON.stringify({ sdp: pc.localDescription }));
-          clearInterval(timer);
         } else if (msg.sdp.type === "answer") {
           console.log("sdp answer");
           pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
-          clearInterval(timer);
         }
       }
     }
