@@ -191,6 +191,7 @@ exports.sendMessage = functions.https.onRequest((request, response) => {
         console.log("Saving: " + JSON.stringify(request.body.data, null, 2));
         var requesterId = request.body.data.id;
         var encounterId = request.body.data.encounterId;
+        var sequenceNumber = request.body.data.seqNum;
         var ref = msgdb.ref("messages/" + encounterId);
         ref.transaction(function (current_value) {
             console.log("Current Value: " + JSON.stringify(current_value, null, 2))
@@ -198,7 +199,18 @@ exports.sendMessage = functions.https.onRequest((request, response) => {
                 current_value = {'queue': []}
             }
             console.log("Write to " + requesterId);
-            current_value.queue.push(request.body.data);
+            var inserted = false;
+            for (var i = 0 ; i < current_value.queue.length; ++i) {
+                if (current_value.queue[i].id == requesterId && 
+                    current_value.queue[i].seqNum > sequenceNumber) {
+                    current_value.queue.splice(i, 0, request.body.data)
+                    inserted = true;
+                    break;
+                }
+            }
+            if (!inserted) {
+                current_value.queue.push(request.body.data);
+            }
             return current_value;
         });
         response.status(200).send({'data': {'text':"Hello from Firebase!"}});

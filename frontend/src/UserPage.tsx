@@ -17,7 +17,7 @@ class UserPageImpl extends React.Component<MyProps> {
 
     componentDidMount() {
         if (this.localVideoRef.current && this.remoteVideoRef.current) {
-          startVideo(this.localVideoRef.current, this.remoteVideoRef.current, this.props.encounterId);
+          startVideo(this.localVideoRef.current, this.remoteVideoRef.current, this.props.encounterId, true);
         }
     }
     

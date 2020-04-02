@@ -45,7 +45,7 @@ class ClinicianVideoImpl extends React.Component<ClinicialVideoProps, ClinicalVi
 
     componentDidMount() {
         if (this.localVideoRef.current && this.remoteVideoRef.current) {
-            startVideo(this.localVideoRef.current, this.remoteVideoRef.current, this.props.encounterId);
+            startVideo(this.localVideoRef.current, this.remoteVideoRef.current, this.props.encounterId, false);
             this.speech.start();
         }
     }

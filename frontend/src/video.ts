@@ -12,10 +12,12 @@ const servers = {
   ],
 };
 
+var msgSequenceNumber = 0;
 export async function startVideo(
   localVideo: HTMLVideoElement,
   remoteVideo: HTMLVideoElement,
   encounterId: string | undefined,
+  polite: boolean
 ) {
   console.log("Encounter: " + encounterId);
   const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -42,11 +44,11 @@ export async function startVideo(
         JSON.stringify({ sdp: pc.localDescription })
       )
     );
-  setInterval(readRemoteMessage, 5000);
+  setInterval(readRemoteMessage, 500);
 
   async function sendRemoteMessage(senderId: number, data: string) {
     const sendMessage = firebase.functions().httpsCallable("sendMessage");
-    var msg = { 'id': senderId, 'encounterId': encounterId, 'data': data };
+    var msg = { 'id': senderId, 'seqNum': msgSequenceNumber++, 'encounterId': encounterId, 'data': data };
     console.log("Sending: " + JSON.stringify(msg))
     const result = await sendMessage(msg);
     console.log(result.data.text);
@@ -56,7 +58,26 @@ export async function startVideo(
     event.candidate
       ? sendRemoteMessage(yourId, JSON.stringify({ ice: event.candidate }))
       : console.log("Sent All Ice");
-  pc.ontrack = event => (remoteVideo.srcObject = event.streams[0]);
+  pc.ontrack = event => {
+    remoteVideo.srcObject = event.streams[0];
+    console.log("ontrack");
+  }
+
+  let makingOffer = false;
+  pc.onnegotiationneeded = async () => {
+    try {
+      makingOffer = true;
+      // @ts-ignore 
+      await pc.setLocalDescription();
+      sendRemoteMessage(yourId, JSON.stringify({sdp: pc.localDescription }));
+    } catch(err) {
+      console.error(err);
+    } finally {
+      makingOffer = false;
+    }
+  };
+
+  let ignoreOffer = false;
 
   async function readRemoteMessage() {
     console.log("checking messages " + encounterId);
@@ -69,23 +90,35 @@ export async function startVideo(
     }
     const msg = JSON.parse(data.data);
     const sender = data.id;
-    console.log(JSON.stringify(msg));
     if (sender !== yourId) {
-      console.log(JSON.stringify(msg));
+
       if (msg.ice !== undefined) {
         console.log("addIceCandidate");
-        pc.addIceCandidate(new RTCIceCandidate(msg.ice));
-        readRemoteMessage();
-      } else if (msg.sdp.type === "offer") {
-        console.log("sdp offer");
-        await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        sendRemoteMessage(yourId, JSON.stringify({ sdp: pc.localDescription }));
-      } else if (msg.sdp.type === "answer") {
-        console.log("sdp answer");
-        pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
-        readRemoteMessage();
+        try {
+          pc.addIceCandidate(new RTCIceCandidate(msg.ice));
+        } catch(err) { 
+          if (!ignoreOffer) {
+            throw err;
+          }
+        }
+      } else if (msg.sdp) {
+        const offerCollision = (msg.sdp.type === "offer") &&
+            (makingOffer || pc.signalingState !== "stable");
+
+        ignoreOffer = !polite && offerCollision;
+        if (ignoreOffer) {
+          return;
+        }
+        if (msg.sdp.type === "offer") {
+          console.log("sdp offer");
+          await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          sendRemoteMessage(yourId, JSON.stringify({ sdp: pc.localDescription }));
+        } else if (msg.sdp.type === "answer") {
+          console.log("sdp answer");
+          pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+        }
       }
     }
   }
