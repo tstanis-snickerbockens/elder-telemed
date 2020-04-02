@@ -44,7 +44,7 @@ export async function startVideo(
         JSON.stringify({ sdp: pc.localDescription })
       )
     );
-  var interval = setInterval(readRemoteMessage, 500);
+  var timer = setInterval(readRemoteMessage, 500);
 
   async function sendRemoteMessage(senderId: number, data: string) {
     const sendMessage = firebase.functions().httpsCallable("sendMessage");
@@ -64,7 +64,7 @@ export async function startVideo(
   }
   pc.onconnectionstatechange = function (event) {
     if (pc.connectionState === "connected") {
-      clearInterval(interval);
+      clearInterval(timer);
     }
   }
 
