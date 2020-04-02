@@ -69,7 +69,8 @@ class PatientAppImpl extends React.Component<PatientAppProps, PatientAppState>  
     })();
   }
   toggleSignIn() {
-    if (this.state.user) {
+    if (!this.state.user) {
+      console.log('sign in');
       const provider = new firebase.auth.GoogleAuthProvider();
       firebase.auth().signInWithRedirect(provider);
     } else {
@@ -113,7 +114,7 @@ class PatientAppImpl extends React.Component<PatientAppProps, PatientAppState>  
             <Typography variant="h6" className={this.props.classes.title}>
               Stealth Health - Patient App
             </Typography>
-            <Button color="inherit" id="loginState">
+            <Button color="inherit" id="loginState" onClick={() => this.toggleSignIn()}>
               {!this.state.user?"Login":"Logout"}
             </Button>
           </Toolbar>
