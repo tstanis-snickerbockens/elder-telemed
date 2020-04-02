@@ -70,12 +70,9 @@ class PatientAppImpl extends React.Component<PatientAppProps, PatientAppState>  
 
   toggleSignIn() {
     if (!this.state.user) {
-      try {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        firebase.auth().signInWithRedirect(provider);
-      } catch(e) {
-        console.log(e);
-      }
+      console.log('sign in');
+      const provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithRedirect(provider);
     } else {
       firebase.auth().signOut();
       this.setState({user: null});

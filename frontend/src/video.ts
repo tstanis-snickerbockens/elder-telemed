@@ -127,7 +127,7 @@ export async function startVideo(
             console.log("Current State: " + pc.signalingState);
             console.error(e);
           }
-        } else if (msg.sdp.type === "answer") {
+       } else if (msg.sdp.type === "answer") {
           console.log("sdp answer");
           pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
         }
