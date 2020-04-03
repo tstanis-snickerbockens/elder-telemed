@@ -19,6 +19,9 @@ const styles = (theme: Theme) => createStyles({
         display: 'flex',
         flexWrap: 'wrap',
     },
+    mainContainer: {
+        padding: theme.spacing(3),
+    },
     textField: {
         marginLeft: theme.spacing(1),
         marginRight: theme.spacing(1),
@@ -78,6 +81,7 @@ class EncounterPageImpl extends React.Component<EncounterPageProps, EncounterPag
     render() {
         return (
             <>
+            <div className={this.props.classes.mainContainer}>
             <Button variant="contained" color="primary" onClick={(event: MouseEvent<HTMLButtonElement>)=>(this.handleNewEncounter(event))}>
                 <Typography className={this.props.classes.typography}>New Encounter</Typography>
             </Button>
@@ -115,6 +119,7 @@ class EncounterPageImpl extends React.Component<EncounterPageProps, EncounterPag
                 <Button variant="contained" onClick={()=>(this.handleSaveEncounter())}>Save</Button>
             </Popover>
             <EncounterList user={this.props.user} onVisit={this.props.onVisit} refresh={this.state.refresh_encounter_list} orderBy="" order=""></EncounterList>
+            </div>
             </>
         );
     }

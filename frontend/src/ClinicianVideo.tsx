@@ -27,7 +27,7 @@ const styles = (theme: Theme) => createStyles({
         bottom: '20px',
         right: '20px',
         width: 'calc(100% / 4)',
-        height: 'calc(100% / 4)',
+        height: 'calc(100% / 5)',
         zIndex: 1 
     },
     remoteVideo: {
@@ -43,6 +43,30 @@ const styles = (theme: Theme) => createStyles({
         left: 0,
         height: 'calc(100vh - 64px)',
         width: '100%'
+    }, 
+    transcription: {
+        position: 'absolute',
+        bottom: '20px',
+        left: '20px',
+        width: '60%',
+        height: '20%',
+        background: 'rgba(76, 76, 76, 0.3)', /* Green background with 30% opacity */
+        zIndex: 1,
+        fontSize: "30pt",
+        overflow: 'scroll',
+        overflowAnchor: 'none'
+    },
+    closeButton: {
+        position: 'absolute',
+        top: '20px',
+        right: '20px',
+        zIndex: 1 
+    },
+    anchor: {
+        overflowAnchor: 'auto',
+
+        /* anchor nodes are required to have non-zero area */
+        height: '1px'
     }
 });
 
@@ -59,7 +83,7 @@ interface ClinicalVideoState {
 class ClinicianVideoImpl extends React.Component<ClinicialVideoProps, ClinicalVideoState> {
     private localVideoRef = React.createRef<HTMLVideoElement>();
     private remoteVideoRef = React.createRef<HTMLVideoElement>();
-
+    private transcriptRef = React.createRef<HTMLDivElement>();
     private speech: Speech;
 
     constructor(props: ClinicialVideoProps) {
@@ -79,6 +103,9 @@ class ClinicianVideoImpl extends React.Component<ClinicialVideoProps, ClinicalVi
         this.setState(prevState => ({...prevState, 
             transcription: prevState.transcription.slice(0, 
                 prevState.transcription.length - 1).concat(to_add)}));
+        if (this.transcriptRef.current) {
+            this.transcriptRef.current.scrollTop = this.transcriptRef.current.scrollHeight;
+        }
     }
 
     componentDidMount() {
@@ -91,16 +118,17 @@ class ClinicianVideoImpl extends React.Component<ClinicialVideoProps, ClinicalVi
     render() {
         return (
           <>
-              <div>
-                {this.state.transcription.map((line) => (
-                    <div>{line}</div>
-                ))}
-              </div>
               <div className={this.props.classes.videoContainer}>
                 <video className={this.props.classes.localVideo} ref={this.localVideoRef} playsInline autoPlay></video>
                 <video className={this.props.classes.remoteVideo} ref={this.remoteVideoRef} playsInline autoPlay></video>
+                <div ref={this.transcriptRef} className={this.props.classes.transcription}>
+                    {this.state.transcription.map((line) => (
+                        <div>{line}</div>
+                    ))}
+                    <div className={this.props.classes.anchor}></div>
+                </div>
+                <Button className={this.props.classes.closeButton} variant="contained" onClick={this.props.onClose}>End Visit</Button>
               </div>
-              <Button variant="contained" onClick={this.props.onClose}>Close</Button>
           </>
         );
     }
