@@ -1,4 +1,5 @@
 import * as firebaseLib from "firebase/app";
+import "firebase/functions";
 /**
  * utter hack to avoid static module loading from Firebase.
  */
