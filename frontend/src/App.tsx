@@ -18,8 +18,8 @@ function App() {
         <Route path="/c">
           <ClinicianApp />
         </Route>
+        <Redirect exact from="/" to="/p" />
       </Switch>
-      <Redirect from="/" to="/p" />
     </Router>
   );
 }
