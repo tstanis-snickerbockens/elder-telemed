@@ -8,6 +8,7 @@ import { startVideo } from "./video";
 import Speech from "./speech";
 import Button from '@material-ui/core/Button'
 import { createStyles, Theme, WithStyles, withStyles } from "@material-ui/core/styles";
+import AnnotatedText from "./AnnotatedText"
 
 const styles = (theme: Theme) => createStyles({
     typography: {
@@ -53,20 +54,13 @@ const styles = (theme: Theme) => createStyles({
         background: 'rgba(76, 76, 76, 0.3)', /* Green background with 30% opacity */
         zIndex: 1,
         fontSize: "30pt",
-        overflow: 'scroll',
-        overflowAnchor: 'none'
+        overflow: 'scroll'
     },
     closeButton: {
         position: 'absolute',
         top: '20px',
         right: '20px',
         zIndex: 1 
-    },
-    anchor: {
-        overflowAnchor: 'auto',
-
-        /* anchor nodes are required to have non-zero area */
-        height: '1px'
     }
 });
 
@@ -77,8 +71,16 @@ interface ClinicialVideoProps extends RouteComponentProps<{}>, WithStyles<typeof
 };
 
 interface ClinicalVideoState {
-    transcription: Array<string>
+    transcription: Array<LineState>
 }
+
+interface LineState {
+    msg: string
+    final: boolean
+    id: number
+}
+
+let next_id = 0;
 
 class ClinicianVideoImpl extends React.Component<ClinicialVideoProps, ClinicalVideoState> {
     private localVideoRef = React.createRef<HTMLVideoElement>();
@@ -93,12 +95,14 @@ class ClinicianVideoImpl extends React.Component<ClinicialVideoProps, ClinicalVi
         this.speech = new Speech({onSpeechText: this.onSpeechText});
     }
 
+    
     onSpeechText(message: string, is_final: boolean): void {
-        let to_add: Array<string>;
+        let to_add: Array<LineState>;
+        
         if (is_final) {
-            to_add = [message, '']
+            to_add = [{msg:message, final:true, id:next_id++}, {msg:'', final:false, id:next_id++}]
         } else {
-            to_add = [message]
+            to_add = [{msg:message, final:false, id:next_id++}]
         }
         this.setState(prevState => ({...prevState, 
             transcription: prevState.transcription.slice(0, 
@@ -122,10 +126,13 @@ class ClinicianVideoImpl extends React.Component<ClinicialVideoProps, ClinicalVi
                 <video className={this.props.classes.localVideo} ref={this.localVideoRef} playsInline autoPlay></video>
                 <video className={this.props.classes.remoteVideo} ref={this.remoteVideoRef} playsInline autoPlay></video>
                 <div ref={this.transcriptRef} className={this.props.classes.transcription}>
-                    {this.state.transcription.map((line) => (
-                        <div>{line}</div>
-                    ))}
-                    <div className={this.props.classes.anchor}></div>
+                    {this.state.transcription.map((line:LineState) => 
+                        <div key={line.id}>
+                        {line.final
+                            ? <AnnotatedText message={line.msg}></AnnotatedText> 
+                            : line.msg}
+                        </div>
+                    )}
                 </div>
                 <Button className={this.props.classes.closeButton} variant="contained" onClick={this.props.onClose}>End Visit</Button>
               </div>
