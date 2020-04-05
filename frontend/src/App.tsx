@@ -2,7 +2,8 @@ import React from "react";
 import {
   BrowserRouter as Router,
   Switch,
-  Route
+  Route,
+  Redirect,
 } from "react-router-dom";
 import { PatientApp } from "./PatientApp";
 import { ClinicianApp } from "./ClinicianApp";
@@ -10,16 +11,17 @@ import { ClinicianApp } from "./ClinicianApp";
 function App() {
   return (
     <Router>
-        <Switch>
-          <Route path="/p">
-            <PatientApp />
-          </Route>
-          <Route path="/c">
-            <ClinicianApp />
-          </Route>
-        </Switch>
+      <Switch>
+        <Route path="/p">
+          <PatientApp />
+        </Route>
+        <Route path="/c">
+          <ClinicianApp />
+        </Route>
+      </Switch>
+      <Redirect from="/" to="/p" />
     </Router>
   );
-};
+}
 
 export default App;
