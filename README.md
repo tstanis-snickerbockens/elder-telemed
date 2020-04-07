@@ -42,4 +42,6 @@ Produce a working demo of a telemedicine app aimed at the elderly and their care
 - Install firebase CLI
 - Run firebase login
 - Run firebase emulators:start
-- Goto localhost:5000/client.html
+- cd frontend
+- npm start
+- Goto localhost:3000/p or localhost:3000/c
