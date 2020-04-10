@@ -38,6 +38,7 @@ Produce a working demo of a telemedicine app aimed at the elderly and their care
 - You should now have a patient and a clinician tab that are connected (it may take a few 10s of seconds) (this can be flaky, try refreshing the patient experience again if it isn't connecting)
 ## Run Locally
 
+- Request to be added as collaborator to elder-telemed firebase project (contact Tom Stanis)
 - git pull
 - Install firebase CLI
 - Run firebase login
