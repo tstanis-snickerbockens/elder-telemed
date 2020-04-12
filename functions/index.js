@@ -10,6 +10,7 @@ const app = express();
 
 app.use(cors);
 let db = admin.firestore();
+let storage = admin.storage();
 
 var AWS = require("aws-sdk");
 var Promise = require('promise');
@@ -304,6 +305,32 @@ exports.annotateTranscription = functions.https.onRequest((request, response) =>
                         response.status(200).send({'data':data});
                         console.log(data);
                     }
+            });
+        } catch(e) {
+            console.log(e);
+        }
+    });
+});
+
+// curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/exportTranscript -d '{"data": {"encounterId": "testVisit", "transcript": [{"msg":"Test foo bar"},{"msg":""}]}}'
+exports.exportTranscript = functions.https.onRequest((request, response) => {
+    return cors(request, response, () => {
+        try {
+            const metadata = {contentType: "text/html"};
+            const bucket = storage.bucket();
+            var transcript = request.body.data.transcript;
+            var encounterId = request.body.data.encounterId;
+            var fileName = "transcripts/" + encounterId + ".txt";
+            var transcriptText = "";
+            transcript.forEach(element => transcriptText.concat(element.msg + "\n"));
+            const transcriptBuffer = new Buffer(transcriptText);
+            var file = bucket.file(fileName);
+            file.save(transcriptBuffer, {
+                metadata: metadata
+            }, function(err) {
+                console.log(err, err.stack);
+            }, function() {
+                console.log("Uploaded transcript file: " + fileName);
             });
         } catch(e) {
             console.log(e);
