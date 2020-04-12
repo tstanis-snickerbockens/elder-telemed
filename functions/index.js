@@ -323,7 +323,7 @@ exports.exportTranscript = functions.https.onRequest((request, response) => {
             var fileName = "transcripts/" + encounterId + ".txt";
             var transcriptText = "";
             transcript.forEach(element => transcriptText.concat(element.msg + "\n"));
-            const transcriptBuffer = new Buffer(transcriptText);
+            const transcriptBuffer = new Buffer.from(transcriptText);
             var file = bucket.file(fileName);
             file.save(transcriptBuffer, {
                 metadata: metadata
