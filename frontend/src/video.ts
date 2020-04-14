@@ -12,7 +12,7 @@ const servers = {
   ],
 };
 
-var msgSequenceNumber = 0;
+let msgSequenceNumber = 0;
 export async function startVideo(
   localVideo: HTMLVideoElement,
   remoteVideo: HTMLVideoElement,
@@ -37,43 +37,45 @@ export async function startVideo(
   });
 
   pc.createOffer()
-    .then(offer => pc.setLocalDescription(offer))
+    .then((offer) => pc.setLocalDescription(offer))
     .then(() =>
-      sendRemoteMessage(
-        yourId,
-        JSON.stringify({ sdp: pc.localDescription })
-      )
+      sendRemoteMessage(yourId, JSON.stringify({ sdp: pc.localDescription }))
     );
 
-  var interval = setInterval(readRemoteMessage, 500);
+  const interval = setInterval(readRemoteMessage, 500);
 
   async function sendRemoteMessage(senderId: number, data: string) {
     const sendMessage = firebase.functions().httpsCallable("sendMessage");
-    var msg = { 'id': senderId, 'seqNum': msgSequenceNumber++, 'encounterId': encounterId, 'data': data };
-    console.log("Sending: " + JSON.stringify(msg))
+    let msg = {
+      id: senderId,
+      seqNum: msgSequenceNumber++,
+      encounterId: encounterId,
+      data: data,
+    };
+    console.log("Sending: " + JSON.stringify(msg));
     const result = await sendMessage(msg);
     console.log(result.data.text);
   }
 
-  pc.onicecandidate = event =>
+  pc.onicecandidate = (event) =>
     event.candidate
       ? sendRemoteMessage(yourId, JSON.stringify({ ice: event.candidate }))
       : console.log("Sent All Ice");
-  pc.ontrack = event => {
+  pc.ontrack = (event) => {
     remoteVideo.srcObject = event.streams[0];
     console.log("ontrack");
-  }
+  };
   pc.onconnectionstatechange = function (event) {
     if (pc.connectionState === "connected") {
       clearInterval(interval);
     }
-  }
+  };
 
   let makingOffer = false;
   pc.onnegotiationneeded = async () => {
     try {
       makingOffer = true;
-      // @ts-ignore 
+      // @ts-ignore
       await pc.setLocalDescription();
       sendRemoteMessage(yourId, JSON.stringify({ sdp: pc.localDescription }));
     } catch (err) {
@@ -89,7 +91,10 @@ export async function startVideo(
   async function readRemoteMessage() {
     console.log("checking messages " + encounterId);
     const readMessage = firebase.functions().httpsCallable("readMessage");
-    const { data } = await readMessage({ 'id': yourId, 'encounterId': encounterId });
+    const { data } = await readMessage({
+      id: yourId,
+      encounterId: encounterId,
+    });
 
     console.log("Read Message: " + JSON.stringify(data));
     if (data == null) {
@@ -98,7 +103,6 @@ export async function startVideo(
     const msg = JSON.parse(data.data);
     const sender = data.id;
     if (sender !== yourId) {
-
       if (msg.ice !== undefined) {
         console.log("addIceCandidate");
         try {
@@ -109,7 +113,8 @@ export async function startVideo(
           }
         }
       } else if (msg.sdp) {
-        const offerCollision = (msg.sdp.type === "offer") &&
+        const offerCollision =
+          msg.sdp.type === "offer" &&
           (makingOffer || pc.signalingState !== "stable");
 
         ignoreOffer = !polite && offerCollision;
@@ -122,12 +127,15 @@ export async function startVideo(
             await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
-            sendRemoteMessage(yourId, JSON.stringify({ sdp: pc.localDescription }));
+            sendRemoteMessage(
+              yourId,
+              JSON.stringify({ sdp: pc.localDescription })
+            );
           } catch (e) {
             console.log("Current State: " + pc.signalingState);
             console.error(e);
           }
-       } else if (msg.sdp.type === "answer") {
+        } else if (msg.sdp.type === "answer") {
           console.log("sdp answer");
           pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
         }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import {
   createStyles,
@@ -10,8 +10,6 @@ import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
-import IconButton from "@material-ui/core/IconButton";
-import MenuIcon from "@material-ui/icons/Menu";
 import * as firebase from "firebase/app";
 import "firebase/auth";
 import { UserPage } from "./UserPage";
@@ -29,6 +27,20 @@ const styles = (theme: Theme) =>
     },
     title: {
       flexGrow: 1,
+      fontFmily: "Roboto",
+      fontStyle: "normal",
+      fontWeight: "bold",
+      fontSize: "18px",
+      letterSpacing: "0.03em",
+      fontVariant: "small-caps",
+    },
+    actionButton: {
+      backgroundColor: "#FCD446",
+    },
+    bottomBar: {
+      top: "auto",
+      bottom: 0,
+      height: "47px",
     },
   });
 
@@ -41,119 +53,96 @@ enum Page {
   WAITING_ROOM = 2,
   IN_ENCOUNTER = 3,
 }
-interface PatientAppState {
-  user: firebase.User | null;
-  encounterId: string | null;
-  page: Page;
-}
-class PatientAppImpl extends React.Component<PatientAppProps, PatientAppState> {
-  constructor(props: PatientAppProps) {
-    super(props);
-    this.state = { user: null, encounterId: null, page: Page.HOME };
-    this.startAppointment = this.startAppointment.bind(this);
-    this.enterEncounter = this.enterEncounter.bind(this);
-  }
+const PatientAppImpl: React.FC<PatientAppProps> = ({ classes }) => {
+  const [user, setUser] = useState<firebase.User | null>(null);
+  const [encounterId, setEncounterId] = useState<string | null>(null);
+  const [page, setPage] = useState(Page.HOME);
 
-  componentDidMount() {
+  useEffect(() => {
     (async () => {
       const result = await firebase.auth().getRedirectResult();
       if (result.user) {
         // User just signed in. Can get result.credential and result.credential.accessToken
         console.log("Case 1 result.user");
-        this.setState({ user: result.user });
+        setUser(result.user);
       } else if (firebase.auth().currentUser) {
         // User already signed in
         console.log("Case 2 result.user");
-        this.setState({ user: firebase.auth().currentUser });
+        setUser(firebase.auth().currentUser);
       } else {
-        this.setState({ user: null });
+        setUser(null);
       }
     })();
-  }
+  }, []);
 
-  toggleSignIn() {
-    if (!this.state.user) {
+  const toggleSignIn = () => {
+    if (!user) {
       console.log("sign in");
       const provider = new firebase.auth.GoogleAuthProvider();
       firebase.auth().signInWithRedirect(provider);
     } else {
       firebase.auth().signOut();
-      this.setState({ user: null });
+      setUser(null);
+    }
+  };
+  const startAppointment = (encounterId: string) => {
+    setEncounterId(encounterId);
+    setPage(Page.WAITING_ROOM);
+  };
+
+  const enterEncounter = () => {
+    setPage(Page.IN_ENCOUNTER);
+  };
+
+  let pageComponent = <WelcomePage></WelcomePage>;
+  if (user) {
+    if (page === Page.HOME) {
+      pageComponent = (
+        <PatientHomePage
+          onStartAppointment={startAppointment}
+          user={user}
+        ></PatientHomePage>
+      );
+    } else if (page === Page.WAITING_ROOM && encounterId) {
+      pageComponent = (
+        <PatientWaitingRoom
+          onEnterEncounter={enterEncounter}
+          user={user}
+          encounterId={encounterId}
+        ></PatientWaitingRoom>
+      );
+    } else if (encounterId) {
+      pageComponent = (
+        <UserPage user={user} encounterId={encounterId}></UserPage>
+      );
     }
   }
-
-  startAppointment(encounterId: string) {
-    this.setState((prevState) => ({
-      ...prevState,
-      encounterId: encounterId,
-      page: Page.WAITING_ROOM,
-    }));
-  }
-
-  enterEncounter() {
-    this.setState((prevState) => ({ ...prevState, page: Page.IN_ENCOUNTER }));
-  }
-
-  render() {
-    let page;
-    if (this.state.user) {
-      if (this.state.page === Page.HOME) {
-        page = (
-          <PatientHomePage
-            onStartAppointment={this.startAppointment}
-            user={this.state.user}
-          ></PatientHomePage>
-        );
-      } else if (
-        this.state.page === Page.WAITING_ROOM &&
-        this.state.encounterId
-      ) {
-        page = (
-          <PatientWaitingRoom
-            onEnterEncounter={this.enterEncounter}
-            user={this.state.user}
-            encounterId={this.state.encounterId}
-          ></PatientWaitingRoom>
-        );
-      } else if (this.state.encounterId) {
-        page = (
-          <UserPage
-            user={this.state.user}
-            encounterId={this.state.encounterId}
-          ></UserPage>
-        );
-      }
-    } else {
-      page = <WelcomePage></WelcomePage>;
-    }
-    return (
-      <div className={this.props.classes.root}>
-        <AppBar position="static">
-          <Toolbar>
-            <IconButton
-              edge="start"
-              className={this.props.classes.menuButton}
-              color="inherit"
-              aria-label="menu"
-            >
-              <MenuIcon />
-            </IconButton>
-            <Typography variant="h6" className={this.props.classes.title}>
-              Stealth Health - Patient App
-            </Typography>
-            <Button
-              color="inherit"
-              id="loginState"
-              onClick={() => this.toggleSignIn()}
-            >
-              {!this.state.user ? "Login" : "Logout"}
-            </Button>
-          </Toolbar>
-        </AppBar>
-        {page}
-      </div>
-    );
-  }
-}
+  return (
+    <div className={classes.root}>
+      <AppBar position="static">
+        <Toolbar>
+          <Typography variant="h6" className={classes.title}>
+            Stealth Health
+          </Typography>
+          <Button
+            variant="contained"
+            color="inherit"
+            id="loginState"
+            className={classes.actionButton}
+            onClick={() => toggleSignIn()}
+          >
+            {!user ? "Login" : "Logout"}
+          </Button>
+        </Toolbar>
+      </AppBar>
+      {pageComponent}
+      <AppBar
+        position="fixed"
+        color="primary"
+        className={classes.bottomBar}
+      ></AppBar>
+    </div>
+  );
+};
 
 export const PatientApp = withStyles(styles)(withRouter(PatientAppImpl));
