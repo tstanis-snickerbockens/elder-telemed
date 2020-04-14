@@ -215,7 +215,7 @@ exports.sendMessage = functions.https.onRequest((request, response) => {
             return;
         }
         if (!request.body.data.fromRole) {
-            response.status(400).send("Missing Fromi Role");
+            response.status(400).send("Missing From Role");
             return;
         }
         
