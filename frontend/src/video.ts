@@ -45,11 +45,9 @@ export async function startVideo(
     pc.addTrack(track, mediaStream);
   });
 
-  pc.createOffer()
-    .then((offer) => pc.setLocalDescription(offer))
-    .then(() =>
-      sendRemoteMessage(yourId, JSON.stringify({ sdp: pc.localDescription }))
-    );
+  let makingOffer = false;
+  let ignoreOffer = false;
+
 
   const interval = setInterval(readRemoteMessage, 500);
 
@@ -66,11 +64,9 @@ export async function startVideo(
     console.log(result.data.text);
   }
 
-  pc.onicecandidate = (event) =>
-    event.candidate
-      ? sendRemoteMessage(yourId, JSON.stringify({ ice: event.candidate }))
-      : console.log("Sent All Ice");
-  pc.ontrack = (event) => {
+  pc.onicecandidate = ({candidate}) =>
+      sendRemoteMessage(yourId, JSON.stringify({ ice: candidate }));
+  pc.ontrack = event => {
     remoteVideo.srcObject = event.streams[0];
     console.log("ontrack");
   };
@@ -78,14 +74,17 @@ export async function startVideo(
     if (pc.connectionState === "connected") {
       clearInterval(interval);
     }
-  };
-
-  let makingOffer = false;
+  }
+  pc.oniceconnectionstatechange = (event) => onIceStateChange(pc, event);
+  pc.onsignalingstatechange = (event) => onSignalStateChange(pc, event);
+  
   pc.onnegotiationneeded = async () => {
     try {
       makingOffer = true;
-      // @ts-ignore
-      await pc.setLocalDescription();
+      const offer = await pc.createOffer();
+      if (pc.signalingState != "stable") return;
+      await pc.setLocalDescription(offer);
+      console.log("onnegotiationneeded Finished setLocalDescription, sending...")
       sendRemoteMessage(yourId, JSON.stringify({ sdp: pc.localDescription }));
     } catch (err) {
       console.log(err);
@@ -94,8 +93,7 @@ export async function startVideo(
       makingOffer = false;
     }
   };
-
-  let ignoreOffer = false;
+  readRemoteMessage();
 
   async function readRemoteMessage() {
     console.log("checking messages " + encounterId);
@@ -112,7 +110,7 @@ export async function startVideo(
     const msg = JSON.parse(data.data);
     const sender = data.id;
     if (sender !== yourId) {
-      if (msg.ice !== undefined) {
+      if (msg.ice) {
         console.log("addIceCandidate");
         try {
           pc.addIceCandidate(new RTCIceCandidate(msg.ice));
@@ -122,33 +120,52 @@ export async function startVideo(
           }
         }
       } else if (msg.sdp) {
-        const offerCollision =
-          msg.sdp.type === "offer" &&
+        console.log("Recv SDP: " + msg.sdp.type);
+        const offerCollision = (msg.sdp.type === "offer") &&
           (makingOffer || pc.signalingState !== "stable");
 
+        console.log("Signaling State: " + pc.signalingState);
+        console.log("Offer Collision: " + offerCollision);
+        console.log("Making Offer: " + makingOffer);
         ignoreOffer = !polite && offerCollision;
+        console.log("Ignore Offer: " + ignoreOffer);
         if (ignoreOffer) {
           return;
         }
-        if (msg.sdp.type === "offer") {
-          console.log("sdp offer");
-          try {
-            await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+        
+        try {
+          await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+        } catch (e) {
+          console.log(e);
+          return;
+        }
+        if (msg.sdp.type === "offer") { 
+          try {  
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
-            sendRemoteMessage(
-              yourId,
-              JSON.stringify({ sdp: pc.localDescription })
-            );
+            console.log("after offer, Finished setLocalDescription, sending...")
+            sendRemoteMessage(yourId, JSON.stringify({ sdp: pc.localDescription }));
           } catch (e) {
             console.log("Current State: " + pc.signalingState);
             console.error(e);
           }
-        } else if (msg.sdp.type === "answer") {
-          console.log("sdp answer");
-          pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
         }
       }
     }
+    readRemoteMessage(); 
+  }
+}
+
+function onIceStateChange(pc: RTCPeerConnection, event: Event): any {
+  if (pc) {
+    console.log(`ICE state: ${pc.iceConnectionState}`);
+    console.log('ICE state change event: ', event);
+  }
+}
+
+function onSignalStateChange(pc: RTCPeerConnection, event: Event): any {
+  if (pc) {
+    console.log(`Signal state: ${pc.signalingState}`);
+    console.log('Signal state change event: ', event);
   }
 }
