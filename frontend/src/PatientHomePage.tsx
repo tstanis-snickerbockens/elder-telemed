@@ -49,7 +49,6 @@ class PatientHomePageImpl extends React.Component<PatientHomePageProps, PatientH
             .then(response => {
                 console.log("Encounters: " + JSON.stringify(response.data));
                 if (response.data && response.data.length > 0) {
-                    // TODO -- what is my role?
                     let advocate = response.data[0].encounter.advocate;
                     console.log("Advocate: " + advocate);
                     let role = this.props.user.email === advocate ? Role.ADVOCATE : Role.PATIENT;
