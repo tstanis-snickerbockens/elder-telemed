@@ -328,9 +328,12 @@ exports.exportTranscript = functions.https.onRequest((request, response) => {
             file.save(transcriptBuffer, {
                 metadata: metadata
             }, function(err) {
-                console.log(err, err.stack);
-            }, function() {
-                console.log("Uploaded transcript file: " + fileName);
+                if(!err) {
+                    console.log("Uploaded transcript file: " + fileName);
+                }
+                else {
+                    console.log(err, err.stack);
+                }    
             });
         } catch(e) {
             console.log(e);
