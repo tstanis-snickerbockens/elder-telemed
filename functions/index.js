@@ -173,7 +173,7 @@ exports.createPatient = functions.https.onRequest((request, response) => {
 // curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/listPatients -d '{"data": {"userId": "tstanis"}}'
 exports.listPatients = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
-        var userId = request.body.data.userId;
+        let userId = request.body.data.userId;
         let encountersRef = db.collection('patients');
         let allPatients = encountersRef.get()
             .then(patients => {
@@ -196,18 +196,22 @@ const msgdb = admin.database();
 exports.sendMessage = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         console.log("Saving: " + JSON.stringify(request.body.data, null, 2));
-        var requesterId = request.body.data.id;
-        var encounterId = request.body.data.encounterId;
-        var sequenceNumber = request.body.data.seqNum;
-        var ref = msgdb.ref("messages/" + encounterId);
+        let requesterId = request.body.data.id;
+        let encounterId = request.body.data.encounterId;
+
+        // TODO(tstanis): Authenticate that the user and authorize them to connect with their role
+        let role = request.body.data.role;
+
+        let sequenceNumber = request.body.data.seqNum;
+        let ref = msgdb.ref("messages/" + encounterId);
         ref.transaction(function (current_value) {
             console.log("Current Value: " + JSON.stringify(current_value, null, 2))
             if (current_value == null) {
                 current_value = {'queue': []}
             }
             console.log("Write to " + requesterId);
-            var inserted = false;
-            for (var i = 0 ; i < current_value.queue.length; ++i) {
+            let inserted = false;
+            for (let i = 0 ; i < current_value.queue.length; ++i) {
                 if (current_value.queue[i].id == requesterId && 
                     current_value.queue[i].seqNum > sequenceNumber) {
                     current_value.queue.splice(i, 0, request.body.data)

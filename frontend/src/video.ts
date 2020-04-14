@@ -12,10 +12,19 @@ const servers = {
   ],
 };
 
+enum Role {
+  PATIENT = "PATIENT",
+  ADVOCATE = "ADVOCATE",
+  CLINICIAN = "CLINICIAN"
+};
+
 let msgSequenceNumber = 0;
 export async function startVideo(
   localVideo: HTMLVideoElement,
-  remoteVideo: HTMLVideoElement,
+  remoteVideo1: HTMLVideoElement,
+  remoteVideo1Role: Role,
+  remoteVideo2: HTMLVideoElement,
+  remoteVideo2Role: Role,
   encounterId: string | undefined,
   polite: boolean
 ) {
