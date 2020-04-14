@@ -1,5 +1,6 @@
 /* eslint-disable no-unreachable */
 import * as firebase from "firebase/app";
+import { Role } from "./Role";
 
 const servers = {
   iceServers: [
@@ -12,23 +13,17 @@ const servers = {
   ],
 };
 
-enum Role {
-  PATIENT = "PATIENT",
-  ADVOCATE = "ADVOCATE",
-  CLINICIAN = "CLINICIAN"
-};
-
 let msgSequenceNumber = 0;
 export async function startVideo(
   localVideo: HTMLVideoElement,
-  remoteVideo1: HTMLVideoElement,
-  remoteVideo1Role: Role,
-  remoteVideo2: HTMLVideoElement,
-  remoteVideo2Role: Role,
+  remoteVideo: HTMLVideoElement,
+  localRole: Role,
+  remoteRole: Role,
   encounterId: string | undefined,
   polite: boolean
 ) {
   console.log("Encounter: " + encounterId);
+  console.log("Role: " + localRole + " -> " + remoteRole);
   const mediaStream = await navigator.mediaDevices.getUserMedia({
     audio: false,
     video: true,
@@ -48,7 +43,6 @@ export async function startVideo(
   let makingOffer = false;
   let ignoreOffer = false;
 
-
   const interval = setInterval(readRemoteMessage, 500);
 
   async function sendRemoteMessage(senderId: number, data: string) {
@@ -57,6 +51,8 @@ export async function startVideo(
       id: senderId,
       seqNum: msgSequenceNumber++,
       encounterId: encounterId,
+      toRole: remoteRole,
+      fromRole: localRole,
       data: data,
     };
     console.log("Sending: " + JSON.stringify(msg));
@@ -82,7 +78,7 @@ export async function startVideo(
     try {
       makingOffer = true;
       const offer = await pc.createOffer();
-      if (pc.signalingState != "stable") return;
+      if (pc.signalingState !== "stable") return;
       await pc.setLocalDescription(offer);
       console.log("onnegotiationneeded Finished setLocalDescription, sending...")
       sendRemoteMessage(yourId, JSON.stringify({ sdp: pc.localDescription }));
@@ -101,6 +97,8 @@ export async function startVideo(
     const { data } = await readMessage({
       id: yourId,
       encounterId: encounterId,
+      toRole: localRole,
+      fromRole: remoteRole
     });
 
     console.log("Read Message: " + JSON.stringify(data));

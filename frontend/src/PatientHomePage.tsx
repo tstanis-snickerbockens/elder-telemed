@@ -10,6 +10,7 @@ import CardContent from '@material-ui/core/CardContent';
 import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
 import Grid from '@material-ui/core/Grid';
+import { Role } from './Role';
 
 const styles = (theme: Theme) => createStyles({
     root: {
@@ -27,34 +28,40 @@ const styles = (theme: Theme) => createStyles({
 
 interface PatientHomePageProps extends RouteComponentProps<{}>, WithStyles<typeof styles> {
   user: firebase.User;
-  onStartAppointment: (encounterId: string) => void;
+  onStartAppointment: (encounterId: string, role: Role) => void;
 };
 
 interface PatientHomePageState {
     encounterId: string | null;
+    role: Role;
 }
 
 class PatientHomePageImpl extends React.Component<PatientHomePageProps, PatientHomePageState> {
     constructor(props: PatientHomePageProps) {
         super(props);
-        this.state = {encounterId: null}
+        this.state = {encounterId: null, role: Role.PATIENT}
         this.startAppointment = this.startAppointment.bind(this);
     }
     componentDidMount() {
-        console.log("Patient: " + this.props.user.email);
+        console.log("User: " + this.props.user.email);
         let queryEncounters = firebase.functions().httpsCallable('queryEncounters');
-        queryEncounters({'patientId': this.props.user.email})
+        queryEncounters({'patientId': this.props.user.email, advocate: this.props.user.email})
             .then(response => {
-                console.log("Patient's Encounters: " + JSON.stringify(response.data));
+                console.log("Encounters: " + JSON.stringify(response.data));
                 if (response.data && response.data.length > 0) {
-                    this.setState({encounterId: response.data[0].encounterId});
+                    // TODO -- what is my role?
+                    let advocate = response.data[0].encounter.advocate;
+                    console.log("Advocate: " + advocate);
+                    let role = this.props.user.email === advocate ? Role.ADVOCATE : Role.PATIENT;
+                    console.log("Our role:" + role);
+                    this.setState({encounterId: response.data[0].encounterId, role: role});
                 }
             });
     }
     
     startAppointment() {
         if (this.state.encounterId) {
-            this.props.onStartAppointment(this.state.encounterId);
+            this.props.onStartAppointment(this.state.encounterId, this.state.role);
         }
     }
 

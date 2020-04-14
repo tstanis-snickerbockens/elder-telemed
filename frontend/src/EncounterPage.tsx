@@ -43,6 +43,7 @@ interface EncounterPageState {
   anchorEl: HTMLElement | null;
   open: boolean;
   new_encounter_patient: string;
+  new_encounter_advocate: string;
   new_encounter_date: string;
   refresh_encounter_list: boolean;
 }
@@ -57,6 +58,7 @@ class EncounterPageImpl extends React.Component<
       anchorEl: null,
       open: false,
       new_encounter_patient: "",
+      new_encounter_advocate: "",
       new_encounter_date: "",
       refresh_encounter_list: false,
     };
@@ -76,6 +78,7 @@ class EncounterPageImpl extends React.Component<
       encounterId: encounterId,
       encounter: {
         patient: this.state.new_encounter_patient,
+        advocate: this.state.new_encounter_advocate,
         when: this.state.new_encounter_date,
       },
     })
@@ -140,6 +143,12 @@ class EncounterPageImpl extends React.Component<
                   onChange={this.handleInputChange}
                   id="patient-name"
                   label="Patient"
+                />
+                <TextField
+                  name="new_encounter_advocate"
+                  onChange={this.handleInputChange}
+                  id="advocate-name"
+                  label="Advocate"
                 />
               </div>
               <div>

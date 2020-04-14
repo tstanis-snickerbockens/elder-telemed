@@ -12,6 +12,7 @@ app.use(cors);
 let db = admin.firestore();
 
 var AWS = require("aws-sdk");
+var Promise = require('promise');
 
 // curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/createEncounter -d '{"data": {"encounterId": "myencounter4", "encounter": {"patient":"mypatient"}}}'
 exports.createEncounter = functions.https.onRequest((request, response) => {
@@ -24,6 +25,7 @@ exports.createEncounter = functions.https.onRequest((request, response) => {
             response.status(400).send("No patient specified.");
             return;
         }
+
         // Check patient exists and rewrite it as a firebase reference
         db.collection('patients').doc(encounter.patient).get()
         .then(doc => {
@@ -118,17 +120,25 @@ exports.listEncounters = functions.https.onRequest((request, response) => {
 // curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/queryEncounters -d '{"data": {"patientId": "mypatient"}}'
 exports.queryEncounters = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
-        var patientId = request.body.data.patientId;
-        console.log("Query(patiendId=" + patientId + ")")
+        let patientId = request.body.data.patientId;
+        let advocate = request.body.data.advocate;
+        console.log("Query(patiendId=" + patientId + ", advocate=" + advocate + ")")
         let encountersRef = db.collection('encounters');
         let patientRef = db.collection('patients').doc(patientId);
-        let query = encountersRef.where('patient', '==', patientRef).get()
-            .then(encounters => {
-                var returnEncounters = []
-                encounters.forEach(doc => {
-                    console.log(doc.id, '=>', doc.data());
-                    returnEncounters.push({'encounterId' : doc.id, 'encounter': rewriteEncounterReferences(doc.data())});
-                });
+        let patientQueryPromise = encountersRef.where('patient', '==', patientRef).get();
+        let advocateQueryPromise = encountersRef.where('advocate', '==', advocate).get();
+        Promise.all([patientQueryPromise, advocateQueryPromise])
+            .then(([patientEncounters, advocateEncounters]) => {
+                let returnEncounters = [];
+                prepareEncounters(patientEncounters);
+                prepareEncounters(advocateEncounters);
+                function prepareEncounters(encounters) {
+                    encounters.forEach(doc => {
+                        console.log(doc.id, '=>', doc.data());
+                        returnEncounters.push({'encounterId' : doc.id, 'encounter': rewriteEncounterReferences(doc.data())});
+                    });
+                }
+                
                 response.status(200).send({'data':returnEncounters});
             })
             .catch(err => {
@@ -200,8 +210,15 @@ exports.sendMessage = functions.https.onRequest((request, response) => {
         let encounterId = request.body.data.encounterId;
 
         // TODO(tstanis): Authenticate that the user and authorize them to connect with their role
-        let role = request.body.data.role;
-
+        if (!request.body.data.toRole) {
+            response.status(400).send("Missing To Role");
+            return;
+        }
+        if (!request.body.data.fromRole) {
+            response.status(400).send("Missing To Role");
+            return;
+        }
+        
         let sequenceNumber = request.body.data.seqNum;
         let ref = msgdb.ref("messages/" + encounterId);
         ref.transaction(function (current_value) {
@@ -231,11 +248,13 @@ exports.sendMessage = functions.https.onRequest((request, response) => {
 exports.readMessage = functions.https.onRequest((request, response) => {
     
     return cors(request, response, () => {
-        var requesterId = request.body.data.id;
-        var encounterId = request.body.data.encounterId;
+        let requesterId = request.body.data.id;
+        let encounterId = request.body.data.encounterId;
+        let toRole = request.body.data.toRole;
+        let fromRole = request.body.data.fromRole;
         console.log("Read from " + requesterId + " of " + encounterId);
-        var ref = msgdb.ref("messages/" + encounterId);
-        var returnVal = null;
+        let ref = msgdb.ref("messages/" + encounterId);
+        let returnVal = null;
         ref.transaction(function(data) {
             console.log("Loaded: " + JSON.stringify(data, null, 2));
             if (data == null || !data.queue || data.queue.length == 0) {
@@ -246,6 +265,10 @@ exports.readMessage = functions.https.onRequest((request, response) => {
             for(var i = 0; i < data.queue.length; ++i) {
                 if (data.queue[i].id == requesterId) {
                     console.log("Skipping my own ID " + requesterId );
+                    continue;
+                } else if (data.queue[i].toRole != toRole ||
+                    data.queue[i].fromRole != fromRole) {
+                    console.log("Skipping non-matching role");
                     continue;
                 } else {
                     console.log("Removing " + JSON.stringify(data.queue[i], null, 2));
