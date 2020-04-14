@@ -152,6 +152,7 @@ class ClinicianVideoImpl extends React.Component<
       );
       this.speech.start();
     }
+<<<<<<< HEAD
     if (this.localVideoRef.current && this.advocateVideoRef.current) {
       startVideo(
         this.localVideoRef.current,
@@ -162,6 +163,33 @@ class ClinicianVideoImpl extends React.Component<
         true,
         this.onAdvocateConnect
       );
+=======
+    
+    async componentWillUnmount() {
+        const exportTranscript =  firebase.functions().httpsCallable('exportTranscript');
+        await exportTranscript({transcript: this.state.transcription, uid: this.props.user.uid, encounterId: this.props.encounterId});
+    }
+
+    render() {
+        return (
+          <>
+              <div className={this.props.classes.videoContainer}>
+                <video className={this.props.classes.localVideo} ref={this.localVideoRef} playsInline autoPlay></video>
+                <video className={this.props.classes.remoteVideo} ref={this.remoteVideoRef} playsInline autoPlay></video>
+                <div ref={this.transcriptRef} className={this.props.classes.transcription}>
+                    {this.state.transcription.map((line:LineState) => 
+                        <div key={line.id}>
+                        {line.final
+                            ? <AnnotatedText message={line.msg}></AnnotatedText> 
+                            : line.msg}
+                        </div>
+                    )}
+                </div>
+                <Button className={this.props.classes.closeButton} variant="contained" onClick={this.props.onClose}>End Visit</Button>
+              </div>
+          </>
+        );
+>>>>>>> f94f5d8... Add uid param to exportTranscript call and hook up transcript export in ClinicianVideo
     }
   }
 

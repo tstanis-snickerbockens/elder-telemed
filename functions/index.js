@@ -312,7 +312,7 @@ exports.annotateTranscription = functions.https.onRequest((request, response) =>
     });
 });
 
-// curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/exportTranscript -d '{"data": {"encounterId": "testVisit", "transcript": [{"msg":"Test foo bar"},{"msg":""}]}}'
+// curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/exportTranscript -d '{"data": {"encounterId": "testVisit", "uid": "testUID", "transcript": [{"msg":"Test foo bar"},{"msg":""}]}}'
 exports.exportTranscript = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         try {
@@ -320,7 +320,9 @@ exports.exportTranscript = functions.https.onRequest((request, response) => {
             const bucket = storage.bucket();
             var transcript = request.body.data.transcript;
             var encounterId = request.body.data.encounterId;
-            var fileName = "transcripts/" + encounterId + ".txt";
+            var uid = request.body.data.uid;
+            /* Use uid so that we can quickly list all files for a user later */
+            var fileName = "transcripts/" + uid + "_" + encounterId + ".txt";
             var transcriptText = "";
             transcript.forEach(element => transcriptText.concat(element.msg + "\n"));
             const transcriptBuffer = new Buffer.from(transcriptText);
