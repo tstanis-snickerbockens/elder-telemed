@@ -41,8 +41,8 @@ const styles = (theme: Theme) => createStyles({
     },
     advocateVideo: {
         position: 'absolute',
-        bottom: '20px',
-        left: '20px',
+        bottom: '150px',
+        right: '20px',
         width: 'calc(100% / 4)',
         height: 'calc(100% / 5)',
         zIndex: 1 
