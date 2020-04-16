@@ -27,7 +27,7 @@ const styles = (theme: Theme) =>
     },
     actionButton: {
       marginLeft: 'auto',
-      backgroundColor: "#FCD446",
+      backgroundColor: "#2b5482",
     },
     logo: {
       height: '47px',
