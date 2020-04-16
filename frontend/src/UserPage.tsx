@@ -72,7 +72,7 @@ class UserPageImpl extends React.Component<MyProps> {
             
             let other = this.props.role === Role.PATIENT ? Role.ADVOCATE : Role.PATIENT;
             startVideo(this.localVideoRef.current, this.otherPartyVideoRef.current, 
-                this.props.role, other, this.props.encounterId, this.props.role == Role.ADVOCATE ? true : false);
+                this.props.role, other, this.props.encounterId, this.props.role === Role.ADVOCATE ? true : false);
         }
     }
     

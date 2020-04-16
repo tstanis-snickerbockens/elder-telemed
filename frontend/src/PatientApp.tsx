@@ -8,7 +8,6 @@ import {
 } from "@material-ui/core/styles";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
-import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import * as firebase from "firebase/app";
 import "firebase/auth";
@@ -27,7 +26,11 @@ const styles = (theme: Theme) =>
       marginRight: theme.spacing(2),
     },
     actionButton: {
+      marginLeft: 'auto',
       backgroundColor: "#FCD446",
+    },
+    logo: {
+      height: '47px',
     },
     topBar: {
       backgroundColor: "#2b5482"
@@ -119,7 +122,7 @@ const PatientAppImpl: React.FC<PatientAppProps> = ({ classes }) => {
     <div className={classes.root}>
       <AppBar className={classes.topBar} position="static">
         <Toolbar>
-          <img src='story_health.png'/>
+          <img alt='Story Health' className={classes.logo} src='story_health.png'/>
           <Button
             variant="contained"
             color="inherit"
