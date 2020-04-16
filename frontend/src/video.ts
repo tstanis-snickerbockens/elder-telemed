@@ -13,6 +13,15 @@ const servers = {
   ],
 };
 
+const globalMediaStream = navigator.mediaDevices.getUserMedia({
+  audio: false,
+  video: true,
+});
+
+async function getMediaStream(): Promise<MediaStream> {
+  return await globalMediaStream;
+}
+
 let msgSequenceNumber = 0;
 export async function startVideo(
   localVideo: HTMLVideoElement,
@@ -24,11 +33,10 @@ export async function startVideo(
 ) {
   console.log("Encounter: " + encounterId);
   console.log("Role: " + localRole + " -> " + remoteRole);
-  const mediaStream = await navigator.mediaDevices.getUserMedia({
-    audio: false,
-    video: true,
-  });
+  
   console.log("localVideo", localVideo);
+
+  const mediaStream = await getMediaStream();
   console.log("mediaStream", mediaStream);
 
   localVideo.srcObject = mediaStream;
