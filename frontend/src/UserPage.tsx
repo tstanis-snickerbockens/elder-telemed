@@ -53,6 +53,11 @@ const styles = (theme: Theme) => createStyles({
     }
 });
 
+enum Mode {
+    WAITING_ROOM,
+    CLINICIAN_VISIT
+};
+
 interface MyProps extends RouteComponentProps<{}>, WithStyles<typeof styles> {
   user: firebase.User;
   encounterId: string;

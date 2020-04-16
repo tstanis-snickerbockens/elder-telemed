@@ -11,19 +11,52 @@ import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
 import Grid from '@material-ui/core/Grid';
 import { Role } from './Role';
+import { green } from '@material-ui/core/colors';
 
 const styles = (theme: Theme) => createStyles({
     root: {
         inWidth: 275,
         padding: 25,
         height: '100%',
+        width: '100%',
     },
     title: {
-        fontSize: 14,
+        paddingTop: '16px',
+        paddingLeft: '13px',
+        paddingBottom: '14px',
+        fontSize: '24px',
+        fontWeight: 'bold',
+        color: 'black',
+        backgroundColor: '#D3DCE9',
     },
     pos: {
         marginBottom: 12,
     },
+    pictures: {
+        marginLeft: 'auto',
+        width: 'max-content'
+    },
+    card: {
+        width: '70vw',
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)'
+    },
+    description: {
+        float: 'left',
+        width: 'max-content'
+    },
+    button: {
+        width: 'max-content',
+        margin: '0 auto',
+        display: 'block',
+        color: theme.palette.getContrastText(green[700]),
+        backgroundColor: green[700],
+        '&:hover': {
+          backgroundColor: green[900],
+        },
+      },
 });
 
 interface PatientHomePageProps extends RouteComponentProps<{}>, WithStyles<typeof styles> {
@@ -68,22 +101,25 @@ class PatientHomePageImpl extends React.Component<PatientHomePageProps, PatientH
         return (
           <>  
             <Grid container justify="center" alignItems="center" className={this.props.classes.root} spacing={2}>
-                <Card>
+                <Card className={this.props.classes.card}>
+                    <Typography className={this.props.classes.title} color="textSecondary" gutterBottom>
+                    <img src='alarm_clock.png'/>
+                    It's time to start your doctor's visit.
+                    </Typography>
                     <CardContent>
-                        <Typography className={this.props.classes.title} color="textSecondary" gutterBottom>
-                        Time to Check In!
-                        </Typography>
-                        <Typography variant="h5" component="h2">
-                        Followup with Dr. Foo
-                        </Typography>
-                        <Typography className={this.props.classes.pos} color="textSecondary">
-                        Tuesday March 20, 10:20am
-                        </Typography>
-                        <Typography variant="body2" component="p">
-                        Your doctor’s office and health partner will be able to see and hear you.
-                        </Typography>
-                        <Button variant="contained" onClick={this.startAppointment} color="primary">
-                            Start Appointment
+                        <div className={this.props.classes.description}>
+                            <Typography variant="h5" component="h2">
+                            <b>Dr. Terry Hahn</b><br/>
+                            Cardiology Follow-up<br/>
+                            Today at 8:30am<br/>
+                            </Typography>
+                        </div>
+                        <div className={this.props.classes.pictures}>
+                            <img src="doctor_circle.png"/>
+                            <img src="advocate_circle.png"/>
+                        </div>
+                        <Button size='large' variant="contained" onClick={this.startAppointment} color="primary" className={this.props.classes.button}>
+                            Begin Video Visit
                         </Button>
                     </CardContent>
                 </Card>
