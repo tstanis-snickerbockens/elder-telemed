@@ -203,6 +203,10 @@ exports.listPatients = functions.https.onRequest((request, response) => {
 
 const msgdb = admin.database();
 
+function getref(msgdb, encounterId, toRole, fromRole) {
+    return msgdb.ref("messages/" + encounterId + "-" + toRole + "-" + fromRole);
+}
+
 exports.sendMessage = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         console.log("Saving: " + JSON.stringify(request.body.data, null, 2));
@@ -220,7 +224,7 @@ exports.sendMessage = functions.https.onRequest((request, response) => {
         }
         
         let sequenceNumber = request.body.data.seqNum;
-        let ref = msgdb.ref("messages/" + encounterId);
+        let ref = getref(msgdb, encounterId, request.body.data.toRole, request.body.data.fromRole);
         ref.transaction(function (current_value) {
             console.log("Current Value: " + JSON.stringify(current_value, null, 2))
             if (current_value == null) {
@@ -253,7 +257,7 @@ exports.readMessage = functions.https.onRequest((request, response) => {
         let toRole = request.body.data.toRole;
         let fromRole = request.body.data.fromRole;
         console.log("Read from " + requesterId + " of " + encounterId);
-        let ref = msgdb.ref("messages/" + encounterId);
+        let ref = getref(msgdb, encounterId, toRole, fromRole);
         let returnVal = null;
         ref.transaction(function(data) {
             console.log("Loaded: " + JSON.stringify(data, null, 2));
@@ -265,10 +269,6 @@ exports.readMessage = functions.https.onRequest((request, response) => {
             for(var i = 0; i < data.queue.length; ++i) {
                 if (data.queue[i].id == requesterId) {
                     console.log("Skipping my own ID " + requesterId );
-                    continue;
-                } else if (data.queue[i].toRole != toRole ||
-                    data.queue[i].fromRole != fromRole) {
-                    console.log("Skipping non-matching role");
                     continue;
                 } else {
                     console.log("Removing " + JSON.stringify(data.queue[i], null, 2));
