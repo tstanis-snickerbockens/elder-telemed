@@ -25,7 +25,6 @@ const styles = (theme: Theme) => createStyles({
         paddingLeft: '13px',
         paddingBottom: '14px',
         fontSize: '24px',
-        fontFamily: 'Roboto',
         fontWeight: 'bold',
         color: 'black',
         backgroundColor: '#D3DCE9',
