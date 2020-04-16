@@ -13,13 +13,16 @@ const servers = {
   ],
 };
 
-const globalMediaStream = navigator.mediaDevices.getUserMedia({
-  audio: false,
-  video: true,
-});
+let globalMediaStream: Promise<MediaStream> | null = null;
 
-async function getMediaStream(): Promise<MediaStream> {
-  return await globalMediaStream;
+function getMediaStream(): Promise<MediaStream> {
+  if (!globalMediaStream) {
+    globalMediaStream = navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: true,
+    });
+  }
+  return globalMediaStream;
 }
 
 let msgSequenceNumber = 0;
