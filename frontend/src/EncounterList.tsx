@@ -68,6 +68,7 @@ interface ListEncounterEntry {
   encounterId: string;
   encounter: {
     patient: string;
+    advocate: string;
     when: number;
   };
 }
@@ -137,7 +138,7 @@ class EncounterListImpl extends React.Component<
           return {
             encounterId: entry.encounterId,
             patient: entry.encounter.patient,
-            advocate: "",
+            advocate: entry.encounter.advocate,
             time: entry.encounter.when,
             encounter_state: "",
             patient_connected: false,

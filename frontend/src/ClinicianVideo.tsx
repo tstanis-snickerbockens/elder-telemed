@@ -1,4 +1,4 @@
-import React, { } from "react";
+ import React, { } from "react";
 import {
     RouteComponentProps,
     withRouter
@@ -9,6 +9,7 @@ import Speech from "./speech";
 import Button from '@material-ui/core/Button'
 import { createStyles, Theme, WithStyles, withStyles } from "@material-ui/core/styles";
 import AnnotatedText from "./AnnotatedText"
+import { Role } from "./Role"
 
 const styles = (theme: Theme) => createStyles({
     typography: {
@@ -31,12 +32,20 @@ const styles = (theme: Theme) => createStyles({
         height: 'calc(100% / 5)',
         zIndex: 1 
     },
-    remoteVideo: {
+    patientVideo: {
         position: 'absolute',
         top: 0,
         right: 0,
         height: '100%',
         width: '100%'
+    },
+    advocateVideo: {
+        position: 'absolute',
+        bottom: '150px',
+        right: '20px',
+        width: 'calc(100% / 4)',
+        height: 'calc(100% / 5)',
+        zIndex: 1 
     },
     videoContainer: {
         position: 'relative',
@@ -84,7 +93,8 @@ let next_id = 0;
 
 class ClinicianVideoImpl extends React.Component<ClinicialVideoProps, ClinicalVideoState> {
     private localVideoRef = React.createRef<HTMLVideoElement>();
-    private remoteVideoRef = React.createRef<HTMLVideoElement>();
+    private patientVideoRef = React.createRef<HTMLVideoElement>();
+    private advocateVideoRef = React.createRef<HTMLVideoElement>();
     private transcriptRef = React.createRef<HTMLDivElement>();
     private speech: Speech;
 
@@ -113,9 +123,14 @@ class ClinicianVideoImpl extends React.Component<ClinicialVideoProps, ClinicalVi
     }
 
     componentDidMount() {
-        if (this.localVideoRef.current && this.remoteVideoRef.current) {
-            startVideo(this.localVideoRef.current, this.remoteVideoRef.current, this.props.encounterId, true);
+        if (this.localVideoRef.current && this.patientVideoRef.current) {
+            startVideo(this.localVideoRef.current, this.patientVideoRef.current, 
+                Role.CLINICIAN, Role.PATIENT, this.props.encounterId, true);
             this.speech.start();
+        }
+        if (this.localVideoRef.current && this.advocateVideoRef.current) {
+            startVideo(this.localVideoRef.current, this.advocateVideoRef.current, 
+                Role.CLINICIAN, Role.ADVOCATE, this.props.encounterId, true);
         }
     }
     
@@ -124,7 +139,8 @@ class ClinicianVideoImpl extends React.Component<ClinicialVideoProps, ClinicalVi
           <>
               <div className={this.props.classes.videoContainer}>
                 <video className={this.props.classes.localVideo} ref={this.localVideoRef} playsInline autoPlay></video>
-                <video className={this.props.classes.remoteVideo} ref={this.remoteVideoRef} playsInline autoPlay></video>
+                <video className={this.props.classes.patientVideo} ref={this.patientVideoRef} playsInline autoPlay></video>
+                <video className={this.props.classes.advocateVideo} ref={this.advocateVideoRef} playsInline autoPlay></video>
                 <div ref={this.transcriptRef} className={this.props.classes.transcription}>
                     {this.state.transcription.map((line:LineState) => 
                         <div key={line.id}>

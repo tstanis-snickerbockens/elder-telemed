@@ -12,6 +12,7 @@ app.use(cors);
 let db = admin.firestore();
 
 var AWS = require("aws-sdk");
+var Promise = require('promise');
 
 // curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/createEncounter -d '{"data": {"encounterId": "myencounter4", "encounter": {"patient":"mypatient"}}}'
 exports.createEncounter = functions.https.onRequest((request, response) => {
@@ -24,6 +25,7 @@ exports.createEncounter = functions.https.onRequest((request, response) => {
             response.status(400).send("No patient specified.");
             return;
         }
+
         // Check patient exists and rewrite it as a firebase reference
         db.collection('patients').doc(encounter.patient).get()
         .then(doc => {
@@ -118,17 +120,25 @@ exports.listEncounters = functions.https.onRequest((request, response) => {
 // curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/queryEncounters -d '{"data": {"patientId": "mypatient"}}'
 exports.queryEncounters = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
-        var patientId = request.body.data.patientId;
-        console.log("Query(patiendId=" + patientId + ")")
+        let patientId = request.body.data.patientId;
+        let advocate = request.body.data.advocate;
+        console.log("Query(patiendId=" + patientId + ", advocate=" + advocate + ")")
         let encountersRef = db.collection('encounters');
         let patientRef = db.collection('patients').doc(patientId);
-        let query = encountersRef.where('patient', '==', patientRef).get()
-            .then(encounters => {
-                var returnEncounters = []
-                encounters.forEach(doc => {
-                    console.log(doc.id, '=>', doc.data());
-                    returnEncounters.push({'encounterId' : doc.id, 'encounter': rewriteEncounterReferences(doc.data())});
-                });
+        let patientQueryPromise = encountersRef.where('patient', '==', patientRef).get();
+        let advocateQueryPromise = encountersRef.where('advocate', '==', advocate).get();
+        Promise.all([patientQueryPromise, advocateQueryPromise])
+            .then(([patientEncounters, advocateEncounters]) => {
+                let returnEncounters = [];
+                prepareEncounters(patientEncounters);
+                prepareEncounters(advocateEncounters);
+                function prepareEncounters(encounters) {
+                    encounters.forEach(doc => {
+                        console.log(doc.id, '=>', doc.data());
+                        returnEncounters.push({'encounterId' : doc.id, 'encounter': rewriteEncounterReferences(doc.data())});
+                    });
+                }
+                
                 response.status(200).send({'data':returnEncounters});
             })
             .catch(err => {
@@ -173,7 +183,7 @@ exports.createPatient = functions.https.onRequest((request, response) => {
 // curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/listPatients -d '{"data": {"userId": "tstanis"}}'
 exports.listPatients = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
-        var userId = request.body.data.userId;
+        let userId = request.body.data.userId;
         let encountersRef = db.collection('patients');
         let allPatients = encountersRef.get()
             .then(patients => {
@@ -193,21 +203,36 @@ exports.listPatients = functions.https.onRequest((request, response) => {
 
 const msgdb = admin.database();
 
+function getref(msgdb, encounterId, toRole, fromRole) {
+    return msgdb.ref("messages/" + encounterId + "-" + toRole + "-" + fromRole);
+}
+
 exports.sendMessage = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         console.log("Saving: " + JSON.stringify(request.body.data, null, 2));
-        var requesterId = request.body.data.id;
-        var encounterId = request.body.data.encounterId;
-        var sequenceNumber = request.body.data.seqNum;
-        var ref = msgdb.ref("messages/" + encounterId);
+        let requesterId = request.body.data.id;
+        let encounterId = request.body.data.encounterId;
+
+        // TODO(tstanis): Authenticate that the user and authorize them to connect with their role
+        if (!request.body.data.toRole) {
+            response.status(400).send("Missing To Role");
+            return;
+        }
+        if (!request.body.data.fromRole) {
+            response.status(400).send("Missing From Role");
+            return;
+        }
+        
+        let sequenceNumber = request.body.data.seqNum;
+        let ref = getref(msgdb, encounterId, request.body.data.toRole, request.body.data.fromRole);
         ref.transaction(function (current_value) {
             console.log("Current Value: " + JSON.stringify(current_value, null, 2))
             if (current_value == null) {
                 current_value = {'queue': []}
             }
             console.log("Write to " + requesterId);
-            var inserted = false;
-            for (var i = 0 ; i < current_value.queue.length; ++i) {
+            let inserted = false;
+            for (let i = 0 ; i < current_value.queue.length; ++i) {
                 if (current_value.queue[i].id == requesterId && 
                     current_value.queue[i].seqNum > sequenceNumber) {
                     current_value.queue.splice(i, 0, request.body.data)
@@ -227,11 +252,13 @@ exports.sendMessage = functions.https.onRequest((request, response) => {
 exports.readMessage = functions.https.onRequest((request, response) => {
     
     return cors(request, response, () => {
-        var requesterId = request.body.data.id;
-        var encounterId = request.body.data.encounterId;
+        let requesterId = request.body.data.id;
+        let encounterId = request.body.data.encounterId;
+        let toRole = request.body.data.toRole;
+        let fromRole = request.body.data.fromRole;
         console.log("Read from " + requesterId + " of " + encounterId);
-        var ref = msgdb.ref("messages/" + encounterId);
-        var returnVal = null;
+        let ref = getref(msgdb, encounterId, toRole, fromRole);
+        let returnVal = null;
         ref.transaction(function(data) {
             console.log("Loaded: " + JSON.stringify(data, null, 2));
             if (data == null || !data.queue || data.queue.length == 0) {

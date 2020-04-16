@@ -16,6 +16,7 @@ import { UserPage } from "./UserPage";
 import { WelcomePage } from "./WelcomePage";
 import { PatientHomePage } from "./PatientHomePage";
 import { PatientWaitingRoom } from "./PatientWaitingRoom";
+import { Role } from "./Role";
 
 const styles = (theme: Theme) =>
   createStyles({
@@ -56,6 +57,7 @@ enum Page {
 const PatientAppImpl: React.FC<PatientAppProps> = ({ classes }) => {
   const [user, setUser] = useState<firebase.User | null>(null);
   const [encounterId, setEncounterId] = useState<string | null>(null);
+  const [role, setRole] = useState<Role>(Role.PATIENT);
   const [page, setPage] = useState(Page.HOME);
 
   useEffect(() => {
@@ -85,8 +87,9 @@ const PatientAppImpl: React.FC<PatientAppProps> = ({ classes }) => {
       setUser(null);
     }
   };
-  const startAppointment = (encounterId: string) => {
+  const startAppointment = (encounterId: string, role: Role) => {
     setEncounterId(encounterId);
+    setRole(role);
     setPage(Page.WAITING_ROOM);
   };
 
@@ -113,7 +116,7 @@ const PatientAppImpl: React.FC<PatientAppProps> = ({ classes }) => {
       );
     } else if (encounterId) {
       pageComponent = (
-        <UserPage user={user} encounterId={encounterId}></UserPage>
+        <UserPage user={user} encounterId={encounterId} role={role}></UserPage>
       );
     }
   }
