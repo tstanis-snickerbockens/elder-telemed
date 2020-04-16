@@ -26,19 +26,14 @@ const styles = (theme: Theme) =>
     menuButton: {
       marginRight: theme.spacing(2),
     },
-    title: {
-      flexGrow: 1,
-      fontFmily: "Roboto",
-      fontStyle: "normal",
-      fontWeight: "bold",
-      fontSize: "18px",
-      letterSpacing: "0.03em",
-      fontVariant: "small-caps",
-    },
     actionButton: {
       backgroundColor: "#FCD446",
     },
+    topBar: {
+      backgroundColor: "#2b5482"
+    },
     bottomBar: {
+      backgroundColor: "#2b5482",
       top: "auto",
       bottom: 0,
       height: "47px",
@@ -122,11 +117,9 @@ const PatientAppImpl: React.FC<PatientAppProps> = ({ classes }) => {
   }
   return (
     <div className={classes.root}>
-      <AppBar position="static">
+      <AppBar className={classes.topBar} position="static">
         <Toolbar>
-          <Typography variant="h6" className={classes.title}>
-            Stealth Health
-          </Typography>
+          <img src='story_health.png'/>
           <Button
             variant="contained"
             color="inherit"
