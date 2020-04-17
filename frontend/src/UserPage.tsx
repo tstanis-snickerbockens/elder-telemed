@@ -62,15 +62,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 }));
 
 
-interface MyProps {
-  user: firebase.User;
-  encounterId: string;
-  role: Role,
-  clinicianReady: boolean,
-  mode: PatientMode
-};
-
-export default function UserPage(props: MyProps) {
+export default function UserPage(user: firebase.User, encounterId: string, role: Role, clinicianReady: boolean, mode: PatientMode) {
     const classes = useStyles();
     const localVideoRef = React.useRef<HTMLVideoElement>(null);
     const clinicianVideoRef = React.useRef<HTMLVideoElement>(null);
@@ -79,23 +71,23 @@ export default function UserPage(props: MyProps) {
     React.useEffect(() => {
         if (localVideoRef.current && clinicianVideoRef.current && 
             otherPartyVideoRef.current) {
-            if (props.mode === PatientMode.WAITING_ROOM) {
-                let other = props.role === Role.PATIENT ? Role.ADVOCATE : Role.PATIENT;
+            if (mode === PatientMode.WAITING_ROOM) {
+                let other = role === Role.PATIENT ? Role.ADVOCATE : Role.PATIENT;
                 startVideo(localVideoRef.current, otherPartyVideoRef.current, 
-                    props.role, other, props.encounterId, props.role === Role.ADVOCATE ? true : false);
+                    role, other, encounterId, role === Role.ADVOCATE ? true : false);
             } else {
                 startVideo(localVideoRef.current, clinicianVideoRef.current, 
-                    props.role, Role.CLINICIAN, props.encounterId, false);
+                    role, Role.CLINICIAN, encounterId, false);
             }
         }
-    }, [props.mode, props.encounterId, props.role]);
+    }, [mode, encounterId, role]);
     
     return (
         <>
         <div className={classes.videoContainer}>
             <video className={classes.localVideo} ref={localVideoRef} playsInline autoPlay></video>
-            <video className={props.mode === PatientMode.WAITING_ROOM ? classes.otherVideoWaitingRoom : classes.otherVideo} ref={otherPartyVideoRef} playsInline autoPlay></video>
-            <video className={props.mode === PatientMode.WAITING_ROOM ? classes.hidden : classes.clinicianVideo} ref={clinicianVideoRef} playsInline autoPlay></video>
+            <video className={mode === PatientMode.WAITING_ROOM ? classes.otherVideoWaitingRoom : classes.otherVideo} ref={otherPartyVideoRef} playsInline autoPlay></video>
+            <video className={mode === PatientMode.WAITING_ROOM ? classes.hidden : classes.clinicianVideo} ref={clinicianVideoRef} playsInline autoPlay></video>
         </div>
         
         </>
