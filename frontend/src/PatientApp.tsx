@@ -3,21 +3,21 @@ import { RouteComponentProps, withRouter } from "react-router-dom";
 import {
   createStyles,
   Theme,
-  WithStyles,
-  withStyles,
+  makeStyles
 } from "@material-ui/core/styles";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
 import Button from "@material-ui/core/Button";
 import * as firebase from "firebase/app";
 import "firebase/auth";
-import { UserPage } from "./UserPage";
+import UserPage from "./UserPage";
 import { WelcomePage } from "./WelcomePage";
 import { PatientHomePage } from "./PatientHomePage";
-import { PatientWaitingRoom } from "./PatientWaitingRoom";
 import { Role } from "./Role";
+import { PatientMode } from "./PatientMode";
+import { yellow } from '@material-ui/core/colors';
 
-const styles = (theme: Theme) =>
+const styles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
       flexGrow: 1,
@@ -27,7 +27,11 @@ const styles = (theme: Theme) =>
     },
     actionButton: {
       marginLeft: 'auto',
-      backgroundColor: "#2b5482",
+      color: theme.palette.getContrastText(yellow[700]),
+      backgroundColor: yellow[700],
+        '&:hover': {
+          backgroundColor: yellow[900],
+        },
     },
     logo: {
       height: '47px',
@@ -41,22 +45,24 @@ const styles = (theme: Theme) =>
       bottom: 0,
       height: "47px",
     },
-  });
+    hidden: {
+      display: 'none'
+    },
+  }));
 
 interface PatientAppProps
-  extends RouteComponentProps<{}>,
-    WithStyles<typeof styles> {}
+  extends RouteComponentProps<{}>{}
 
-enum Page {
-  HOME = 1,
-  WAITING_ROOM = 2,
-  IN_ENCOUNTER = 3,
-}
-const PatientAppImpl: React.FC<PatientAppProps> = ({ classes }) => {
+
+const PatientAppImpl: React.FC<PatientAppProps> = () => {
+  const classes = styles();
   const [user, setUser] = useState<firebase.User | null>(null);
   const [encounterId, setEncounterId] = useState<string | null>(null);
   const [role, setRole] = useState<Role>(Role.PATIENT);
-  const [page, setPage] = useState(Page.HOME);
+  const [mode, setMode] = useState(PatientMode.HOME);
+  const [clinicianReady] = useState(false);
+  const [pageComponent, setPageComponent] = useState(<WelcomePage></WelcomePage>);
+  const [topButton, setTopButton] = useState();
 
   useEffect(() => {
     (async () => {
@@ -75,55 +81,44 @@ const PatientAppImpl: React.FC<PatientAppProps> = ({ classes }) => {
     })();
   }, []);
 
-  const toggleSignIn = () => {
-    if (!user) {
-      console.log("sign in");
-      const provider = new firebase.auth.GoogleAuthProvider();
-      firebase.auth().signInWithRedirect(provider);
-    } else {
-      firebase.auth().signOut();
-      setUser(null);
-    }
-  };
+  
   const startAppointment = (encounterId: string, role: Role) => {
     setEncounterId(encounterId);
     setRole(role);
-    setPage(Page.WAITING_ROOM);
+    setMode(PatientMode.WAITING_ROOM);
   };
 
-  const enterEncounter = () => {
-    setPage(Page.IN_ENCOUNTER);
-  };
-
-  let pageComponent = <WelcomePage></WelcomePage>;
-  if (user) {
-    if (page === Page.HOME) {
-      pageComponent = (
-        <PatientHomePage
-          onStartAppointment={startAppointment}
-          user={user}
-        ></PatientHomePage>
-      );
-    } else if (page === Page.WAITING_ROOM && encounterId) {
-      pageComponent = (
-        <PatientWaitingRoom
-          onEnterEncounter={enterEncounter}
-          user={user}
-          encounterId={encounterId}
-        ></PatientWaitingRoom>
-      );
-    } else if (encounterId) {
-      pageComponent = (
-        <UserPage user={user} encounterId={encounterId} role={role}></UserPage>
-      );
+  useEffect(() => {
+    if (user) {
+      if (mode === PatientMode.HOME) {
+        setPageComponent(
+          <PatientHomePage
+            onStartAppointment={startAppointment}
+            user={user}
+          ></PatientHomePage>
+        );
+      } else if (encounterId) {
+        setPageComponent(
+          <UserPage user={user} encounterId={encounterId} role={role} mode={mode} clinicianReady={clinicianReady}></UserPage>
+        );
+      }
     }
-  }
-  return (
-    <div className={classes.root}>
-      <AppBar className={classes.topBar} position="static">
-        <Toolbar>
-          <img alt='Story Health' className={classes.logo} src='story_health.png'/>
-          <Button
+  }, [user, encounterId, mode, clinicianReady, role]);
+  
+  useEffect(() => {
+    const toggleSignIn = () => {
+      if (!user) {
+        console.log("sign in");
+        const provider = new firebase.auth.GoogleAuthProvider();
+        firebase.auth().signInWithRedirect(provider);
+      } else {
+        firebase.auth().signOut();
+        setUser(null);
+      }
+    };
+
+    if (mode === PatientMode.HOME) {
+      setTopButton(<Button
             variant="contained"
             color="inherit"
             id="loginState"
@@ -131,7 +126,26 @@ const PatientAppImpl: React.FC<PatientAppProps> = ({ classes }) => {
             onClick={() => toggleSignIn()}
           >
             {!user ? "Login" : "Logout"}
-          </Button>
+          </Button>);
+    } else if (mode === PatientMode.IN_ENCOUNTER) {
+      setTopButton(
+        <Button className={classes.actionButton} variant="contained" onClick={() => setMode(PatientMode.WAITING_ROOM)} color="primary">
+          End Appointment
+        </Button>);
+    } else {
+      setTopButton(
+        <Button className={classes.actionButton} variant="contained" onClick={() => setMode(PatientMode.IN_ENCOUNTER)} color="primary">
+          Start Appointment
+        </Button>);
+    }
+  }, [mode, user, classes.actionButton]);
+
+  return (
+    <div className={classes.root}>
+      <AppBar className={classes.topBar} position="static">
+        <Toolbar>
+          <img alt='Story Health' className={classes.logo} src='story_health.png'/>
+          {topButton}
         </Toolbar>
       </AppBar>
       {pageComponent}
@@ -144,4 +158,4 @@ const PatientAppImpl: React.FC<PatientAppProps> = ({ classes }) => {
   );
 };
 
-export const PatientApp = withStyles(styles)(withRouter(PatientAppImpl));
+export const PatientApp = withRouter(PatientAppImpl);
