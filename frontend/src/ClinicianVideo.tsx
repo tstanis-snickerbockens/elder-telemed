@@ -165,9 +165,15 @@ class ClinicianVideoImpl extends React.Component<
       );
 =======
     
-    async componentWillUnmount() {
-        const exportTranscript =  firebase.functions().httpsCallable('exportTranscript');
-        await exportTranscript({transcript: this.state.transcription, uid: this.props.user.uid, encounterId: this.props.encounterId});
+    async onCloseEncounter() {
+        try {
+            const createTranscript =  firebase.functions().httpsCallable('createTranscript');
+            const response = await createTranscript({transcript: this.state.transcription, uid: this.props.user.uid, encounterId: this.props.encounterId});
+        } catch(err) {
+            console.log(err);
+        } finally {
+            this.props.onClose();        
+        }
     }
 
     render() {
@@ -185,7 +191,7 @@ class ClinicianVideoImpl extends React.Component<
                         </div>
                     )}
                 </div>
-                <Button className={this.props.classes.closeButton} variant="contained" onClick={this.props.onClose}>End Visit</Button>
+                <Button className={this.props.classes.closeButton} variant="contained" onClick={this.onCloseEncounter}>End Visit</Button>
               </div>
           </>
         );

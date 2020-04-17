@@ -312,8 +312,8 @@ exports.annotateTranscription = functions.https.onRequest((request, response) =>
     });
 });
 
-// curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/exportTranscript -d '{"data": {"encounterId": "testVisit", "uid": "testUID", "transcript": [{"msg":"Test foo bar"},{"msg":""}]}}'
-exports.exportTranscript = functions.https.onRequest((request, response) => {
+// curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/createTranscript -d '{"data": {"encounterId": "testVisit", "uid": "testUID", "transcript": [{"msg":"Test foo bar"},{"msg":""}]}}'
+exports.createTranscript = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         try {
             const metadata = {contentType: "text/html"};
@@ -332,13 +332,16 @@ exports.exportTranscript = functions.https.onRequest((request, response) => {
             }, function(err) {
                 if(!err) {
                     console.log("Uploaded transcript file: " + fileName);
+                    response.status(200).send({data: 'ok'});
                 }
                 else {
                     console.log(err, err.stack);
+                    response.status(500).send(err);
                 }    
             });
         } catch(e) {
             console.log(e);
+            response.status(500).send(e);
         }
     });
 });
