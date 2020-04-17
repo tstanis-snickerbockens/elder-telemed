@@ -25,11 +25,12 @@ var ws = require('ws');
 var kurento = require('kurento-client');
 var fs    = require('fs');
 var https = require('https');
+var http = require('http');
 
 var argv = minimist(process.argv.slice(2), {
     default: {
-        as_uri: 'https://localhost:8443/',
-        ws_uri: 'ws://localhost:8888/kurento'
+        as_uri: 'https://35.223.250.231:8080/',
+        ws_uri: 'ws://35.223.250.231:8888/kurento'
     }
 });
 
@@ -45,6 +46,8 @@ var app = express();
  * Management of sessions
  */
 app.use(cookieParser());
+
+app.use(express.static('static'));
 
 var sessionHandler = session({
     secret : 'none',
@@ -62,12 +65,26 @@ var sessions = {};
 var candidatesQueue = {};
 var kurentoClient = null;
 
+
+//
+// app.get('/', (req, res) => {
+//   res.status(200).send('Hello, world!').end();
+// });
+
 /*
  * Server startup
  */
 var asUrl = url.parse(argv.as_uri);
-var port = asUrl.port;
-var server = https.createServer(options, app).listen(port, function() {
+
+const PORT = process.env.PORT || 8080;
+
+// const server = require('http').Server(app);
+// server.listen(PORT, () => {
+//     console.log(`App listening on port ${PORT}`);
+//     console.log('Press Ctrl+C to quit.');
+// });
+
+var server = https.createServer(options, app).listen(PORT, function() {
     console.log('Kurento Tutorial started');
     console.log('Open ' + url.format(asUrl) + ' with a WebRTC capable browser');
 });
@@ -297,4 +314,3 @@ function onIceCandidate(sessionId, _candidate) {
     }
 }
 
-app.use(express.static(path.join(__dirname, 'static')));
