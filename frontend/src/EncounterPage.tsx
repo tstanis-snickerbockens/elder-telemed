@@ -6,9 +6,11 @@ import {
   withStyles,
 } from "@material-ui/core/styles";
 import Popover from "@material-ui/core/Popover";
-import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import TextField from "@material-ui/core/TextField";
+import AddCircleIcon from "@material-ui/icons/AddCircle";
+import IconButton from "@material-ui/core/IconButton";
+
 import { EncounterList } from "./EncounterList";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import * as firebase from "firebase/app";
@@ -63,12 +65,17 @@ class EncounterPageImpl extends React.Component<
       refresh_encounter_list: false,
     };
     this.handleInputChange = this.handleInputChange.bind(this);
+    this.handleNewEncounter = this.handleNewEncounter.bind(this);
+    this.handleSaveEncounter = this.handleSaveEncounter.bind(this);
+    this.handleNewEncounterClose = this.handleNewEncounterClose.bind(this);
   }
   handleNewEncounter(event: MouseEvent<HTMLButtonElement>) {
     this.setState({ anchorEl: event.currentTarget, open: true });
   }
 
-  handleNewEncounterClose() {}
+  handleNewEncounterClose() {
+    this.setState({ anchorEl: null, open: false });
+  }
 
   handleSaveEncounter() {
     var createEncounter = firebase.functions().httpsCallable("createEncounter");
@@ -112,17 +119,10 @@ class EncounterPageImpl extends React.Component<
     return (
       <>
         <div className={this.props.classes.mainContainer}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={(event: MouseEvent<HTMLButtonElement>) =>
-              this.handleNewEncounter(event)
-            }
-          >
-            <Typography className={this.props.classes.typography}>
-              New Encounter
-            </Typography>
-          </Button>
+          <IconButton aria-label="delete" onClick={this.handleNewEncounter}>
+            <AddCircleIcon></AddCircleIcon>
+          </IconButton>
+
           <Popover
             open={this.state.open}
             anchorEl={this.state.anchorEl}
@@ -166,11 +166,11 @@ class EncounterPageImpl extends React.Component<
                 />
               </div>
             </form>
-            <Button
-              variant="contained"
-              onClick={() => this.handleSaveEncounter()}
-            >
+            <Button variant="contained" onClick={this.handleSaveEncounter}>
               Save
+            </Button>
+            <Button variant="contained" onClick={this.handleNewEncounterClose}>
+              Cancel
             </Button>
           </Popover>
           <EncounterList
