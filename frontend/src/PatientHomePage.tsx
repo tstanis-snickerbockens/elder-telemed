@@ -103,7 +103,7 @@ class PatientHomePageImpl extends React.Component<PatientHomePageProps, PatientH
             <Grid container justify="center" alignItems="center" className={this.props.classes.root} spacing={2}>
                 <Card className={this.props.classes.card}>
                     <Typography className={this.props.classes.title} color="textSecondary" gutterBottom>
-                    <img src='alarm_clock.png'/>
+                    <img alt='' src='alarm_clock.png'/>
                     It's time to start your doctor's visit.
                     </Typography>
                     <CardContent>
@@ -115,12 +115,13 @@ class PatientHomePageImpl extends React.Component<PatientHomePageProps, PatientH
                             </Typography>
                         </div>
                         <div className={this.props.classes.pictures}>
-                            <img src="doctor_circle.png"/>
-                            <img src="advocate_circle.png"/>
+                            <img alt='' src="doctor_circle.png"/>
+                            <img alt='' src="advocate_circle.png"/>
                         </div>
                         <Button size='large' variant="contained" onClick={this.startAppointment} color="primary" className={this.props.classes.button}>
                             Begin Video Visit
                         </Button>
+                        
                     </CardContent>
                 </Card>
             </Grid>

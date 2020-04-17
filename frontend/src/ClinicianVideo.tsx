@@ -105,7 +105,6 @@ class ClinicianVideoImpl extends React.Component<ClinicialVideoProps, ClinicalVi
         this.speech = new Speech({onSpeechText: this.onSpeechText});
     }
 
-    
     onSpeechText(message: string, is_final: boolean): void {
         let to_add: Array<LineState>;
         
