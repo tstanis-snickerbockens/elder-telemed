@@ -310,3 +310,94 @@ exports.annotateTranscription = functions.https.onRequest((request, response) =>
         }
     });
 });
+//
+//
+// /*
+//  * OpenVidu token and session handling.
+//  *
+//  */
+//
+//
+// function createSession(sessionId) {
+//     return new Promise((resolve, reject) => {
+//
+//       const body = JSON.stringify({ customSessionId: sessionId });
+//       const options = {
+//         headers: new HttpHeaders({
+//           'Authorization': 'Basic ' + btoa('OPENVIDUAPP:' + this.OPENVIDU_SERVER_SECRET),
+//           'Content-Type': 'application/json'
+//         })
+//       };
+//       return this.httpClient.post(this.OPENVIDU_SERVER_URL + '/api/sessions', body, options)
+//         .pipe(
+//           catchError(error => {
+//             if (error.status === 409) {
+//               resolve(sessionId);
+//             } else {
+//               console.warn('No connection to OpenVidu Server. This may be a certificate error at ' + this.OPENVIDU_SERVER_URL);
+//               if (window.confirm('No connection to OpenVidu Server. This may be a certificate error at \"' + this.OPENVIDU_SERVER_URL +
+//                 '\"\n\nClick OK to navigate and accept it. If no certificate warning is shown, then check that your OpenVidu Server' +
+//                 'is up and running at "' + this.OPENVIDU_SERVER_URL + '"')) {
+//                 location.assign(this.OPENVIDU_SERVER_URL + '/accept-certificate');
+//               }
+//             }
+//             return observableThrowError(error);
+//           })
+//         )
+//         .subscribe(response => {
+//           console.log(response);
+//           resolve(response['id']);
+//         });
+//     });
+//     }
+//
+// function createToken(sessionId) {
+//     return new Promise((resolve, reject) => {
+//
+//       const body = JSON.stringify({ session: sessionId });
+//       const options = {
+//         headers: new HttpHeaders({
+//           'Authorization': 'Basic ' + btoa('OPENVIDUAPP:' + this.OPENVIDU_SERVER_SECRET),
+//           'Content-Type': 'application/json'
+//         })
+//       };
+//       return this.httpClient.post(this.OPENVIDU_SERVER_URL + '/api/tokens', body, options)
+//         .pipe(
+//           catchError(error => {
+//             reject(error);
+//             return observableThrowError(error);
+//           })
+//         )
+//         .subscribe(response => {
+//           console.log(response);
+//           resolve(response['token']);
+//         });
+//     });
+// }
+//
+//
+// exports.getOpenViduToken = functions.https.onRequest((request, response) => {
+//     return cors((request, response, () => {
+//         createSession(request.body.data.sessionId).then(
+//             sessionId => {
+//                 return createToken(sessionId).then
+//             }).then()
+//     }
+//     }
+// });
+//   /**
+//    * --------------------------
+//    * SERVER-SIDE RESPONSIBILITY
+//    * --------------------------
+//    * This method retrieve the mandatory user token from OpenVidu Server,
+//    * in this case making use Angular http API.
+//    * This behavior MUST BE IN YOUR SERVER-SIDE IN PRODUCTION. In this case:
+//    *   1) Initialize a session in OpenVidu Server	 (POST /api/sessions)
+//    *   2) Generate a token in OpenVidu Server		   (POST /api/tokens)
+//    *   3) The token must be consumed in Session.connect() method of OpenVidu Browser
+//    */
+//
+//   getToken(): Promise<string> {
+//
+//   }
+//
