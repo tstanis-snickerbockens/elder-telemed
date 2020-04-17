@@ -1,6 +1,6 @@
-import React from "react";
-import clsx from "clsx";
+import React, { useEffect, useState } from "react";
 import { RouteComponentProps, withRouter } from "react-router-dom";
+
 import {
   createStyles,
   Theme,
@@ -8,20 +8,9 @@ import {
   withStyles,
 } from "@material-ui/core/styles";
 import AppBar from "@material-ui/core/AppBar";
-import Drawer from "@material-ui/core/Drawer";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
-import IconButton from "@material-ui/core/IconButton";
-import MenuIcon from "@material-ui/icons/Menu";
-import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemIcon from "@material-ui/core/ListItemIcon";
-import ListItemText from "@material-ui/core/ListItemText";
-import List from "@material-ui/core/List";
-import Divider from "@material-ui/core/Divider";
-import ScheduleIcon from "@material-ui/icons/Schedule";
-import PeopleIcon from "@material-ui/icons/People";
 import * as firebase from "firebase/app";
 import "firebase/auth";
 
@@ -29,62 +18,32 @@ import { ClinicianVideo } from "./ClinicianVideo";
 import { WelcomePage } from "./WelcomePage";
 import { EncounterPage } from "./EncounterPage";
 import { PatientPage } from "./PatientPage";
+import { Box, Tabs, Tab } from "@material-ui/core";
 
-const drawerWidth = 240;
 const styles = (theme: Theme) =>
   createStyles({
     root: {
-      display: "flex",
+      flexGrow: 1,
     },
     menuButton: {
       marginRight: theme.spacing(2),
     },
     title: {
       flexGrow: 1,
+      fontFmily: "Roboto",
+      fontStyle: "normal",
+      fontWeight: "bold",
+      fontSize: "18px",
+      letterSpacing: "0.03em",
+      fontVariant: "small-caps",
     },
-    appBar: {
-      transition: theme.transitions.create(["margin", "width"], {
-        easing: theme.transitions.easing.sharp,
-        duration: theme.transitions.duration.leavingScreen,
-      }),
+    actionButton: {
+      backgroundColor: "#FCD446",
     },
-    appBarShift: {
-      width: `calc(100% - ${drawerWidth}px)`,
-      marginLeft: drawerWidth,
-      transition: theme.transitions.create(["margin", "width"], {
-        easing: theme.transitions.easing.easeOut,
-        duration: theme.transitions.duration.enteringScreen,
-      }),
-    },
-    drawer: {
-      width: drawerWidth,
-      flexShrink: 0,
-    },
-    drawerPaper: {
-      width: drawerWidth,
-    },
-    drawerHeader: {
-      display: "flex",
-      alignItems: "center",
-      padding: theme.spacing(0, 1),
-      // necessary for content to be below app bar
-      ...theme.mixins.toolbar,
-      justifyContent: "flex-end",
-    },
-    content: {
-      flexGrow: 1,
-      transition: theme.transitions.create("margin", {
-        easing: theme.transitions.easing.sharp,
-        duration: theme.transitions.duration.leavingScreen,
-      }),
-      marginLeft: -drawerWidth,
-    },
-    contentShift: {
-      transition: theme.transitions.create("margin", {
-        easing: theme.transitions.easing.easeOut,
-        duration: theme.transitions.duration.enteringScreen,
-      }),
-      marginLeft: 0,
+    bottomBar: {
+      top: "auto",
+      bottom: 0,
+      height: "47px",
     },
   });
 
@@ -92,193 +51,141 @@ interface ClinicianAppProps
   extends RouteComponentProps<{}>,
     WithStyles<typeof styles> {}
 
-enum Panel {
-  ENCOUNTERS = 1,
-  PATIENTS = 2,
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: any;
+  value: any;
 }
 
-interface ClinicianAppState {
-  user: firebase.User | null;
-  encounterId: string | null;
-  drawerOpen: boolean;
-  activePanel: Panel;
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div hidden={value !== index} id={`simple-tabpanel-${index}`} {...other}>
+      {value === index && <Box p={3}>{children}</Box>}
+    </div>
+  );
 }
 
-class ClinicianAppImpl extends React.Component<
-  ClinicianAppProps,
-  ClinicianAppState
-> {
-  constructor(props: ClinicianAppProps) {
-    super(props);
-    this.state = {
-      user: null,
-      encounterId: null,
-      drawerOpen: true,
-      activePanel: Panel.ENCOUNTERS,
-    };
-    this.beginVisit = this.beginVisit.bind(this);
-    this.onClose = this.onClose.bind(this);
+type MainClinicianPanelProps = {
+  onVisit: (s: string) => void;
+  user: firebase.User;
+};
 
-    this.handleListItemClick = this.handleListItemClick.bind(this);
-  }
+const MainClinicianPanel = ({ onVisit, user }: MainClinicianPanelProps) => {
+  const [value, setValue] = React.useState(0);
 
-  componentDidMount() {
+  const handleChange = (_: any, newValue: number) => {
+    setValue(newValue);
+  };
+
+  return (
+    <div>
+      <Tabs
+        value={value}
+        onChange={handleChange}
+        aria-label="simple tabs example"
+      >
+        <Tab label="Encounters" />
+        <Tab label="Patient" />
+      </Tabs>
+      <TabPanel value={value} index={0}>
+        <EncounterPage onVisit={onVisit} user={user}></EncounterPage>
+      </TabPanel>
+      <TabPanel value={value} index={1}>
+        <PatientPage user={user}></PatientPage>
+      </TabPanel>
+    </div>
+  );
+};
+const ClinicianAppImpl: React.FC<ClinicianAppProps> = ({ classes }) => {
+  const [user, setUser] = useState<firebase.User | null>(null);
+  const [encounterId, setEncounterId] = useState<string | null>(null);
+
+  useEffect(() => {
     (async () => {
       const result = await firebase.auth().getRedirectResult();
       if (result.user) {
         // User just signed in. Can get result.credential and result.credential.accessToken
         console.log("Case 1 result.user");
-        this.setState({ user: result.user });
+        setUser(result.user);
       } else if (firebase.auth().currentUser) {
         // User already signed in
         console.log("Case 2 result.user");
-        this.setState({ user: firebase.auth().currentUser });
+        setUser(firebase.auth().currentUser);
       } else {
-        this.setState({ user: null });
+        setUser(null);
       }
     })();
-  }
+  }, []);
 
-  toggleSignIn() {
-    console.log("toggleSignIn");
-    if (!this.state.user) {
+  const toggleSignIn = () => {
+    if (!user) {
+      console.log("sign in");
       const provider = new firebase.auth.GoogleAuthProvider();
       firebase.auth().signInWithRedirect(provider);
     } else {
       firebase.auth().signOut();
-      this.setState({ user: null });
+      setUser(null);
     }
-  }
+  };
 
-  beginVisit(encounterId: string) {
-    console.log("Begin encounter " + encounterId);
-    this.setState((prevState) => ({ ...prevState, encounterId: encounterId }));
-  }
+  const beginVisit = (eid: string) => {
+    console.log("Begin encounter " + eid);
+    setEncounterId(eid);
+  };
 
-  onClose() {
-    this.setState((prevState) => ({ ...prevState, encounterId: null }));
-  }
+  const onClose = () => {
+    setEncounterId(null);
+  };
 
-  handleDrawerClose() {}
-
-  handleListItemClick(newActivePanel: Panel) {
-    this.setState((prevState) => ({
-      ...prevState,
-      activePanel: newActivePanel,
-    }));
-  }
-
-  render() {
-    let page;
-    if (this.state.user) {
-      if (this.state.encounterId) {
-        page = (
-          <ClinicianVideo
-            user={this.state.user}
-            encounterId={this.state.encounterId}
-            onClose={this.onClose}
-          ></ClinicianVideo>
-        );
-      } else {
-        if (this.state.activePanel === Panel.ENCOUNTERS) {
-          page = (
-            <EncounterPage
-              onVisit={this.beginVisit}
-              user={this.state.user}
-            ></EncounterPage>
-          );
-        } else {
-          page = <PatientPage user={this.state.user}></PatientPage>;
-        }
-      }
+  let pageComponent;
+  if (user) {
+    if (encounterId) {
+      pageComponent = (
+        <ClinicianVideo
+          user={user}
+          encounterId={encounterId}
+          onClose={onClose}
+        ></ClinicianVideo>
+      );
     } else {
-      page = <WelcomePage></WelcomePage>;
+      pageComponent = (
+        <MainClinicianPanel
+          onVisit={beginVisit}
+          user={user}
+        ></MainClinicianPanel>
+      );
     }
-    return (
-      <div className={this.props.classes.root}>
-        <AppBar
-          position="fixed"
-          className={clsx(this.props.classes.appBar, {
-            [this.props.classes.appBarShift]: this.state.drawerOpen,
-          })}
-        >
-          <Toolbar>
-            <IconButton
-              edge="start"
-              className={this.props.classes.menuButton}
-              color="inherit"
-              aria-label="menu"
-            >
-              <MenuIcon />
-            </IconButton>
-            <Typography variant="h6" className={this.props.classes.title}>
-              Stealth Health - Clinician App
-            </Typography>
-            <Button
-              onClick={() => {
-                this.toggleSignIn();
-              }}
-              color="inherit"
-            >
-              {!this.state.user ? "Login" : "Logout"}
-            </Button>
-          </Toolbar>
-        </AppBar>
-        <Drawer
-          className={this.props.classes.drawer}
-          variant="persistent"
-          anchor="left"
-          open={this.state.drawerOpen}
-          classes={{
-            paper: this.props.classes.drawerPaper,
-          }}
-        >
-          <div className={this.props.classes.drawerHeader}>
-            <IconButton onClick={this.handleDrawerClose}>
-              <ChevronLeftIcon />
-            </IconButton>
-          </div>
-          <Divider />
-          <List component="nav">
-            <ListItem
-              button
-              key="Encounters"
-              selected={this.state.activePanel === Panel.ENCOUNTERS}
-              onClick={() => {
-                this.handleListItemClick(Panel.ENCOUNTERS);
-              }}
-            >
-              <ListItemIcon>
-                <ScheduleIcon />
-              </ListItemIcon>
-              <ListItemText primary="Encounters" />
-            </ListItem>
-            <ListItem
-              button
-              key="Patients"
-              selected={this.state.activePanel === Panel.PATIENTS}
-              onClick={() => {
-                this.handleListItemClick(Panel.PATIENTS);
-              }}
-            >
-              <ListItemIcon>
-                <PeopleIcon />
-              </ListItemIcon>
-              <ListItemText primary="Patients" />
-            </ListItem>
-          </List>
-        </Drawer>
-        <main
-          className={clsx(this.props.classes.content, {
-            [this.props.classes.contentShift]: this.state.drawerOpen,
-          })}
-        >
-          <div className={this.props.classes.drawerHeader} />
-          {page}
-        </main>
-      </div>
-    );
+  } else {
+    pageComponent = <WelcomePage></WelcomePage>;
   }
-}
+  return (
+    <div className={classes.root}>
+      <AppBar position="static">
+        <Toolbar>
+          <Typography variant="h6" className={classes.title}>
+            Stealth Health
+          </Typography>
+          <Button
+            variant="contained"
+            color="inherit"
+            id="loginState"
+            className={classes.actionButton}
+            onClick={() => toggleSignIn()}
+          >
+            {!user ? "Login" : "Logout"}
+          </Button>
+        </Toolbar>
+      </AppBar>
+      {pageComponent}
+      <AppBar
+        position="fixed"
+        color="primary"
+        className={classes.bottomBar}
+      ></AppBar>
+    </div>
+  );
+};
 
 export const ClinicianApp = withStyles(styles)(withRouter(ClinicianAppImpl));

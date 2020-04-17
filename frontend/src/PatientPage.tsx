@@ -6,9 +6,11 @@ import {
   withStyles,
 } from "@material-ui/core/styles";
 import Popover from "@material-ui/core/Popover";
-import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import TextField from "@material-ui/core/TextField";
+import AddCircleIcon from "@material-ui/icons/AddCircle";
+import { IconButton } from "@material-ui/core";
+
 import { PatientList } from "./PatientList";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import * as firebase from "firebase/app";
@@ -55,6 +57,7 @@ class PatientPageImpl extends React.Component<
       refresh_patient_list: false,
     };
     this.handleInputChange = this.handleInputChange.bind(this);
+    this.handleNewPatient = this.handleNewPatient.bind(this);
   }
   handleNewPatient(event: MouseEvent<HTMLButtonElement>) {
     this.setState({ anchorEl: event.currentTarget, open: true });
@@ -98,17 +101,10 @@ class PatientPageImpl extends React.Component<
   render() {
     return (
       <>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={(event: MouseEvent<HTMLButtonElement>) =>
-            this.handleNewPatient(event)
-          }
-        >
-          <Typography className={this.props.classes.typography}>
-            New Patient
-          </Typography>
-        </Button>
+        <IconButton aria-label="delete" onClick={this.handleNewPatient}>
+          <AddCircleIcon></AddCircleIcon>
+        </IconButton>
+
         <Popover
           open={this.state.open}
           anchorEl={this.state.anchorEl}
