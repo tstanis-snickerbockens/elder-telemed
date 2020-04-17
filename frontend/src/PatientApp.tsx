@@ -99,7 +99,7 @@ const PatientAppImpl: React.FC<PatientAppProps> = () => {
         );
       } else if (encounterId) {
         setPageComponent(
-          <UserPage user={user} encounterId={encounterId} role={role} mode={mode} clinicianReady={clinicianReady}></UserPage>
+          <UserPage encounterId={encounterId} role={role} mode={mode} clinicianReady={clinicianReady}></UserPage>
         );
       }
     }

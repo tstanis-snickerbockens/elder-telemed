@@ -1,6 +1,5 @@
 import React, { } from "react";
 import { makeStyles, Theme, createStyles } from "@material-ui/core/styles";
-import * as firebase from "firebase/app";
 import { startVideo } from "./video";
 import { Role } from "./Role";
 import { PatientMode } from "./PatientMode";
@@ -61,8 +60,14 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     }
 }));
 
+interface Props {
+    encounterId: string;
+    role: Role;
+    clinicianReady: boolean;
+    mode: PatientMode
+}
 
-export default function UserPage(user: firebase.User, encounterId: string, role: Role, clinicianReady: boolean, mode: PatientMode) {
+export default function UserPage(props: Props) {
     const classes = useStyles();
     const localVideoRef = React.useRef<HTMLVideoElement>(null);
     const clinicianVideoRef = React.useRef<HTMLVideoElement>(null);
@@ -71,23 +76,23 @@ export default function UserPage(user: firebase.User, encounterId: string, role:
     React.useEffect(() => {
         if (localVideoRef.current && clinicianVideoRef.current && 
             otherPartyVideoRef.current) {
-            if (mode === PatientMode.WAITING_ROOM) {
-                let other = role === Role.PATIENT ? Role.ADVOCATE : Role.PATIENT;
+            if (props.mode === PatientMode.WAITING_ROOM) {
+                let other = props.role === Role.PATIENT ? Role.ADVOCATE : Role.PATIENT;
                 startVideo(localVideoRef.current, otherPartyVideoRef.current, 
-                    role, other, encounterId, role === Role.ADVOCATE ? true : false);
+                    props.role, other, props.encounterId, props.role === Role.ADVOCATE ? true : false);
             } else {
                 startVideo(localVideoRef.current, clinicianVideoRef.current, 
-                    role, Role.CLINICIAN, encounterId, false);
+                    props.role, Role.CLINICIAN, props.encounterId, false);
             }
         }
-    }, [mode, encounterId, role]);
+    }, [props.mode, props.encounterId, props.role]);
     
     return (
         <>
         <div className={classes.videoContainer}>
             <video className={classes.localVideo} ref={localVideoRef} playsInline autoPlay></video>
-            <video className={mode === PatientMode.WAITING_ROOM ? classes.otherVideoWaitingRoom : classes.otherVideo} ref={otherPartyVideoRef} playsInline autoPlay></video>
-            <video className={mode === PatientMode.WAITING_ROOM ? classes.hidden : classes.clinicianVideo} ref={clinicianVideoRef} playsInline autoPlay></video>
+            <video className={props.mode === PatientMode.WAITING_ROOM ? classes.otherVideoWaitingRoom : classes.otherVideo} ref={otherPartyVideoRef} playsInline autoPlay></video>
+            <video className={props.mode === PatientMode.WAITING_ROOM ? classes.hidden : classes.clinicianVideo} ref={clinicianVideoRef} playsInline autoPlay></video>
         </div>
         
         </>
