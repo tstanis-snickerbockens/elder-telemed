@@ -130,7 +130,7 @@ const PatientAppImpl: React.FC<PatientAppProps> = () => {
     } else if (mode === PatientMode.IN_ENCOUNTER) {
       setTopButton(
         <Button className={classes.actionButton} variant="contained" onClick={() => setMode(PatientMode.WAITING_ROOM)} color="primary">
-          End Appointmentt
+          End Appointment
         </Button>);
     } else {
       setTopButton(
