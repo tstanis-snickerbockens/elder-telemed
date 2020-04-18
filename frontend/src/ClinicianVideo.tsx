@@ -121,15 +121,23 @@ class ClinicianVideoImpl extends React.Component<ClinicialVideoProps, ClinicalVi
         }
     }
 
+    onPatientConnect() {
+
+    }
+
+    onAdvocateConnect() {
+
+    }
+
     componentDidMount() {
         if (this.localVideoRef.current && this.patientVideoRef.current) {
             startVideo(this.localVideoRef.current, this.patientVideoRef.current, 
-                Role.CLINICIAN, Role.PATIENT, this.props.encounterId, true);
+                Role.CLINICIAN, Role.PATIENT, this.props.encounterId, true, this.onPatientConnect);
             this.speech.start();
         }
         if (this.localVideoRef.current && this.advocateVideoRef.current) {
             startVideo(this.localVideoRef.current, this.advocateVideoRef.current, 
-                Role.CLINICIAN, Role.ADVOCATE, this.props.encounterId, true);
+                Role.CLINICIAN, Role.ADVOCATE, this.props.encounterId, true, this.onAdvocateConnect);
         }
     }
     
