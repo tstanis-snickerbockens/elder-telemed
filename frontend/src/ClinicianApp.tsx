@@ -14,7 +14,7 @@ import { ClinicianVideo } from "./ClinicianVideo";
 import { EncounterPage } from "./EncounterPage";
 import { PatientPage } from "./PatientPage";
 import { Box, Tabs, Tab } from "@material-ui/core";
-import { StealthContext, StealthTopButton } from "./StealthHome";
+import { StoryContext, StoryTopButton } from "./StoryHome";
 
 const styles = (theme: Theme) =>
   createStyles({
@@ -96,7 +96,7 @@ const MainClinicianPanel = ({ onVisit, user }: MainClinicianPanelProps) => {
 };
 const ClinicianAppImpl: React.FC<ClinicianAppProps> = () => {
   const [encounterId, setEncounterId] = useState<string | null>(null);
-  const { user, setUserTopButton } = useContext(StealthContext);
+  const { user, setUserTopButton } = useContext(StoryContext);
 
   const endVisit = () => {
     setEncounterId(null);
@@ -107,7 +107,7 @@ const ClinicianAppImpl: React.FC<ClinicianAppProps> = () => {
     console.log("Begin encounter " + eid);
     setEncounterId(eid);
     setUserTopButton(
-      <StealthTopButton onClick={endVisit}>End Appointment</StealthTopButton>
+      <StoryTopButton onClick={endVisit}>End Appointment</StoryTopButton>
     );
   };
 

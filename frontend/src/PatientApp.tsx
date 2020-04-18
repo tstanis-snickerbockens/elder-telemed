@@ -4,7 +4,7 @@ import UserPage from "./UserPage";
 import { PatientHomePage } from "./PatientHomePage";
 import { Role } from "./Role";
 import { PatientMode } from "./PatientMode";
-import { StealthContext, StealthTopButton } from "./StealthHome";
+import { StoryContext, StoryTopButton } from "./StoryHome";
 
 interface PatientAppProps extends RouteComponentProps<{}> {}
 
@@ -13,7 +13,7 @@ const PatientAppImpl: React.FC<PatientAppProps> = () => {
   const [role, setRole] = useState<Role>(Role.PATIENT);
   const [mode, setMode] = useState(PatientMode.HOME);
   const [clinicianReady] = useState(false);
-  const { user, setUserTopButton } = useContext(StealthContext);
+  const { user, setUserTopButton } = useContext(StoryContext);
 
   const startAppointment = (encounterId: string, role: Role) => {
     setEncounterId(encounterId);
@@ -26,15 +26,15 @@ const PatientAppImpl: React.FC<PatientAppProps> = () => {
       setUserTopButton(null);
     } else if (mode === PatientMode.IN_ENCOUNTER) {
       setUserTopButton(
-        <StealthTopButton onClick={() => setMode(PatientMode.WAITING_ROOM)}>
+        <StoryTopButton onClick={() => setMode(PatientMode.WAITING_ROOM)}>
           End Appointment
-        </StealthTopButton>
+        </StoryTopButton>
       );
     } else {
       setUserTopButton(
-        <StealthTopButton onClick={() => setMode(PatientMode.IN_ENCOUNTER)}>
+        <StoryTopButton onClick={() => setMode(PatientMode.IN_ENCOUNTER)}>
           Start Appointment
-        </StealthTopButton>
+        </StoryTopButton>
       );
     }
   }, [mode, user, setUserTopButton]);

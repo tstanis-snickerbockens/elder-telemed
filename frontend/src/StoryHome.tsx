@@ -39,7 +39,7 @@ const styles = makeStyles((theme: Theme) =>
   })
 );
 
-export type StealthHomeProps = {
+export type StoryHomeProps = {
   children: React.ReactNode;
 };
 
@@ -47,13 +47,13 @@ const defaultContext = {
   user: (undefined as unknown) as firebase.User,
   setUserTopButton: (button: React.ReactNode | null) => {},
 };
-export const StealthContext = React.createContext(defaultContext);
+export const StoryContext = React.createContext(defaultContext);
 
-type StealthTopButtonProps = {
+type StoryTopButtonProps = {
   children: React.ReactNode;
   onClick: (e: unknown) => void;
 };
-export const StealthTopButton: React.FC<StealthTopButtonProps> = ({
+export const StoryTopButton: React.FC<StoryTopButtonProps> = ({
   children,
   onClick,
 }) => {
@@ -72,7 +72,7 @@ export const StealthTopButton: React.FC<StealthTopButtonProps> = ({
   );
 };
 
-export const StealthHome: React.FC<StealthHomeProps> = ({ children }) => {
+export const StoryHome: React.FC<StoryHomeProps> = ({ children }) => {
   const classes = styles();
   // user has three possible settings: the user, null (signed out), undefined (dunno)
   // the page is rendered differently in each case
@@ -114,9 +114,9 @@ export const StealthHome: React.FC<StealthHomeProps> = ({ children }) => {
     setTopButton(
       userTopButton ||
         (user !== undefined && (
-          <StealthTopButton onClick={() => toggleSignIn()}>
+          <StoryTopButton onClick={() => toggleSignIn()}>
             {user ? "Logout" : "Login"}
-          </StealthTopButton>
+          </StoryTopButton>
         )) ||
         null
     );
@@ -141,9 +141,9 @@ export const StealthHome: React.FC<StealthHomeProps> = ({ children }) => {
         </Toolbar>
       </AppBar>
       {user ? (
-        <StealthContext.Provider value={userContext}>
+        <StoryContext.Provider value={userContext}>
           {children}
-        </StealthContext.Provider>
+        </StoryContext.Provider>
       ) : (
         <WelcomePage waiting={user === undefined}></WelcomePage>
       )}

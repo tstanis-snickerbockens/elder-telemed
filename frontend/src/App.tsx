@@ -7,12 +7,12 @@ import {
 } from "react-router-dom";
 import { PatientApp } from "./PatientApp";
 import { ClinicianApp } from "./ClinicianApp";
-import { StealthHome } from "./StealthHome";
+import { StoryHome } from "./StoryHome";
 
 function App() {
   return (
     <Router>
-      <StealthHome>
+      <StoryHome>
         <Switch>
           <Route path="/p">
             <PatientApp />
@@ -22,7 +22,7 @@ function App() {
           </Route>
           <Redirect from="/" to="/p" />
         </Switch>
-      </StealthHome>
+      </StoryHome>
     </Router>
   );
 }
