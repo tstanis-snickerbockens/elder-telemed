@@ -32,7 +32,8 @@ export async function startVideo(
   localRole: Role,
   remoteRole: Role,
   encounterId: string | undefined,
-  polite: boolean
+  polite: boolean,
+  onConnect: () => void | undefined,
 ) {
   console.log("Encounter: " + encounterId);
   console.log("Role: " + localRole + " -> " + remoteRole);
@@ -80,6 +81,9 @@ export async function startVideo(
   pc.onconnectionstatechange = function (event) {
     if (pc.connectionState === "connected") {
       clearInterval(interval);
+      if (onConnect) {
+        onConnect();
+      }
     }
   }
   pc.oniceconnectionstatechange = (event) => onIceStateChange(pc, event);

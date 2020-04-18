@@ -29,9 +29,9 @@ const styles = makeStyles((theme: Theme) =>
       marginLeft: 'auto',
       color: theme.palette.getContrastText(yellow[700]),
       backgroundColor: yellow[700],
-        '&:hover': {
-          backgroundColor: yellow[900],
-        },
+      '&:hover': {
+        backgroundColor: yellow[900],
+      },
     },
     logo: {
       height: '47px',
