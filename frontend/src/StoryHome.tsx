@@ -63,7 +63,6 @@ export const StoryTopButton: React.FC<StoryTopButtonProps> = ({
     <Button
       variant="contained"
       color="inherit"
-      id="loginState"
       className={classes.actionButton}
       onClick={onClick}
     >
@@ -99,10 +98,10 @@ export const StoryHome: React.FC<StoryHomeProps> = ({ children }) => {
       }
     })();
   }, []);
+
   useEffect(() => {
     const toggleSignIn = () => {
       if (!user) {
-        console.log("sign in");
         const provider = new firebase.auth.GoogleAuthProvider();
         firebase.auth().signInWithRedirect(provider);
       } else {
