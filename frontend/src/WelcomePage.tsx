@@ -13,16 +13,14 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-export const WelcomePage: React.FC<{ waiting?: boolean }> = ({ waiting }) => {
+export const WelcomePage: React.FC<{}> = () => {
   const classes = useStyles();
 
   return (
     <div className={classes.splashScreen}>
       <Typography variant="h4">Welcome to</Typography>
-      <Typography variant="h2">
-        Story Health : Telemedicine for the Elderly
-      </Typography>
-      <Typography>{waiting ? "" : "Please log in."}</Typography>
+      <Typography variant="h2">Stealth Health : Telemedicine for the Elderly</Typography>
+      <Typography>Please log in.</Typography>
     </div>
   );
 };
