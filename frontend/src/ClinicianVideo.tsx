@@ -165,7 +165,7 @@ class ClinicianVideoImpl extends React.Component<
     }
   }
 
-  onCloseEncounter() {
+  componentWillUnmount() {
     const createTranscript =  firebase.functions().httpsCallable('createTranscript');
     try {
       createTranscript({transcript: this.state.transcription, uid: this.props.user.uid, encounterId: this.props.encounterId})
@@ -174,8 +174,6 @@ class ClinicianVideoImpl extends React.Component<
       });
     } catch(err) {
       console.log(err);
-    } finally {
-      this.props.onClose();
     }
   }
   
