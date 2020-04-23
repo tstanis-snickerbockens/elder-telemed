@@ -321,10 +321,17 @@ exports.createTranscript = functions.https.onRequest((request, response) => {
             var transcript = request.body.data.transcript;
             var encounterId = request.body.data.encounterId;
             var uid = request.body.data.uid;
-            /* Use uid so that we can quickly list all files for a user later */
+            // Use uid so that we can quickly list all files for a user later
             var fileName = "transcripts/" + uid + "_" + encounterId + ".txt";
             var transcriptText = "";
+            if (!transcript || transcript.length === 0) {
+                console.log("Empty transcript.");
+                response.status(200).send({data:'ok'});
+                return;
+            }
+
             transcript.forEach(element => transcriptText.concat(element.msg + "\n"));
+
             const transcriptBuffer = new Buffer.from(transcriptText);
             var file = bucket.file(fileName);
             file.save(transcriptBuffer, {
