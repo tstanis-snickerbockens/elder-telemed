@@ -38,6 +38,7 @@ export default class Speech {
 
   start() {
     if (!this.recognizing) {
+      console.log("speech.start")
       this.initWebsocket(this.getUserMedia(), this.handleTranscription);
       this.recognizing = true;
     }
@@ -53,6 +54,7 @@ export default class Speech {
   private getUserMedia(): any {
     var audioParams = {
       echoCancellation: true,
+      noiseSuppression: true,
       channelCount: 1,
       sampleRate: {
         ideal: SAMPLE_RATE,
@@ -85,6 +87,7 @@ export default class Speech {
     // Need the maximum value for 16-bit signed samples, to convert from float.
     const MAX_INT = Math.pow(2, 16 - 1) - 1;
     scriptNode.addEventListener("audioprocess", function (e) {
+      console.log("Sending transcribe...");
       var floatSamples = e.inputBuffer.getChannelData(0);
       // The samples are floats in range [-1, 1]. Convert to 16-bit signed
       // integer.
@@ -97,9 +100,11 @@ export default class Speech {
       );
     });
 
+    let current_state = 'none';
     function newWebsocket() {
+      console.log("newWebsocket");
       var websocketPromise = new Promise(function (resolve, reject) {
-        var socket = new WebSocket("wss://35.223.135.61:8443/transcribe");
+        var socket = new WebSocket("wss://speech.prod.storyhealth.ai/transcribe");
         socket.addEventListener("open", resolve);
         socket.addEventListener("error", reject);
       });
@@ -112,6 +117,7 @@ export default class Speech {
           // If the socket is closed for whatever reason, pause the mic
           socket.addEventListener("close", function () {
             console.log("Websocket closing...");
+            current_state = "closed";
           });
           socket.addEventListener("error", function (e: any) {
             console.log("Error from websocket", e);
@@ -142,6 +148,7 @@ export default class Speech {
     }
 
     function closeWebsocket() {
+      console.log("closeWebsocket");
       scriptNode.disconnect();
       if (sourceNode) sourceNode.disconnect();
       if (socket && socket.readyState === socket.OPEN) socket.close();
@@ -149,10 +156,13 @@ export default class Speech {
 
     function toggleWebsocket(e: any) {
       var context = e.target;
-      if (context.state === "running") {
+      console.log("toggleWebsocket: " + context.state);
+      if (context.state === "running" && current_state !== "running") {
         newWebsocket();
+        current_state = "running";
       } else if (context.state === "suspended") {
         closeWebsocket();
+        current_state = "suspended";
       }
     }
     // When the mic is resumed or paused, change the state of the websocket too

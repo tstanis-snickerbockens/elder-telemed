@@ -85,6 +85,7 @@ public class TranscribeSocket extends WebSocketAdapter
             RecognitionConfig.newBuilder()
             .setEncoding(AudioEncoding.LINEAR16)
             .setSampleRateHertz(constraints.sampleRate)
+            .setModel("video")
             .setLanguageCode("en-US")
             .build();
         StreamingRecognitionConfig streamingConfig =
