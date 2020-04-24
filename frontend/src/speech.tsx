@@ -54,6 +54,7 @@ export default class Speech {
   private getUserMedia(): any {
     var audioParams = {
       echoCancellation: true,
+      noiseSuppression: true,
       channelCount: 1,
       sampleRate: {
         ideal: SAMPLE_RATE,
@@ -99,10 +100,11 @@ export default class Speech {
       );
     });
 
+    let current_state = 'none';
     function newWebsocket() {
       console.log("newWebsocket");
       var websocketPromise = new Promise(function (resolve, reject) {
-        var socket = new WebSocket("wss://speach.service.mystoryhealth.com/transcribe");
+        var socket = new WebSocket("wss://speech.prod.storyhealth.ai/transcribe");
         socket.addEventListener("open", resolve);
         socket.addEventListener("error", reject);
       });
@@ -115,6 +117,7 @@ export default class Speech {
           // If the socket is closed for whatever reason, pause the mic
           socket.addEventListener("close", function () {
             console.log("Websocket closing...");
+            current_state = "closed";
           });
           socket.addEventListener("error", function (e: any) {
             console.log("Error from websocket", e);
@@ -151,7 +154,6 @@ export default class Speech {
       if (socket && socket.readyState === socket.OPEN) socket.close();
     }
 
-    let current_state = 'none';
     function toggleWebsocket(e: any) {
       var context = e.target;
       console.log("toggleWebsocket: " + context.state);

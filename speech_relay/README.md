@@ -4,9 +4,8 @@ Choose a new version number.  Examples below use version number 1.0
 
 gcloud auth configure-docker
 
-docker build --tag speach_relay .
-docker tag speach_relay gcr.io/elder-telemed/speach_relay
-docker push gcr.io/elder-telemed/speach_relay
+docker build --tag gcr.io/elder-telemed/speech_relay .
+docker push gcr.io/elder-telemed/speech_relay
 
 To run locally you will need to download a service account key and then:
 
