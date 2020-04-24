@@ -165,6 +165,18 @@ class ClinicianVideoImpl extends React.Component<
     }
   }
 
+  componentWillUnmount() {
+    const createTranscript =  firebase.functions().httpsCallable('createTranscript');
+    try {
+      createTranscript({transcript: this.state.transcription, uid: this.props.user.uid, encounterId: this.props.encounterId})
+      .then(function (response) {
+        console.log("Wrote transcript");
+      });
+    } catch(err) {
+      console.log(err);
+    }
+  }
+  
   render() {
     return (
       <>

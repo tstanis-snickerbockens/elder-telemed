@@ -10,6 +10,7 @@ const app = express();
 
 app.use(cors);
 let db = admin.firestore();
+let storage = admin.storage();
 
 var AWS = require("aws-sdk");
 var Promise = require('promise');
@@ -307,6 +308,47 @@ exports.annotateTranscription = functions.https.onRequest((request, response) =>
             });
         } catch(e) {
             console.log(e);
+        }
+    });
+});
+
+// curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/createTranscript -d '{"data": {"encounterId": "testVisit", "uid": "testUID", "transcript": [{"msg":"Test foo bar"},{"msg":""}]}}'
+exports.createTranscript = functions.https.onRequest((request, response) => {
+    return cors(request, response, () => {
+        try {
+            const metadata = {contentType: "text/html"};
+            const bucket = storage.bucket();
+            var transcript = request.body.data.transcript;
+            var encounterId = request.body.data.encounterId;
+            var uid = request.body.data.uid;
+            // Use uid so that we can quickly list all files for a user later
+            var fileName = "transcripts/" + uid + "_" + encounterId + ".txt";
+            var transcriptText = "";
+            if (!transcript || transcript.length === 0) {
+                console.log("Empty transcript.");
+                response.status(200).send({data:'ok'});
+                return;
+            }
+
+            transcript.forEach(element => transcriptText.concat(element.msg + "\n"));
+
+            const transcriptBuffer = new Buffer.from(transcriptText);
+            var file = bucket.file(fileName);
+            file.save(transcriptBuffer, {
+                metadata: metadata
+            }, function(err) {
+                if(!err) {
+                    console.log("Uploaded transcript file: " + fileName);
+                    response.status(200).send({data: 'ok'});
+                }
+                else {
+                    console.log(err, err.stack);
+                    response.status(500).send(err);
+                }    
+            });
+        } catch(e) {
+            console.log(e);
+            response.status(500).send(e);
         }
     });
 });
