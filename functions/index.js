@@ -292,6 +292,10 @@ exports.annotateTranscription = functions.https.onRequest((request, response) =>
         try {
             AWS.config.loadFromPath("aws_credentials.json");
             var message = request.body.data.message;
+            if (message.trim() == "") {
+                response.status(200).send({'data':""});
+                return;
+            }
             var params = {
                 'Text': message
             };
@@ -302,6 +306,7 @@ exports.annotateTranscription = functions.https.onRequest((request, response) =>
                         response.status(500).send(err);
                         console.log(err, err.stack);
                     } else {
+                        response.set('Cache-Control', 'public, max-age=300, s-maxage=600');
                         response.status(200).send({'data':data});
                         console.log(data);
                     }

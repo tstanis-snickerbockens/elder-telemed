@@ -18,26 +18,24 @@ interface AnnotationCache {
 }
 
 
+async function getAnnotation(message: string) {
+    const annotateTranscription = firebase.functions().httpsCallable('annotateTranscription');
+    const cache = {} as AnnotationCache;
+    const result = cache[message] || await annotateTranscription({ message });
+    cache[message] = result;
+    console.log("Annotation Result: " + result);
+    return result;
+};
 
 export default function AnnotatedText(props: AnnotationProps)  {
     const [result, setResult] = React.useState<AnnotationResult | null>(null);
 
-    const getAnnotation = (() => {
-        const annotateTranscription = firebase.functions().httpsCallable('annotateTranscription');
-        const cache = {} as AnnotationCache;
-        return async (message: string) => {
-            const result = cache[message] || await annotateTranscription({ message });
-            cache[message] = result;
-            return result;
-        };
-    })();
-
     React.useEffect(() => {
         getAnnotation(props.message).then(setResult);
-    }, [getAnnotation, props.message]);
+    }, [props.message]);
 
     let last = 0;
-    if (result) {
+    if (result && result.data && result.data.Entities) {
         return (
             <>
             {result.data.Entities.map((entity, index) => {

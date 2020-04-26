@@ -69,7 +69,8 @@ export default class Speech {
 
   handleTranscription(e: any) {
     var result = JSON.parse(e.data);
-    if (result.alternatives_) {
+    if (result.alternatives_ && result.alternatives_[0].transcript_.trim() !== "") {
+      console.log("Transcription result: " + result.alternatives_[0].transcript_ + " FINAL " + result.isFinal_)
       this.props.onSpeechText(
         result.alternatives_[0].transcript_,
         result.isFinal_
@@ -91,6 +92,9 @@ export default class Speech {
       var floatSamples = e.inputBuffer.getChannelData(0);
       // The samples are floats in range [-1, 1]. Convert to 16-bit signed
       // integer.
+      if (current_state === "closed") {
+        newWebsocket();
+      }
       socket.send(
         Int16Array.from(
           floatSamples.map(function (n) {
@@ -102,6 +106,7 @@ export default class Speech {
 
     let current_state = 'none';
     function newWebsocket() {
+      current_state = "opening";
       console.log("newWebsocket");
       var websocketPromise = new Promise(function (resolve, reject) {
         var socket = new WebSocket("wss://speech.prod.storyhealth.ai/transcribe");
