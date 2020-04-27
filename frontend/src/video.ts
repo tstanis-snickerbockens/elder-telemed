@@ -25,6 +25,15 @@ function getMediaStream(): Promise<MediaStream> {
   return globalMediaStream;
 }
 
+function setupPeer(mediaStream: MediaStream): RTCPeerConnection {
+  const pc = new RTCPeerConnection(servers);
+
+  mediaStream.getTracks().forEach(function (track) {
+    pc.addTrack(track, mediaStream);
+  });
+  return pc;
+}
+
 let msgSequenceNumber = 0;
 export async function startVideo(
   localVideo: HTMLVideoElement,
@@ -46,11 +55,7 @@ export async function startVideo(
   localVideo.srcObject = mediaStream;
 
   const yourId = Math.floor(Math.random() * 1000000000);
-  const pc = new RTCPeerConnection(servers);
-
-  mediaStream.getTracks().forEach(function (track) {
-    pc.addTrack(track, mediaStream);
-  });
+  const pc = setupPeer(mediaStream);
 
   let makingOffer = false;
   let ignoreOffer = false;

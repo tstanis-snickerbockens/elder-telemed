@@ -3,7 +3,9 @@ import { makeStyles, Theme, createStyles } from "@material-ui/core/styles";
 import { startVideo } from "./video";
 import { Role } from "./Role";
 import { PatientMode } from "./PatientMode";
+import PreVisitWork from "./PreVisitWork";
 import Typography from "@material-ui/core/Typography";
+import {QuestionType, PreVisitQuestion} from "./PreVisitQuestion";
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
     typography: {
@@ -136,7 +138,8 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     },
     waitingRoomWorkspace: {
         flex: "1 1 auto",
-        backgroundColor: '#E5E5E5',        
+        backgroundColor: '#E5E5E5',  
+        position: "relative",      
     },
     flexContainer: {
         display: 'flex',
@@ -173,6 +176,16 @@ interface Props {
     clinicianReady: boolean;
     mode: PatientMode
 }
+
+const pre_work_questions : Array<PreVisitQuestion> = [
+    {type: QuestionType.MULTI_CHOICE, options: ["yes", "no", "I don't know"], queryText: "Are you taking vicodin still?"},
+    {type: QuestionType.MULTI_CHOICE, options: ["yes", "no", "I don't know"], queryText: "Have you ever been diagnosed with Cancer?"},
+    {type: QuestionType.MULTI_CHOICE, options: ["yes", "no", "I don't know"], queryText: "Have you ever been diagnosed with Diabetes?"},
+    {type: QuestionType.MULTI_CHOICE, options: ["yes", "no", "I don't know"], queryText: "Have you ever been diagnosed with Heart Disease?"},
+    {type: QuestionType.MULTI_CHOICE, options: ["yes", "no", "I don't know"], queryText: "Have you ever been diagnosed with Stroke?"},
+    {type: QuestionType.MULTI_CHOICE, options: ["yes", "no", "I don't know"], queryText: "Have you ever been diagnosed with Shingles?"},
+    {type: QuestionType.TEXT, options: [], queryText: "What are you here to discuss?"}, 
+    ];
 
 export default function UserPage(props: Props) {
     const classes = useStyles();
@@ -229,6 +242,7 @@ export default function UserPage(props: Props) {
                 </div>
             </div>
             <div className={props.mode === PatientMode.WAITING_ROOM ? classes.waitingRoomWorkspace: classes.hidden}>
+                <PreVisitWork encounterId={props.encounterId} questions={pre_work_questions}></PreVisitWork>
             </div>
         </div>
         </>
