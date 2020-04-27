@@ -220,8 +220,12 @@ exports.clearMessages = functions.https.onRequest((request, response) => {
             return;
         }
         let ref = getref(msgdb, encounterId, request.body.data.toRole, request.body.data.fromRole);
-        ref.set({'queue': []});
-        response.status(200).send({"data": "ok"});
+        ref.set({'queue': []}).then(() => {
+            response.status(200).send({"data": "ok"})
+        }).catch((e) => {
+            console.log(e);
+            response.status(500).send();
+        })
     });
 });
 

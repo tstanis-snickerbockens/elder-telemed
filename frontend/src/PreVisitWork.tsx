@@ -1,9 +1,5 @@
 import React, {ChangeEvent, KeyboardEvent } from "react";
 import { makeStyles, Theme, createStyles } from "@material-ui/core/styles";
-import { startVideo } from "./video";
-import { Role } from "./Role";
-import { PatientMode } from "./PatientMode";
-import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import { green, blue, grey } from '@material-ui/core/colors';
 import TextField from "@material-ui/core/TextField";
@@ -61,7 +57,7 @@ function TextAnswerEntry({answer, onAnswer} : AnswerEntryProps) {
 
     const keyPress = (e: KeyboardEvent) => {
         // Enter Key
-        if(e.keyCode == 13) {
+        if(e.keyCode === 13) {
            handleAnswer();
         }
     };
@@ -179,7 +175,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 
 export default function PreVisitWork(props: Props) {
     const classes = useStyles();
-    const [finishedQuestions, setFinishedQuestions] = React.useState<Array<FinishedQuestionEntry>>([]);
+    const [finishedQuestions] = React.useState<Array<FinishedQuestionEntry>>([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = React.useState<number>(0);
     const [currentAnswer, setCurrentAnswer] = React.useState<string>("");
     const finishedRef = React.useRef<HTMLDivElement>(null);
