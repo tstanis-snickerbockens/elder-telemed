@@ -208,6 +208,23 @@ function getref(msgdb, encounterId, toRole, fromRole) {
     return msgdb.ref("messages/" + encounterId + "-" + toRole + "-" + fromRole);
 }
 
+exports.clearMessages = functions.https.onRequest((request, response) => {
+    return cors(request, response, () => {
+        let encounterId = request.body.data.encounterId;
+        if (!request.body.data.toRole) {
+            response.status(400).send("Missing To Role");
+            return;
+        }
+        if (!request.body.data.fromRole) {
+            response.status(400).send("Missing From Role");
+            return;
+        }
+        let ref = getref(msgdb, encounterId, request.body.data.toRole, request.body.data.fromRole);
+        ref.set({'queue': []});
+        response.status(200).send({"data": "ok"});
+    });
+});
+
 exports.sendMessage = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         console.log("Saving: " + JSON.stringify(request.body.data, null, 2));
@@ -257,11 +274,12 @@ exports.readMessage = functions.https.onRequest((request, response) => {
         let encounterId = request.body.data.encounterId;
         let toRole = request.body.data.toRole;
         let fromRole = request.body.data.fromRole;
-        console.log("Read from " + requesterId + " of " + encounterId);
         let ref = getref(msgdb, encounterId, toRole, fromRole);
         let returnVal = null;
         ref.transaction(function(data) {
-            console.log("Loaded: " + JSON.stringify(data, null, 2));
+            if (data) {
+                console.log("Loaded: " + JSON.stringify(data, null, 2));
+            }
             if (data == null || !data.queue || data.queue.length == 0) {
                 return data;
             }
@@ -281,8 +299,13 @@ exports.readMessage = functions.https.onRequest((request, response) => {
             console.log("New Queue Length " + data.queue.length);
             return data;
         }).then(() => {
-            console.log("Returning: " + JSON.stringify(returnVal, null, 2));
+            if (returnVal) {
+                console.log("Returning: " + JSON.stringify(returnVal, null, 2));
+            }
             response.status(200).send({'data': returnVal});
+        }).catch((e) => {
+            console.log("Error: " + e);
+            response.status(500).send(e);
         });
     });
 });
@@ -313,6 +336,7 @@ exports.annotateTranscription = functions.https.onRequest((request, response) =>
             });
         } catch(e) {
             console.log(e);
+            response.status(500).send(e);
         }
     });
 });

@@ -47,7 +47,9 @@ export async function startVideo(
   console.log("Encounter: " + encounterId);
   console.log("Role: " + localRole + " -> " + remoteRole);
   
-  console.log("localVideo", localVideo);
+  console.log("Start Video");
+  const clearMessages = firebase.functions().httpsCallable("clearMessages");
+  await clearMessages({encoutnerId: encounterId, toRole: remoteRole, fromRole: localRole});
 
   const mediaStream = await getMediaStream();
   console.log("mediaStream", mediaStream);
