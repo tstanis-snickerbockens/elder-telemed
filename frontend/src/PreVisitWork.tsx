@@ -4,10 +4,14 @@ import Button from "@material-ui/core/Button";
 import { green, blue, grey } from '@material-ui/core/colors';
 import TextField from "@material-ui/core/TextField";
 import {PreVisitQuestion, QuestionType} from "./PreVisitQuestion";
+import {DataChannel} from "./video";
+import {Role} from "./Role";
 
 interface Props {
     encounterId: string;
-    questions: Array<PreVisitQuestion>;
+    questions: Array<PreVisitQuestion>,
+    dataChannel: DataChannel,
+    role: Role,
 }
 
 interface FinishedQuestionEntry {
@@ -77,7 +81,7 @@ function TextAnswerEntry({answer, onAnswer} : AnswerEntryProps) {
 
 interface MultiChoiceAnswerEntryProps {
     options: Array<string>,
-    onAnswer: (answer: string) => void;
+    onAnswer: (answer: string) => void,
 }
 
 function MultiChoiceAnswerEntry({options, onAnswer}: MultiChoiceAnswerEntryProps) {
@@ -173,20 +177,57 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     }
 }));
 
+enum DataChannelMessage {
+    CHOOSE_ANSWER = 'choose_answer',
+    SET_STATE = 'set_state',
+    GOTO_INDEX = 'goto_index'
+}
+
+interface Message {
+    msg_type: DataChannelMessage,
+    data: any
+}
+
 export default function PreVisitWork(props: Props) {
     const classes = useStyles();
-    const [finishedQuestions] = React.useState<Array<FinishedQuestionEntry>>([]);
+    const [finishedQuestions, setFinishedQuestions] = React.useState<Array<FinishedQuestionEntry>>([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = React.useState<number>(0);
     const [currentAnswer, setCurrentAnswer] = React.useState<string>("");
     const finishedRef = React.useRef<HTMLDivElement>(null);
-    const handleAnswer = (answer: string) => {
+
+    const handleAnswer = React.useCallback((answer: string) => {
+        console.log("handleAnswer: " + answer);
         finishedQuestions.splice(currentQuestionIndex, 1, {
             queryText: props.questions[currentQuestionIndex].queryText,
             answer: answer
         });
+
         setCurrentAnswer("");
+        console.log("Question Index Before " + currentQuestionIndex);
         setCurrentQuestionIndex(currentQuestionIndex + 1);
-    };
+        console.log("Question Index Now " + currentQuestionIndex);
+    }, [currentQuestionIndex, finishedQuestions, props.questions]);
+
+    React.useEffect(() => {
+        const messageRouter = {
+            'choose_answer': (answer: any) => {
+                handleAnswer(answer as string);
+            },
+            'set_state': (state: any) => {
+                setFinishedQuestions(state.finished as Array<FinishedQuestionEntry>);
+                setCurrentQuestionIndex(state.currentIndex as number);
+            },
+            'goto_index': (index: any) => {
+                setCurrentQuestionIndex(index as number);
+            }
+        };
+
+        props.dataChannel.setOnData((data: object) => {
+            const msg = data as Message;
+            messageRouter[msg.msg_type](msg.data);
+        });
+    }, [props.dataChannel, handleAnswer]);
+    
     React.useEffect(() => {
         if (finishedRef.current) {
             finishedRef.current.scrollTop = finishedRef.current.scrollHeight;
@@ -195,7 +236,16 @@ export default function PreVisitWork(props: Props) {
 
     const onClickFinished = (index: number) => {
         setCurrentQuestionIndex(index);
+        const msg = {msg_type: DataChannelMessage.GOTO_INDEX, data: index};
+        props.dataChannel.sendMessage(msg);
     }
+
+    const onUIAnswer = (answer: string) => {
+        const msg = {msg_type: DataChannelMessage.CHOOSE_ANSWER, data: answer};
+        props.dataChannel.sendMessage(msg);
+        handleAnswer(answer);
+    }
+
     const questionsFinished = currentQuestionIndex >= props.questions.length;
     return (
         <>
@@ -229,11 +279,11 @@ export default function PreVisitWork(props: Props) {
                     {questionsFinished || props.questions[currentQuestionIndex].type === QuestionType.TEXT ?
                         <TextAnswerEntry 
                             answer={currentAnswer} 
-                            onAnswer={handleAnswer}></TextAnswerEntry> 
+                            onAnswer={onUIAnswer}></TextAnswerEntry> 
                         :
                         <MultiChoiceAnswerEntry 
                             options={props.questions[currentQuestionIndex].options} 
-                            onAnswer={handleAnswer}></MultiChoiceAnswerEntry>
+                            onAnswer={onUIAnswer}></MultiChoiceAnswerEntry>
                     }
                 </div>
             </div>

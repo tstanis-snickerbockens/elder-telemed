@@ -34,6 +34,63 @@ function setupPeer(mediaStream: MediaStream): RTCPeerConnection {
   return pc;
 }
 
+enum DataChannelState {
+  CLOSED,
+  OPEN
+}
+
+export class DataChannel {
+  private onData: (data: any) => void;
+  private dataChannel: RTCDataChannel | null;
+  private state: DataChannelState;
+
+  constructor(onData: (data: object) => void) {
+    this.state = DataChannelState.CLOSED;
+    this.onData = onData;
+    this.dataChannel = null;
+  }
+
+  setOnData(onData: (data: object) => void) {
+    this.onData = onData;
+  }
+
+  setup(pc: RTCPeerConnection, listen: boolean) {
+    if (!listen) {
+      this.dataChannel = pc.createDataChannel("foo");
+      this.configureDataChannel();
+      this.dataChannel.onopen = (event) => {
+        console.log("Connected!" + this);
+        this.state = DataChannelState.OPEN;
+      };
+      
+    } else {
+      this.dataChannel = null;
+      pc.ondatachannel = (event) => {
+        console.log("ondatachannel! " + this);
+        this.dataChannel = event.channel;
+        this.configureDataChannel();
+      }
+    }
+  }
+
+  configureDataChannel() {
+    if (this.dataChannel) {
+      this.dataChannel.onmessage = (event) => {
+        console.log("New Message: " + event.data);
+        this.onData(JSON.parse(event.data));
+      };
+    }
+  }
+
+  sendMessage(msg: object) {
+    console.log("Send: " + msg);
+    if (this.dataChannel) {
+      console.log("Send Data Channel: " + JSON.stringify(msg))
+      this.dataChannel.send(JSON.stringify(msg));
+    }
+  }
+}
+
 let msgSequenceNumber = 0;
 export async function startVideo(
   localVideo: HTMLVideoElement,
@@ -43,6 +100,7 @@ export async function startVideo(
   encounterId: string | undefined,
   polite: boolean,
   onConnect: () => void | undefined,
+  dataChannel: DataChannel
 ) {
   console.log("Encounter: " + encounterId);
   console.log("Role: " + localRole + " -> " + remoteRole);
@@ -58,6 +116,7 @@ export async function startVideo(
 
   const yourId = Math.floor(Math.random() * 1000000000);
   const pc = setupPeer(mediaStream);
+  dataChannel.setup(pc, polite);
 
   let makingOffer = false;
   let ignoreOffer = false;
