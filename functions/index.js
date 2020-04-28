@@ -152,7 +152,7 @@ exports.queryEncounters = functions.https.onRequest((request, response) => {
 // curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/createPatient -d '{"data": {"patientEmail": "mypatient", "patient":{"name": "foo bar"}}}'
 exports.createPatient = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
-        console.log("createPatient: " + JSON.stringify(request.body.data, null, 2))
+        console.log("createPatient: " + JSON.stringify(request.body.data, null, 2));
         var patientEmail = request.body.data.patientEmail;
         var patient = request.body.data.patient;
         let ref = db.collection('patients').doc(patientEmail);
@@ -167,7 +167,36 @@ exports.createPatient = functions.https.onRequest((request, response) => {
                     }
                 });
         }).then(result => {
-            //ref.collection('webrtc_signal_queue').doc('queue').set({});
+            console.log('Transaction success!');
+            response.status(200).send({data:'ok'});
+        }).catch(err => {
+            console.log('Transaction failure:', err.msg?err.msg:err);
+            if (err.code) {
+                response.status(err.code).send(err.msg);
+            } else {
+                response.status(500).send();
+            }
+        });
+    });
+});
+
+exports.updatePatient = functions.https.onRequest((request, response) => {
+    return cors(request, response, () => {
+        console.log("updatePatient: " + JSON.stringify(request.body.data, null, 2));
+        var patientEmail = request.body.data.patientEmail;
+        var patient = request.body.data.patient;
+        let ref = db.collection('patients').doc(patientEmail);
+        db.runTransaction(t => {
+            return t.get(ref)
+                .then(doc => {
+                    if (doc.exists) {                    
+                        t.set(ref, patient);
+                        return Promise.resolve("Saved");
+                    } else {
+                        return Promise.reject({code: 404, msg:"Patient doesn't exist: " + patientEmail});
+                    }
+                });
+        }).then(result => {
             console.log('Transaction success!');
             response.status(200).send({data:'ok'});
         }).catch(err => {

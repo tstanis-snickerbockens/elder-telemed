@@ -6,11 +6,9 @@ import {
   withStyles,
 } from "@material-ui/core/styles";
 import Popover from "@material-ui/core/Popover";
-import Button from "@material-ui/core/Button";
-import TextField from "@material-ui/core/TextField";
 import AddCircleIcon from "@material-ui/icons/AddCircle";
 import { IconButton } from "@material-ui/core";
-
+import PatientForm from "./PatientForm";
 import { PatientList } from "./PatientList";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import * as firebase from "firebase/app";
@@ -20,15 +18,11 @@ const styles = (theme: Theme) =>
     typography: {
       padding: theme.spacing(2),
     },
-    container: {
-      display: "flex",
-      flexWrap: "wrap",
-    },
-    textField: {
-      marginLeft: theme.spacing(1),
-      marginRight: theme.spacing(1),
-      width: 200,
-    },
+
+    
+    newPatientPopover: {
+      padding: '10px'
+    }
   });
 
 interface PatientPageProps
@@ -40,7 +34,6 @@ interface PatientPageProps
 interface PatientPageState {
   anchorEl: HTMLElement | null;
   open: boolean;
-  new_patient_email: string;
   refresh_patient_list: boolean;
 }
 
@@ -53,49 +46,24 @@ class PatientPageImpl extends React.Component<
     this.state = {
       anchorEl: null,
       open: false,
-      new_patient_email: "",
       refresh_patient_list: false,
     };
-    this.handleInputChange = this.handleInputChange.bind(this);
     this.handleNewPatient = this.handleNewPatient.bind(this);
+    this.onEditComplete = this.onEditComplete.bind(this);
   }
   handleNewPatient(event: MouseEvent<HTMLButtonElement>) {
     this.setState({ anchorEl: event.currentTarget, open: true });
   }
 
-  handleNewPatientClose() {}
 
-  handleSavePatient() {
-    var createPatient = firebase.functions().httpsCallable("createPatient");
-    var page = this;
-    createPatient({
-      patientEmail: this.state.new_patient_email,
-      patient: { email: this.state.new_patient_email },
-    })
-      .then(function (response) {
-        console.log(
-          "Create Encounter Response: " +
-            console.log(JSON.stringify(response.data))
-        );
-        page.setState((prevState) => ({
-          ...prevState,
-          refresh_patient_list: !prevState.refresh_patient_list,
-        }));
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-    this.setState({ anchorEl: null, open: false });
-  }
-
-  handleInputChange(event: ChangeEvent<HTMLInputElement>) {
-    const target = event.target;
-    const name = target.name;
-
+  onEditComplete(changed: boolean) {
+      
     this.setState((prevState) => ({
       ...prevState,
-      [name]: target.value,
+      refresh_patient_list: !prevState.refresh_patient_list,
     }));
+      
+    this.setState({ anchorEl: null, open: false });
   }
 
   render() {
@@ -108,7 +76,6 @@ class PatientPageImpl extends React.Component<
         <Popover
           open={this.state.open}
           anchorEl={this.state.anchorEl}
-          onClose={this.handleNewPatientClose}
           anchorOrigin={{
             vertical: "bottom",
             horizontal: "center",
@@ -118,20 +85,9 @@ class PatientPageImpl extends React.Component<
             horizontal: "center",
           }}
         >
-          <form className={this.props.classes.container} noValidate>
-            <div>
-              <TextField
-                name="new_patient_email"
-                onChange={this.handleInputChange}
-                id="patient-email"
-                label="Email"
-              />
-            </div>
-            <div></div>
-          </form>
-          <Button variant="contained" onClick={() => this.handleSavePatient()}>
-            Save
-          </Button>
+          <div className={this.props.classes.newPatientPopover}>
+            <PatientForm previousName='' previousEmail='' newPatient={true} onComplete={this.onEditComplete}></PatientForm>
+          </div>
         </Popover>
         <PatientList
           user={this.props.user}
