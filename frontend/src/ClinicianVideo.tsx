@@ -1,7 +1,7 @@
 import React from "react";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import * as firebase from "firebase/app";
-import { startVideo } from "./video";
+import { startVideo, DataChannel } from "./video";
 import Speech from "./speech";
 import {
   createStyles,
@@ -148,7 +148,8 @@ class ClinicianVideoImpl extends React.Component<
         Role.PATIENT,
         this.props.encounterId,
         true,
-        this.onPatientConnect
+        this.onPatientConnect,
+        new DataChannel(()=>{})
       );
       this.speech.start();
     }
@@ -160,7 +161,8 @@ class ClinicianVideoImpl extends React.Component<
         Role.ADVOCATE,
         this.props.encounterId,
         true,
-        this.onAdvocateConnect
+        this.onAdvocateConnect,
+        new DataChannel(()=>{})
       );
     }
   }

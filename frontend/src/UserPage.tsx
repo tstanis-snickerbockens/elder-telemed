@@ -1,6 +1,6 @@
 import React, { } from "react";
 import { makeStyles, Theme, createStyles } from "@material-ui/core/styles";
-import { startVideo } from "./video";
+import { startVideo, DataChannel } from "./video";
 import { Role } from "./Role";
 import { PatientMode } from "./PatientMode";
 import PreVisitWork from "./PreVisitWork";
@@ -177,6 +177,8 @@ interface Props {
     mode: PatientMode
 }
 
+
+
 const pre_work_questions : Array<PreVisitQuestion> = [
     {type: QuestionType.MULTI_CHOICE, options: ["yes", "no", "I don't know"], queryText: "Are you taking vicodin still?"},
     {type: QuestionType.MULTI_CHOICE, options: ["yes", "no", "I don't know"], queryText: "Have you ever been diagnosed with Cancer?"},
@@ -194,6 +196,7 @@ export default function UserPage(props: Props) {
     const otherPartyVideoRef = React.useRef<HTMLVideoElement>(null);
     const [connectedToAdvocate, setConnectedToAdvocate] = React.useState(false);
     const [connectedToClinician, setConnectedToClinician] = React.useState(false);
+    const [dataChannel] = React.useState(new DataChannel(() => {}));
 
     const onAdvocateVideoConnect = (() => {
         setConnectedToAdvocate(true);
@@ -210,13 +213,13 @@ export default function UserPage(props: Props) {
                 let other = props.role === Role.PATIENT ? Role.ADVOCATE : Role.PATIENT;
                 startVideo(localVideoRef.current, otherPartyVideoRef.current, 
                     props.role, other, props.encounterId, props.role === Role.ADVOCATE ? true : false,
-                    onAdvocateVideoConnect);
+                    onAdvocateVideoConnect, dataChannel);
             } else {
                 startVideo(localVideoRef.current, clinicianVideoRef.current, 
-                    props.role, Role.CLINICIAN, props.encounterId, false, onClinicianVideoConnect);
+                    props.role, Role.CLINICIAN, props.encounterId, false, onClinicianVideoConnect, dataChannel);
             }
         }
-    }, [props.mode, props.encounterId, props.role]);
+    }, [props.mode, props.encounterId, props.role, dataChannel]);
     
     return (
         <>
@@ -242,7 +245,7 @@ export default function UserPage(props: Props) {
                 </div>
             </div>
             <div className={props.mode === PatientMode.WAITING_ROOM ? classes.waitingRoomWorkspace: classes.hidden}>
-                <PreVisitWork encounterId={props.encounterId} questions={pre_work_questions}></PreVisitWork>
+                <PreVisitWork encounterId={props.encounterId} questions={pre_work_questions} dataChannel={dataChannel} role={props.role}></PreVisitWork>
             </div>
         </div>
         </>
