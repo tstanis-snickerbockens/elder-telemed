@@ -67,6 +67,57 @@ exports.createEncounter = functions.https.onRequest((request, response) => {
     });
 });
 
+exports.updateEncounter = functions.https.onRequest((request, response) => {
+    return cors(request, response, () => {
+        console.log("updateEncounter: " + JSON.stringify(request.body.data, null, 2))
+        var encounterId = request.body.data.encounterId;
+        var encounter = request.body.data.encounter;
+
+        if (!encounter.patient || 0 === encounter.patient.length) {
+            response.status(400).send("No patient specified.");
+            return;
+        }
+
+        // Check patient exists and rewrite it as a firebase reference
+        db.collection('patients').doc(encounter.patient).get()
+        .then(doc => {
+            console.log("Check Patient: " + doc.exists + " " + JSON.stringify(doc.data()))
+            if (!doc.exists) {
+                console.log("Rejecting!");
+                return Promise.reject({code: 400, msg:"Patient doesn't exist: " + encounter.patient});
+            } else {
+                encounter.patient = db.doc('patients/' + encounter.patient);
+            }
+        }).then(() => {
+            let ref = db.collection('encounters').doc(encounterId);
+            let transaction = db.runTransaction(t => {
+                return t.get(ref)
+                    .then(doc => {
+                        if (!doc.exists) {
+                            return Promise.reject({code: 404, msg:"Encounter ID doesn't exists: " + encounterId});
+                        } else {
+                            t.set(ref, encounter);
+                            return Promise.resolve("Saved");
+                        }
+                    });
+            }).then(result => {
+                console.log('Transaction success!');
+                response.status(200).send({data:'ok'});
+            }).catch(err => {
+                console.log('Transaction failure:', err.msg?err.msg:err);
+                if (err.code) {
+                    response.status(err.code).send(err.msg);
+                } else {
+                    response.status(500).send();
+                }
+            });
+        }).catch(err => {
+            response.status(err.code).send(err.msg);
+            return;
+        });
+    });
+});
+
 // Rewrite encounter to replace all references with actual patient Ids which
 // can be returned through the API.
 function rewriteEncounterReferences(encounter) {

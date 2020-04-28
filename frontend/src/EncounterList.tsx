@@ -13,6 +13,7 @@ import TableContainer from "@material-ui/core/TableContainer";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import Paper from "@material-ui/core/Paper";
+import {Encounter} from "encounter";
 import * as firebase from "firebase/app";
 
 const styles = (theme: Theme) =>
@@ -40,16 +41,6 @@ const styles = (theme: Theme) =>
     },
   });
 
-interface EncounterRow {
-  encounterId: string;
-  patient: string;
-  advocate: string;
-  time: number;
-  encounter_state: string;
-  patient_connected: boolean;
-  advocate_connected: boolean;
-}
-
 interface EncounterListProps
   extends RouteComponentProps<{}>,
     WithStyles<typeof styles> {
@@ -61,17 +52,9 @@ interface EncounterListProps
 }
 
 interface EncounterListState {
-  encounters: Array<EncounterRow>;
+  encounters: Array<Encounter>;
 }
 
-interface ListEncounterEntry {
-  encounterId: string;
-  encounter: {
-    patient: string;
-    advocate: string;
-    when: number;
-  };
-}
 
 class EncounterListImpl extends React.Component<
   EncounterListProps,
@@ -84,7 +67,7 @@ class EncounterListImpl extends React.Component<
   }
 
   private headers = [
-    { id: "name", numeric: false, disablePadding: true, label: "Patient Name" },
+    { id: "name", numeric: false, disablePadding: false, label: "Patient Name" },
     {
       id: "advocates",
       numeric: false,
@@ -133,17 +116,9 @@ class EncounterListImpl extends React.Component<
     let listEncounters = firebase.functions().httpsCallable("listEncounters");
     listEncounters({ userId: "myuser" })
       .then((response) => {
-        let newEncounters = response.data.map((entry: ListEncounterEntry) => {
+        let newEncounters = response.data.map((entry: Encounter) => {
           console.log(JSON.stringify(entry));
-          return {
-            encounterId: entry.encounterId,
-            patient: entry.encounter.patient,
-            advocate: entry.encounter.advocate,
-            time: entry.encounter.when,
-            encounter_state: "",
-            patient_connected: false,
-            advocate_connected: false,
-          };
+          return entry;
         });
         this.setState((state) => {
           return { encounters: newEncounters };
@@ -163,7 +138,7 @@ class EncounterListImpl extends React.Component<
               {this.headers.map((headCell) => (
                 <TableCell
                   key={headCell.id}
-                  align={headCell.numeric ? "right" : "left"}
+                  align={"left"}
                   padding={headCell.disablePadding ? "none" : "default"}
                 >
                   {headCell.label}
@@ -175,14 +150,14 @@ class EncounterListImpl extends React.Component<
             {this.state.encounters.map((row) => (
               <TableRow key={row.encounterId}>
                 <TableCell component="th" scope="row">
-                  {row.patient}
+                  {row.encounter.patient}
                 </TableCell>
-                <TableCell align="right">{row.advocate}</TableCell>
-                <TableCell align="right">{row.time}</TableCell>
-                <TableCell align="right">{row.encounter_state}</TableCell>
-                <TableCell align="right">{row.patient_connected}</TableCell>
-                <TableCell align="right">{row.advocate_connected}</TableCell>
-                <TableCell align="right">
+                <TableCell align="left">{row.encounter.advocate}</TableCell>
+                <TableCell align="left">{row.encounter.when}</TableCell>
+                <TableCell align="left">{row.encounter.state}</TableCell>
+                <TableCell align="left">{row.encounter.patientState ? row.encounter.patientState.state : ""}</TableCell>
+                <TableCell align="left">{row.encounter.advocateState ? row.encounter.advocateState.state : ""}</TableCell>
+                <TableCell align="left">
                   <button
                     onClick={(event) => this.props.onVisit(row.encounterId)}
                   >

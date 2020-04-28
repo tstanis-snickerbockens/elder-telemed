@@ -1,4 +1,4 @@
-import React, { MouseEvent, ChangeEvent } from "react";
+import React from "react";
 import {
   createStyles,
   Theme,
@@ -53,11 +53,11 @@ export default function PatientForm({newPatient, previousEmail, previousName, on
             console.log(err);
             onComplete(false);
         });
-    }, [email, name]);
+    }, [email, name, newPatient, onComplete]);
 
     const handleCancel = React.useCallback(() => {
         onComplete(false);
-    }, []);
+    }, [onComplete]);
 
     return (
         <>

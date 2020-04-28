@@ -1,4 +1,4 @@
-import React, { MouseEvent, ChangeEvent } from "react";
+import React, { MouseEvent } from "react";
 import {
   createStyles,
   Theme,

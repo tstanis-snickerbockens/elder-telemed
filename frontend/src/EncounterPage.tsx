@@ -6,11 +6,10 @@ import {
   withStyles,
 } from "@material-ui/core/styles";
 import Popover from "@material-ui/core/Popover";
-import Button from "@material-ui/core/Button";
-import TextField from "@material-ui/core/TextField";
 import AddCircleIcon from "@material-ui/icons/AddCircle";
 import IconButton from "@material-ui/core/IconButton";
-
+import { newEncounter } from "./encounter";
+import EncounterForm from "./EncounterForm";
 import { EncounterList } from "./EncounterList";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import * as firebase from "firebase/app";
@@ -31,6 +30,9 @@ const styles = (theme: Theme) =>
       marginLeft: theme.spacing(1),
       marginRight: theme.spacing(1),
       width: 200,
+    },
+    popoverInside: {
+      margin: theme.spacing(1),
     },
   });
 
@@ -136,42 +138,9 @@ class EncounterPageImpl extends React.Component<
               horizontal: "center",
             }}
           >
-            <form className={this.props.classes.container} noValidate>
-              <div>
-                <TextField
-                  name="new_encounter_patient"
-                  onChange={this.handleInputChange}
-                  id="patient-name"
-                  label="Patient"
-                />
-                <TextField
-                  name="new_encounter_advocate"
-                  onChange={this.handleInputChange}
-                  id="advocate-name"
-                  label="Advocate"
-                />
-              </div>
-              <div>
-                <TextField
-                  name="new_encounter_date"
-                  id="datetime-local"
-                  label="Time"
-                  type="datetime-local"
-                  defaultValue="2020-05-24T10:30"
-                  className={this.props.classes.textField}
-                  onChange={this.handleInputChange}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                />
-              </div>
-            </form>
-            <Button variant="contained" onClick={this.handleSaveEncounter}>
-              Save
-            </Button>
-            <Button variant="contained" onClick={this.handleNewEncounterClose}>
-              Cancel
-            </Button>
+            <div className={this.props.classes.popoverInside}>
+              <EncounterForm isNewEncounter={true} previousEncounter={newEncounter()} onComplete={this.handleNewEncounterClose}></EncounterForm>
+            </div>
           </Popover>
           <EncounterList
             user={this.props.user}

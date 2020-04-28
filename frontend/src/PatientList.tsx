@@ -81,10 +81,6 @@ export function PatientList(props: PatientListProps) {
   const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>();
   const [editOpen, setEditOpen] = React.useState<boolean>(false);
 
-  React.useEffect(() => {
-    refreshPatients();    
-  }, [props.refresh]);
-
   const refreshPatients = React.useCallback(() => {
     console.log("refreshPatients");
     let listPatients = firebase.functions().httpsCallable("listPatients");
@@ -105,17 +101,21 @@ export function PatientList(props: PatientListProps) {
       });
   }, []);
 
+  React.useEffect(() => {
+    refreshPatients();    
+  }, [props.refresh, refreshPatients]);
+
   const onEditPatient = React.useCallback((event, index) => {
     setAnchorEl(event.target);
     setEditOpen(!editOpen);
-  }, []);
+  }, [editOpen]);
 
   const onEditComplete = React.useCallback((changed: boolean) => {
     if (changed) {
       refreshPatients();
     }
     setEditOpen(false);
-  }, []);
+  }, [refreshPatients]);
   
   return (
     <TableContainer component={Paper}>
