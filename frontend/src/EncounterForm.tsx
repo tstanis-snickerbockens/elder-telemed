@@ -8,6 +8,12 @@ import Button from "@material-ui/core/Button";
 import TextField from "@material-ui/core/TextField";
 import { Encounter } from "./encounter";
 import * as firebase from "firebase/app";
+import DateFnsUtils from '@date-io/date-fns';
+import {
+    MuiPickersUtilsProvider,
+    DateTimePicker,
+  } from '@material-ui/pickers';
+import { whileStatement } from "@babel/types";
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
     textField: {
@@ -36,7 +42,7 @@ export default function EncounterForm({isNewEncounter, previousEncounter, onComp
     const classes = useStyles();
     const [patient, setPatient] = React.useState(previousEncounter.encounter.patient);
     const [advocate, setAdvocate] = React.useState(previousEncounter.encounter.advocate);
-    const [when, setWhen] = React.useState(previousEncounter.encounter.when);
+    const [when, setWhen] = React.useState(new Date(previousEncounter.encounter.when));
 
     const handleSave = React.useCallback(() => {
         console.log("Previous Encounter: "+ JSON.stringify(previousEncounter));
@@ -45,7 +51,7 @@ export default function EncounterForm({isNewEncounter, previousEncounter, onComp
         Object.assign(newEncounter.encounter, previousEncounter.encounter);
         newEncounter.encounter.patient = patient;
         newEncounter.encounter.advocate = advocate;
-        newEncounter.encounter.when = when;
+        newEncounter.encounter.when = when.getTime();
 
         console.log("Saving: " + JSON.stringify(newEncounter));
         serverFunction(newEncounter).then(function (response) {
@@ -84,21 +90,14 @@ export default function EncounterForm({isNewEncounter, previousEncounter, onComp
                 value={advocate}
                 variant="outlined"
             />
-            <TextField
-                  name="new_encounter_date"
-                  id="datetime-local"
-                  label="Time"
-                  type="datetime-local"
-                  defaultValue="2020-05-24T10:30"
-                  value={when}
-                  onChange={(e) => setWhen(e.target.value)}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  inputProps={{
-                    step: 900, // 15 min
-                  }}
+            <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                <DateTimePicker
+                    label="Appointment Time"
+                    inputVariant="outlined"
+                    value={when}
+                    onChange={(e: any) => setWhen(e)}
                 />
+            </MuiPickersUtilsProvider>
         </form>
         <Button variant="contained" onClick={() => handleSave()}>
             Save

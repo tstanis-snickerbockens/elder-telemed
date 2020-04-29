@@ -83,7 +83,7 @@ const MainClinicianPanel = ({ onVisit, user }: MainClinicianPanelProps) => {
         aria-label="simple tabs example"
       >
         <Tab label="Encounters" />
-        <Tab label="Patient" />
+        <Tab label="Patients" />
       </Tabs>
       <TabPanel value={value} index={0}>
         <EncounterPage onVisit={onVisit} user={user}></EncounterPage>

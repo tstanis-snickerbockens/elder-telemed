@@ -172,11 +172,11 @@ class EncounterListImpl extends React.Component<
                   {row.encounter.patient}
                 </TableCell>
                 <TableCell align="left">{row.encounter.advocate}</TableCell>
-                <TableCell align="left">{row.encounter.when}</TableCell>
+                <TableCell align="left">{new Date(row.encounter.when).toLocaleString()}</TableCell>
                 <TableCell align="left">{row.encounter.state}</TableCell>
                 <TableCell align="left">{row.encounter.patientState ? row.encounter.patientState.state : ""}</TableCell>
                 <TableCell align="left">{row.encounter.advocateState ? row.encounter.advocateState.state : ""}</TableCell>
-                <TableCell align="left">
+                <TableCell align="right">
                   <ButtonGroup color="primary" aria-label="outlined primary button group">
                     <Button size="small" variant="contained"
                       onClick={(event: any) => this.onEdit(event, index)}

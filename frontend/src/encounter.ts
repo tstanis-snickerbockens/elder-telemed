@@ -22,7 +22,7 @@ export interface Encounter {
     encounter: {
         patient: string;
         advocate: string;
-        when: string;
+        when: number;
         patientState: PersonTimedState;
         advocateState: PersonTimedState;
         doctorState: PersonTimedState;
@@ -37,7 +37,7 @@ export function newEncounter(): Encounter {
         encounter: {
             patient: "",
             advocate: "",
-            when: "",
+            when: new Date().getTime(),
             patientState: { state: PersonState.NONE, lastUpdateTime: 0 },
             advocateState: { state: PersonState.NONE, lastUpdateTime: 0 },
             doctorState: { state: PersonState.NONE, lastUpdateTime: 0 },
