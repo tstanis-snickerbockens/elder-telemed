@@ -15,6 +15,7 @@ import { EncounterPage } from "./EncounterPage";
 import { PatientPage } from "./PatientPage";
 import { Box, Tabs, Tab } from "@material-ui/core";
 import { StoryContext, StoryTopButton } from "./StoryHome";
+import { Encounter } from "./encounter";
 
 const styles = (theme: Theme) =>
   createStyles({
@@ -64,7 +65,7 @@ function TabPanel(props: TabPanelProps) {
 }
 
 type MainClinicianPanelProps = {
-  onVisit: (s: string) => void;
+  onVisit: (e: Encounter) => void;
   user: firebase.User;
 };
 
@@ -95,26 +96,26 @@ const MainClinicianPanel = ({ onVisit, user }: MainClinicianPanelProps) => {
   );
 };
 const ClinicianAppImpl: React.FC<ClinicianAppProps> = () => {
-  const [encounterId, setEncounterId] = useState<string | null>(null);
+  const [encounter, setEncounter] = useState<Encounter | null>(null);
   const { user, setUserTopButton } = useContext(StoryContext);
 
   const endVisit = () => {
-    setEncounterId(null);
+    setEncounter(null);
     setUserTopButton(null);
   };
 
-  const beginVisit = (eid: string) => {
-    console.log("Begin encounter " + eid);
-    setEncounterId(eid);
+  const beginVisit = (encounter: Encounter) => {
+    console.log("Begin encounter " + encounter.encounterId);
+    setEncounter(encounter);
     setUserTopButton(
       <StoryTopButton onClick={endVisit}>End Appointment</StoryTopButton>
     );
   };
 
-  return encounterId ? (
+  return encounter ? (
     <ClinicianVideo
       user={user}
-      encounterId={encounterId}
+      encounter={encounter}
       onClose={endVisit}
     ></ClinicianVideo>
   ) : (

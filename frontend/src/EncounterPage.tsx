@@ -8,7 +8,7 @@ import {
 import Popover from "@material-ui/core/Popover";
 import AddCircleIcon from "@material-ui/icons/AddCircle";
 import IconButton from "@material-ui/core/IconButton";
-import { newEncounter } from "./encounter";
+import { Encounter, newEncounter } from "./encounter";
 import EncounterForm from "./EncounterForm";
 import { EncounterList } from "./EncounterList";
 import { RouteComponentProps, withRouter } from "react-router-dom";
@@ -40,7 +40,7 @@ interface EncounterPageProps
   extends RouteComponentProps<{}>,
     WithStyles<typeof styles> {
   user: firebase.User | null;
-  onVisit: (encounterId: string) => void;
+  onVisit: (encounter: Encounter) => void;
 }
 
 interface EncounterPageState {

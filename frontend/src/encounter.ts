@@ -7,7 +7,7 @@ export enum PersonState {
     ENCOUNTER = 'encounter',
 };
 
-enum EncounterState {
+export enum EncounterState {
     SCHEDULED = 'scheduled',
     IN_PROGRESS = 'in_progress',
     COMPLETE = 'complete',

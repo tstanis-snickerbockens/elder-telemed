@@ -13,11 +13,12 @@ import TableContainer from "@material-ui/core/TableContainer";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import Paper from "@material-ui/core/Paper";
-import {Encounter, PersonState} from "./encounter";
+import {Encounter, PersonState, EncounterState} from "./encounter";
 import EncounterForm from "./EncounterForm";
 import Popover from "@material-ui/core/Popover";
 import Button from "@material-ui/core/Button";
 import ButtonGroup from "@material-ui/core/ButtonGroup";
+import { Role } from "./Role";
 import * as firebase from "firebase/app";
 import { yellow, green, purple } from '@material-ui/core/colors';
 
@@ -78,6 +79,14 @@ const styles = (theme: Theme) =>
       margin: '3px',
       color: theme.palette.getContrastText(yellow[700]),
       backgroundColor: yellow[700],
+    }, 
+    inProgress: {
+      display: 'inline-block',
+      padding: '4px 8px',
+      borderRadius: '8px',
+      margin: '3px',
+      color: theme.palette.getContrastText(green[700]),
+      backgroundColor: green[700],
     }
   });
 
@@ -88,14 +97,15 @@ interface EncounterListProps
   order: string;
   user: firebase.User | null;
   refresh: boolean; // Used to force refresh from server.
-  onVisit: (encounterId: string) => void;
+  onVisit: (encounter: Encounter) => void;
 }
 
 interface EncounterListState {
   encounters: Array<Encounter>;
   editOpen: boolean,
   anchorEl: HTMLElement | null,
-  editEncounterIndex: number
+  editEncounterIndex: number,
+  timer: number
 }
 
 function timeSinceMinutes(timestamp: number) {
@@ -109,10 +119,11 @@ class EncounterListImpl extends React.Component<
   constructor(props: EncounterListProps) {
     super(props);
     console.log("EncounterListImpl");
-    this.state = { encounters: [], editOpen: false, anchorEl: null, editEncounterIndex: 0 };
+    this.state = { encounters: [], editOpen: false, anchorEl: null, editEncounterIndex: 0, timer: 0 };
     this.onEdit = this.onEdit.bind(this);
     this.onEditComplete = this.onEditComplete.bind(this);
-    this.getTimeDeltaDisplay = this.getTimeDeltaDisplay.bind(this);
+    this.getEncounterStatusDisplay = this.getEncounterStatusDisplay.bind(this);
+    this.refreshEncounters = this.refreshEncounters.bind(this);
   }
 
   private headers = [
@@ -133,8 +144,17 @@ class EncounterListImpl extends React.Component<
     { id: "actions", numeric: false, disablePadding: false, label: "" },
   ];
 
+  private timer: NodeJS.Timeout | null = null;
+
   componentDidMount() {
     this.refreshEncounters();
+    this.timer = setInterval(this.refreshEncounters, 10 * 1000)
+  }
+
+  componentWillUnmount() {
+    if (this.timer) {
+      clearInterval(this.timer);
+    }
   }
 
   componentWillReceiveProps(props: EncounterListProps) {
@@ -149,24 +169,24 @@ class EncounterListImpl extends React.Component<
     return hours + ":" + (remainingMinutes < 10 ? "0" : "") + remainingMinutes;
   }
 
-  getPatientStatus(encounter: Encounter) {    
-    
-    if (encounter.encounter.patientState.arrivalTime > 0) {
+  getStatus(role: Role, encounter: Encounter) {    
+    let state = role == Role.PATIENT ? encounter.encounter.patientState : encounter.encounter.advocateState;
+    if (state.arrivalTime > 0) {
       // TODO: Need to check whether the timestamps are recent... otherwise assume that they aren't here.
-      let timeSinceArrivedMinutes = timeSinceMinutes(encounter.encounter.patientState.arrivalTime);
+      let timeSinceArrivedMinutes = timeSinceMinutes(state.arrivalTime);
       
-      if (encounter.encounter.patientState.state === PersonState.PREPARING) {
+      if (state.state === PersonState.PREPARING) {
         return (<>
-          <span className={this.props.classes.patientPreparingStatus}>Patient PreWork.  Arrived {this.formatMinutes(timeSinceArrivedMinutes)} ago.</span>
+          <span className={this.props.classes.patientPreparingStatus}>PreWork.  Arrived {this.formatMinutes(timeSinceArrivedMinutes)} ago.</span>
         </>);
-      } else if (encounter.encounter.patientState.state === PersonState.READY) {
+      } else if (state.state === PersonState.READY) {
         return (<>
-          <span className={this.props.classes.patientReadyStatus}>Patient Ready.  Arrived {this.formatMinutes(timeSinceArrivedMinutes)} ago.</span>
+          <span className={this.props.classes.patientReadyStatus}>Ready.  Arrived {this.formatMinutes(timeSinceArrivedMinutes)} ago.</span>
         </>);
-      } else if (encounter.encounter.patientState.state === PersonState.ENCOUNTER) {
-        let timeSinceInEncounter = timeSinceMinutes(encounter.encounter.patientState.stateTransitionTime);
+      } else if (state.state === PersonState.ENCOUNTER) {
+        let timeSinceInEncounter = timeSinceMinutes(state.stateTransitionTime);
         return (<>
-          <span className={this.props.classes.patientReadyStatus}>Patient In Encounter.  Elapsed {this.formatMinutes(timeSinceInEncounter)}</span>
+          <span className={this.props.classes.patientReadyStatus}>In Encounter.  Elapsed {this.formatMinutes(timeSinceInEncounter)}</span>
         </>);
       }
     } else {
@@ -182,10 +202,18 @@ class EncounterListImpl extends React.Component<
     }
   }
 
-  getTimeDeltaDisplay(encounterDate: Date) {
+  getEncounterStatusDisplay(encounter: Encounter) {
+    let encounterDate = new Date(encounter.encounter.when)
+    if (encounter.encounter.state == EncounterState.IN_PROGRESS) {
+      return <span className={this.props.classes.inProgress}>In Progress</span>;
+    } else if (encounter.encounter.state == EncounterState.COMPLETE) {
+      return <span>Complete</span>
+    }
     let diff_minutes = Math.floor(((encounterDate.getTime() - new Date().getTime()) / 1000) / 60);
-    if (diff_minutes < 0) {
-      return "Past";
+    if (diff_minutes < 0 && diff_minutes > -60) {
+      return "Imminent";
+    } else if (diff_minutes < -60) {
+      return "Missed";
     } else if (diff_minutes < 60) {
       return (
         <>
@@ -207,10 +235,8 @@ class EncounterListImpl extends React.Component<
         let newEncounters = response.data.map((entry: Encounter) => {
           console.log(JSON.stringify(entry));
           return entry;
-        });
-        this.setState((state) => {
-          return { encounters: newEncounters, editOpen: false, anchorEl: null };
-        });
+        });        
+        this.setState({ encounters: newEncounters, editOpen: this.state.editOpen, anchorEl: this.state.anchorEl });
       })
       .catch((err) => {
         console.log("ERROR: " + JSON.stringify(err));
@@ -226,6 +252,7 @@ class EncounterListImpl extends React.Component<
   }
 
   render() {
+    console.log("render");
     return (
       <>
       <TableContainer component={Paper}>
@@ -249,11 +276,14 @@ class EncounterListImpl extends React.Component<
                 <TableCell align="left">{new Date(row.encounter.when).toLocaleString()}</TableCell>
                 <TableCell component="th" scope="row">
                   {row.encounter.patient}<br/>
-                  {this.getPatientStatus(row)}
+                  {this.getStatus(Role.PATIENT, row)}
                 </TableCell>
-                <TableCell align="left">{row.encounter.advocate}</TableCell>
+                <TableCell align="left">
+                  {row.encounter.advocate}<br/>
+                  {this.getStatus(Role.ADVOCATE, row)}
+                </TableCell>
                 <TableCell>
-                  {this.getTimeDeltaDisplay(new Date(row.encounter.when))}
+                  {this.getEncounterStatusDisplay(row)}
                 </TableCell>
                 <TableCell align="right">
                   <ButtonGroup color="primary" aria-label="outlined primary button group">
@@ -263,7 +293,7 @@ class EncounterListImpl extends React.Component<
                       Edit
                     </Button>
                     <Button size="small" variant="contained"
-                      onClick={(event: any) => this.props.onVisit(row.encounterId)}
+                      onClick={(event: any) => this.props.onVisit(row)}
                     >
                       Go
                     </Button>
