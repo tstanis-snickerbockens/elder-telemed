@@ -143,6 +143,12 @@ class EncounterListImpl extends React.Component<
     }
   }
 
+  formatMinutes(minutes: number) {
+    let hours = Math.floor(minutes / 60);
+    let remainingMinutes = minutes % 60;
+    return hours + ":" + (remainingMinutes < 10 ? "0" : "") + remainingMinutes;
+  }
+
   getPatientStatus(encounter: Encounter) {    
     
     if (encounter.encounter.patientState.arrivalTime > 0) {
@@ -151,15 +157,16 @@ class EncounterListImpl extends React.Component<
       
       if (encounter.encounter.patientState.state === PersonState.PREPARING) {
         return (<>
-          <span className={this.props.classes.patientPreparingStatus}>Patient PreWork.  Arrived 0:{timeSinceArrivedMinutes} ago.</span>
+          <span className={this.props.classes.patientPreparingStatus}>Patient PreWork.  Arrived {this.formatMinutes(timeSinceArrivedMinutes)} ago.</span>
         </>);
       } else if (encounter.encounter.patientState.state === PersonState.READY) {
         return (<>
-          <span className={this.props.classes.patientReadyStatus}>Patient Ready.  Arrived 0:{timeSinceArrivedMinutes} ago.</span>
+          <span className={this.props.classes.patientReadyStatus}>Patient Ready.  Arrived {this.formatMinutes(timeSinceArrivedMinutes)} ago.</span>
         </>);
       } else if (encounter.encounter.patientState.state === PersonState.ENCOUNTER) {
+        let timeSinceInEncounter = timeSinceMinutes(encounter.encounter.patientState.stateTransitionTime);
         return (<>
-          <span className={this.props.classes.patientReadyStatus}>Patient In Encounter.</span>
+          <span className={this.props.classes.patientReadyStatus}>Patient In Encounter.  Elapsed {this.formatMinutes(timeSinceInEncounter)}</span>
         </>);
       }
     } else {
@@ -173,7 +180,6 @@ class EncounterListImpl extends React.Component<
         return "";
       }
     }
-    
   }
 
   getTimeDeltaDisplay(encounterDate: Date) {

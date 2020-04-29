@@ -245,8 +245,7 @@ export default function UserPage(props: Props) {
     // Update encounter to know that we are here.
     React.useEffect(() => {
         const updateEncounter = firebase.functions().httpsCallable("updateEncounter");  
-        let updatedEncounter: Encounter = Object.assign({}, props.encounter);
-        Object.assign(updatedEncounter.encounter, props.encounter.encounter);        
+        let updatedEncounter: Encounter = JSON.parse(JSON.stringify(props.encounter));
         let encounterRole: PersonTimedState = getStateByRole(updatedEncounter, props.role);
         encounterRole.state = props.mode === PatientMode.IN_ENCOUNTER ? PersonState.ENCOUNTER : (preWorkComplete ? PersonState.READY : PersonState.PREPARING);
         let now = new Date().getTime();

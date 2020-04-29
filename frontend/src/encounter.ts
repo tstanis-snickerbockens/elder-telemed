@@ -9,7 +9,8 @@ export enum PersonState {
 
 enum EncounterState {
     SCHEDULED = 'scheduled',
-    COMPLETE = 'complete'
+    COMPLETE = 'complete',
+    DELETED = 'deleted'
 }
 
 export interface PersonTimedState {
