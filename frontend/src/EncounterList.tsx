@@ -19,6 +19,7 @@ import Popover from "@material-ui/core/Popover";
 import Button from "@material-ui/core/Button";
 import ButtonGroup from "@material-ui/core/ButtonGroup";
 import * as firebase from "firebase/app";
+import { yellow } from '@material-ui/core/colors';
 
 const styles = (theme: Theme) =>
   createStyles({
@@ -45,6 +46,14 @@ const styles = (theme: Theme) =>
     },
     editEncounterPopover: {
       margin: theme.spacing(1)
+    }, 
+    startsSoon: {
+      display: 'inline-block',
+        padding: '4px 8px',
+        borderRadius: '8px',
+        margin: '3px',
+        color: theme.palette.getContrastText(yellow[700]),
+        backgroundColor: yellow[700],
     }
   });
 
@@ -75,40 +84,24 @@ class EncounterListImpl extends React.Component<
     this.state = { encounters: [], editOpen: false, anchorEl: null };
     this.onEdit = this.onEdit.bind(this);
     this.onEditComplete = this.onEditComplete.bind(this);
+    this.getTimeDeltaDisplay = this.getTimeDeltaDisplay.bind(this);
   }
 
   private headers = [
-    { id: "name", numeric: false, disablePadding: false, label: "Patient Name" },
-    {
-      id: "advocates",
-      numeric: false,
-      disablePadding: false,
-      label: "Advocates",
-    },
     {
       id: "time",
       numeric: false,
       disablePadding: false,
       label: "Scheduled Time",
     },
+    { id: "name", numeric: false, disablePadding: false, label: "Patient" },
     {
-      id: "encounter_state",
+      id: "advocates",
       numeric: false,
       disablePadding: false,
-      label: "State",
+      label: "Advocates",
     },
-    {
-      id: "patient_connected",
-      numeric: false,
-      disablePadding: false,
-      label: "Patient Connected",
-    },
-    {
-      id: "advocate_connected",
-      numeric: false,
-      disablePadding: false,
-      label: "Advocate Connected",
-    },
+    { id: "status", numeric: false, disablePadding: false, label: "Status"},
     { id: "actions", numeric: false, disablePadding: false, label: "" },
   ];
 
@@ -119,6 +112,23 @@ class EncounterListImpl extends React.Component<
   componentWillReceiveProps(props: EncounterListProps) {
     if (props.refresh !== this.props.refresh) {
       this.refreshEncounters();
+    }
+  }
+
+  getTimeDeltaDisplay(encounterDate: Date) {
+    let diff_minutes = Math.floor(((encounterDate.getTime() - new Date().getTime()) / 1000) / 60);
+    if (diff_minutes < 0) {
+      return "Past";
+    } else if (diff_minutes < 60) {
+      return (
+        <>
+          <span className={this.props.classes.startsSoon}>
+            {"Starts in 0:" + (diff_minutes < 10 ? "0" + diff_minutes : diff_minutes)}
+          </span>
+        </>
+      ) 
+    } else {
+      return "Upcomming";
     }
   }
 
@@ -168,14 +178,14 @@ class EncounterListImpl extends React.Component<
           <TableBody>
             {this.state.encounters.map((row, index) => (
               <TableRow key={row.encounterId}>
+                <TableCell align="left">{new Date(row.encounter.when).toLocaleString()}</TableCell>
                 <TableCell component="th" scope="row">
                   {row.encounter.patient}
                 </TableCell>
                 <TableCell align="left">{row.encounter.advocate}</TableCell>
-                <TableCell align="left">{new Date(row.encounter.when).toLocaleString()}</TableCell>
-                <TableCell align="left">{row.encounter.state}</TableCell>
-                <TableCell align="left">{row.encounter.patientState ? row.encounter.patientState.state : ""}</TableCell>
-                <TableCell align="left">{row.encounter.advocateState ? row.encounter.advocateState.state : ""}</TableCell>
+                <TableCell>
+                  {this.getTimeDeltaDisplay(new Date(row.encounter.when))}
+                </TableCell>
                 <TableCell align="right">
                   <ButtonGroup color="primary" aria-label="outlined primary button group">
                     <Button size="small" variant="contained"
@@ -204,7 +214,7 @@ class EncounterListImpl extends React.Component<
                     <div className={this.props.classes.editEncounterPopover}>
                       <EncounterForm isNewEncounter={false} previousEncounter={row} onComplete={this.onEditComplete}></EncounterForm>
                     </div>
-                  </Popover>                  
+                  </Popover>
                 </TableCell>
               </TableRow>
             ))}
