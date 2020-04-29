@@ -69,6 +69,7 @@ export class DataChannel {
         console.log("ondatachannel! " + this);
         this.dataChannel = event.channel;
         this.configureDataChannel();
+        this.state = DataChannelState.OPEN;
       }
     }
   }
@@ -83,6 +84,9 @@ export class DataChannel {
   }
 
   sendMessage(msg: object) {
+    if (this.state !== DataChannelState.OPEN) {
+      return;
+    }
     console.log("Send: " + msg);
     if (this.dataChannel) {
       console.log("Send Data Channel: " + JSON.stringify(msg))

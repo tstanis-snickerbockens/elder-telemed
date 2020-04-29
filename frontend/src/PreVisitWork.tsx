@@ -12,6 +12,7 @@ interface Props {
     questions: Array<PreVisitQuestion>,
     dataChannel: DataChannel,
     role: Role,
+    onComplete: () => void
 }
 
 interface FinishedQuestionEntry {
@@ -207,6 +208,12 @@ export default function PreVisitWork(props: Props) {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
         console.log("Question Index Now " + currentQuestionIndex);
     }, [currentQuestionIndex, finishedQuestions, props.questions]);
+
+    React.useEffect(() => {
+        if (currentQuestionIndex >= props.questions.length) {
+            props.onComplete();
+        }
+    }, [currentQuestionIndex, props, props.questions, props.onComplete])
 
     React.useEffect(() => {
         const messageRouter = {

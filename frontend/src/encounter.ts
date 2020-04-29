@@ -15,6 +15,8 @@ enum EncounterState {
 export interface PersonTimedState {
     state: PersonState;
     lastUpdateTime: number;
+    arrivalTime: number;
+    stateTransitionTime: number;
 }
 
 export interface Encounter {
@@ -38,10 +40,14 @@ export function newEncounter(): Encounter {
             patient: "",
             advocate: "",
             when: new Date().getTime(),
-            patientState: { state: PersonState.NONE, lastUpdateTime: 0 },
-            advocateState: { state: PersonState.NONE, lastUpdateTime: 0 },
-            doctorState: { state: PersonState.NONE, lastUpdateTime: 0 },
+            patientState: newPersonTimedState(),
+            advocateState: newPersonTimedState(),
+            doctorState: newPersonTimedState(),
             state: EncounterState.SCHEDULED
         }
     }
+}
+
+export function newPersonTimedState(): PersonTimedState { 
+    return { state: PersonState.NONE, lastUpdateTime: 0, arrivalTime: 0, stateTransitionTime: 0 };
 }

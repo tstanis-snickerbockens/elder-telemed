@@ -1,4 +1,4 @@
-import React, {ChangeEvent} from "react";
+import React from "react";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import {
   createStyles,
@@ -13,13 +13,13 @@ import TableContainer from "@material-ui/core/TableContainer";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import Paper from "@material-ui/core/Paper";
-import {Encounter} from "./encounter";
+import {Encounter, PersonState} from "./encounter";
 import EncounterForm from "./EncounterForm";
 import Popover from "@material-ui/core/Popover";
 import Button from "@material-ui/core/Button";
 import ButtonGroup from "@material-ui/core/ButtonGroup";
 import * as firebase from "firebase/app";
-import { yellow } from '@material-ui/core/colors';
+import { yellow, green, purple } from '@material-ui/core/colors';
 
 const styles = (theme: Theme) =>
   createStyles({
@@ -49,11 +49,35 @@ const styles = (theme: Theme) =>
     }, 
     startsSoon: {
       display: 'inline-block',
-        padding: '4px 8px',
-        borderRadius: '8px',
-        margin: '3px',
-        color: theme.palette.getContrastText(yellow[700]),
-        backgroundColor: yellow[700],
+      padding: '4px 8px',
+      borderRadius: '8px',
+      margin: '3px',
+      color: theme.palette.getContrastText(yellow[700]),
+      backgroundColor: yellow[700],
+    },
+    patientPreparingStatus: {
+      display: 'inline-block',
+      padding: '4px 8px',
+      borderRadius: '8px',
+      margin: '3px',
+      color: theme.palette.getContrastText(purple[700]),
+      backgroundColor: purple[700],
+    },
+    patientReadyStatus: {
+      display: 'inline-block',
+      padding: '4px 8px',
+      borderRadius: '8px',
+      margin: '3px',
+      color: theme.palette.getContrastText(green[700]),
+      backgroundColor: green[700],
+    }, 
+    patientNotHere: {
+      display: 'inline-block',
+      padding: '4px 8px',
+      borderRadius: '8px',
+      margin: '3px',
+      color: theme.palette.getContrastText(yellow[700]),
+      backgroundColor: yellow[700],
     }
   });
 
@@ -71,8 +95,12 @@ interface EncounterListState {
   encounters: Array<Encounter>;
   editOpen: boolean,
   anchorEl: HTMLElement | null,
+  editEncounterIndex: number
 }
 
+function timeSinceMinutes(timestamp: number) {
+  return Math.floor((new Date().getTime() - new Date(timestamp).getTime()) / (60 * 1000));
+}
 
 class EncounterListImpl extends React.Component<
   EncounterListProps,
@@ -81,7 +109,7 @@ class EncounterListImpl extends React.Component<
   constructor(props: EncounterListProps) {
     super(props);
     console.log("EncounterListImpl");
-    this.state = { encounters: [], editOpen: false, anchorEl: null };
+    this.state = { encounters: [], editOpen: false, anchorEl: null, editEncounterIndex: 0 };
     this.onEdit = this.onEdit.bind(this);
     this.onEditComplete = this.onEditComplete.bind(this);
     this.getTimeDeltaDisplay = this.getTimeDeltaDisplay.bind(this);
@@ -115,6 +143,39 @@ class EncounterListImpl extends React.Component<
     }
   }
 
+  getPatientStatus(encounter: Encounter) {    
+    
+    if (encounter.encounter.patientState.arrivalTime > 0) {
+      // TODO: Need to check whether the timestamps are recent... otherwise assume that they aren't here.
+      let timeSinceArrivedMinutes = timeSinceMinutes(encounter.encounter.patientState.arrivalTime);
+      
+      if (encounter.encounter.patientState.state === PersonState.PREPARING) {
+        return (<>
+          <span className={this.props.classes.patientPreparingStatus}>Patient PreWork.  Arrived 0:{timeSinceArrivedMinutes} ago.</span>
+        </>);
+      } else if (encounter.encounter.patientState.state === PersonState.READY) {
+        return (<>
+          <span className={this.props.classes.patientReadyStatus}>Patient Ready.  Arrived 0:{timeSinceArrivedMinutes} ago.</span>
+        </>);
+      } else if (encounter.encounter.patientState.state === PersonState.ENCOUNTER) {
+        return (<>
+          <span className={this.props.classes.patientReadyStatus}>Patient In Encounter.</span>
+        </>);
+      }
+    } else {
+      let timeTillAppointment = -timeSinceMinutes(encounter.encounter.when);
+      console.log("Time Till Appointment: " + timeTillAppointment);
+      if (timeTillAppointment > 0 && timeTillAppointment < 15) {
+        return (<>
+          <span className={this.props.classes.patientNotHere}>Patient not yet arrived.</span>
+        </>);
+      } else {
+        return "";
+      }
+    }
+    
+  }
+
   getTimeDeltaDisplay(encounterDate: Date) {
     let diff_minutes = Math.floor(((encounterDate.getTime() - new Date().getTime()) / 1000) / 60);
     if (diff_minutes < 0) {
@@ -128,7 +189,7 @@ class EncounterListImpl extends React.Component<
         </>
       ) 
     } else {
-      return "Upcomming";
+      return "Upcoming";
     }
   }
 
@@ -151,7 +212,7 @@ class EncounterListImpl extends React.Component<
   }
 
   onEdit(event: any, index: number) {
-    this.setState({editOpen: true, anchorEl: event.target});
+    this.setState({editOpen: true, anchorEl: event.target, editEncounterIndex: index});
   }
 
   onEditComplete() {
@@ -160,6 +221,7 @@ class EncounterListImpl extends React.Component<
 
   render() {
     return (
+      <>
       <TableContainer component={Paper}>
         <Table className={this.props.classes.table} aria-label="simple table">
           <TableHead>
@@ -180,7 +242,8 @@ class EncounterListImpl extends React.Component<
               <TableRow key={row.encounterId}>
                 <TableCell align="left">{new Date(row.encounter.when).toLocaleString()}</TableCell>
                 <TableCell component="th" scope="row">
-                  {row.encounter.patient}
+                  {row.encounter.patient}<br/>
+                  {this.getPatientStatus(row)}
                 </TableCell>
                 <TableCell align="left">{row.encounter.advocate}</TableCell>
                 <TableCell>
@@ -199,28 +262,29 @@ class EncounterListImpl extends React.Component<
                       Go
                     </Button>
                   </ButtonGroup>
-                  <Popover
-                    open={this.state.editOpen}
-                    anchorEl={this.state.anchorEl}
-                    anchorOrigin={{
-                      vertical: "bottom",
-                      horizontal: "center",
-                    }}
-                    transformOrigin={{
-                      vertical: "top",
-                      horizontal: "center",
-                    }}
-                  >
-                    <div className={this.props.classes.editEncounterPopover}>
-                      <EncounterForm isNewEncounter={false} previousEncounter={row} onComplete={this.onEditComplete}></EncounterForm>
-                    </div>
-                  </Popover>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
+      <Popover
+        open={this.state.editOpen}
+        anchorEl={this.state.anchorEl}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "center",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "center",
+        }}
+      >
+        <div className={this.props.classes.editEncounterPopover}>
+          <EncounterForm isNewEncounter={false} previousEncounter={this.state.encounters[this.state.editEncounterIndex]} onComplete={this.onEditComplete}></EncounterForm>
+        </div>
+      </Popover>
+      </>
     );
   }
 }

@@ -6,6 +6,8 @@ import { PatientMode } from "./PatientMode";
 import PreVisitWork from "./PreVisitWork";
 import Typography from "@material-ui/core/Typography";
 import {QuestionType, PreVisitQuestion} from "./PreVisitQuestion";
+import {Encounter, PersonState, PersonTimedState, newPersonTimedState} from "./encounter";
+import * as firebase from "firebase/app";
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
     typography: {
@@ -171,7 +173,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 }));
 
 interface Props {
-    encounterId: string;
+    encounter: Encounter;
     role: Role;
     clinicianReady: boolean;
     mode: PatientMode
@@ -189,6 +191,18 @@ const pre_work_questions : Array<PreVisitQuestion> = [
     {type: QuestionType.TEXT, options: [], queryText: "What are you here to discuss?"}, 
     ];
 
+function getStateByRole(encounter: Encounter, role: Role): PersonTimedState {
+    let state = (role === Role.PATIENT ? encounter.encounter.patientState : encounter.encounter.advocateState);
+    if (!state) {
+        if (role === Role.PATIENT) {
+            state = encounter.encounter.patientState = newPersonTimedState();
+        } else {
+            state = encounter.encounter.advocateState = newPersonTimedState();
+        }
+    }
+    return state;
+}
+
 export default function UserPage(props: Props) {
     const classes = useStyles();
     const localVideoRef = React.useRef<HTMLVideoElement>(null);
@@ -197,6 +211,8 @@ export default function UserPage(props: Props) {
     const [connectedToAdvocate, setConnectedToAdvocate] = React.useState(false);
     const [connectedToClinician, setConnectedToClinician] = React.useState(false);
     const [dataChannel] = React.useState(new DataChannel(() => {}));
+    const [preWorkComplete, setPreWorkComplete] = React.useState(false);
+    const [updateTimer, setUpdateTimer] = React.useState(0);
 
     const onAdvocateVideoConnect = (() => {
         setConnectedToAdvocate(true);
@@ -206,21 +222,52 @@ export default function UserPage(props: Props) {
         setConnectedToClinician(true);
     });
 
+    const onPreWorkComplete = (() => {
+        console.log("PreWork complete!");
+        setPreWorkComplete(true);
+    });
+
     React.useEffect(() => {
         if (localVideoRef.current && clinicianVideoRef.current && 
             otherPartyVideoRef.current) {
             if (props.mode === PatientMode.WAITING_ROOM) {
                 let other = props.role === Role.PATIENT ? Role.ADVOCATE : Role.PATIENT;
                 startVideo(localVideoRef.current, otherPartyVideoRef.current, 
-                    props.role, other, props.encounterId, props.role === Role.ADVOCATE ? true : false,
+                    props.role, other, props.encounter.encounterId, props.role === Role.ADVOCATE ? true : false,
                     onAdvocateVideoConnect, dataChannel);
             } else {
                 startVideo(localVideoRef.current, clinicianVideoRef.current, 
-                    props.role, Role.CLINICIAN, props.encounterId, false, onClinicianVideoConnect, dataChannel);
+                    props.role, Role.CLINICIAN, props.encounter.encounterId, false, onClinicianVideoConnect, dataChannel);
             }
         }
-    }, [props.mode, props.encounterId, props.role, dataChannel]);
+    }, [props.mode, props.encounter.encounterId, props.role, dataChannel]);
     
+    // Update encounter to know that we are here.
+    React.useEffect(() => {
+        const updateEncounter = firebase.functions().httpsCallable("updateEncounter");  
+        let updatedEncounter: Encounter = Object.assign({}, props.encounter);
+        Object.assign(updatedEncounter.encounter, props.encounter.encounter);        
+        let encounterRole: PersonTimedState = getStateByRole(updatedEncounter, props.role);
+        encounterRole.state = props.mode === PatientMode.IN_ENCOUNTER ? PersonState.ENCOUNTER : (preWorkComplete ? PersonState.READY : PersonState.PREPARING);
+        let now = new Date().getTime();
+        encounterRole.lastUpdateTime = now;
+        if (encounterRole.arrivalTime === 0) {
+            encounterRole.arrivalTime = now;
+        }
+        if (encounterRole.state !== getStateByRole(props.encounter, props.role).state) {
+            encounterRole.stateTransitionTime = now;
+        }
+        console.log("Saving Encounter: " + JSON.stringify(updatedEncounter));
+        updateEncounter(updatedEncounter);
+
+        const onTimer = (() => {
+            setUpdateTimer(updateTimer + 1);
+        });
+        if (encounterRole.state !== PersonState.ENCOUNTER) {
+            setTimeout(onTimer, 10 * 1000);
+        }
+    }, [props.encounter, props.mode, props.role, preWorkComplete, updateTimer]);
+
     return (
         <>
         <div className={classes.flexContainer}>
@@ -245,7 +292,12 @@ export default function UserPage(props: Props) {
                 </div>
             </div>
             <div className={props.mode === PatientMode.WAITING_ROOM ? classes.waitingRoomWorkspace: classes.hidden}>
-                <PreVisitWork encounterId={props.encounterId} questions={pre_work_questions} dataChannel={dataChannel} role={props.role}></PreVisitWork>
+                <PreVisitWork 
+                    encounterId={props.encounter.encounterId} 
+                    questions={pre_work_questions} 
+                    dataChannel={dataChannel} 
+                    role={props.role}
+                    onComplete={onPreWorkComplete}></PreVisitWork>
             </div>
         </div>
         </>
