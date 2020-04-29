@@ -39,14 +39,15 @@ export default function EncounterForm({isNewEncounter, previousEncounter, onComp
     const [when, setWhen] = React.useState(previousEncounter.encounter.when);
 
     const handleSave = React.useCallback(() => {
+        console.log("Previous Encounter: "+ JSON.stringify(previousEncounter));
         const serverFunction = firebase.functions().httpsCallable(isNewEncounter ? 'createEncounter' : "updateEncounter");  
-        previousEncounter.encounter.patient = patient;
-        let newEncounter: Encounter = Object.create(previousEncounter);
+        let newEncounter: Encounter = Object.assign({}, previousEncounter);
         Object.assign(newEncounter.encounter, previousEncounter.encounter);
         newEncounter.encounter.patient = patient;
         newEncounter.encounter.advocate = advocate;
         newEncounter.encounter.when = when;
 
+        console.log("Saving: " + JSON.stringify(newEncounter));
         serverFunction(newEncounter).then(function (response) {
             console.log(
                 "Create/Update Encounter Response: " +
@@ -89,9 +90,13 @@ export default function EncounterForm({isNewEncounter, previousEncounter, onComp
                   label="Time"
                   type="datetime-local"
                   defaultValue="2020-05-24T10:30"
-                  onChange={(e) => setWhen(Number(e.target.value))}
+                  value={when}
+                  onChange={(e) => setWhen(e.target.value)}
                   InputLabelProps={{
                     shrink: true,
+                  }}
+                  inputProps={{
+                    step: 900, // 15 min
                   }}
                 />
         </form>

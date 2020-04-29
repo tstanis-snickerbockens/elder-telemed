@@ -1,4 +1,4 @@
-import React from "react";
+import React, {ChangeEvent} from "react";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import {
   createStyles,
@@ -13,7 +13,11 @@ import TableContainer from "@material-ui/core/TableContainer";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import Paper from "@material-ui/core/Paper";
-import {Encounter} from "encounter";
+import {Encounter} from "./encounter";
+import EncounterForm from "./EncounterForm";
+import Popover from "@material-ui/core/Popover";
+import Button from "@material-ui/core/Button";
+import ButtonGroup from "@material-ui/core/ButtonGroup";
 import * as firebase from "firebase/app";
 
 const styles = (theme: Theme) =>
@@ -39,6 +43,9 @@ const styles = (theme: Theme) =>
       top: 20,
       width: 1,
     },
+    editEncounterPopover: {
+      margin: theme.spacing(1)
+    }
   });
 
 interface EncounterListProps
@@ -53,6 +60,8 @@ interface EncounterListProps
 
 interface EncounterListState {
   encounters: Array<Encounter>;
+  editOpen: boolean,
+  anchorEl: HTMLElement | null,
 }
 
 
@@ -63,7 +72,9 @@ class EncounterListImpl extends React.Component<
   constructor(props: EncounterListProps) {
     super(props);
     console.log("EncounterListImpl");
-    this.state = { encounters: [] };
+    this.state = { encounters: [], editOpen: false, anchorEl: null };
+    this.onEdit = this.onEdit.bind(this);
+    this.onEditComplete = this.onEditComplete.bind(this);
   }
 
   private headers = [
@@ -98,7 +109,7 @@ class EncounterListImpl extends React.Component<
       disablePadding: false,
       label: "Advocate Connected",
     },
-    { id: "go", numeric: false, disablePadding: false, label: "Go" },
+    { id: "actions", numeric: false, disablePadding: false, label: "" },
   ];
 
   componentDidMount() {
@@ -121,12 +132,20 @@ class EncounterListImpl extends React.Component<
           return entry;
         });
         this.setState((state) => {
-          return { encounters: newEncounters };
+          return { encounters: newEncounters, editOpen: false, anchorEl: null };
         });
       })
       .catch((err) => {
         console.log("ERROR: " + JSON.stringify(err));
       });
+  }
+
+  onEdit(event: any, index: number) {
+    this.setState({editOpen: true, anchorEl: event.target});
+  }
+
+  onEditComplete() {
+    this.setState({editOpen: false, anchorEl: null});
   }
 
   render() {
@@ -147,7 +166,7 @@ class EncounterListImpl extends React.Component<
             </TableRow>
           </TableHead>
           <TableBody>
-            {this.state.encounters.map((row) => (
+            {this.state.encounters.map((row, index) => (
               <TableRow key={row.encounterId}>
                 <TableCell component="th" scope="row">
                   {row.encounter.patient}
@@ -158,11 +177,34 @@ class EncounterListImpl extends React.Component<
                 <TableCell align="left">{row.encounter.patientState ? row.encounter.patientState.state : ""}</TableCell>
                 <TableCell align="left">{row.encounter.advocateState ? row.encounter.advocateState.state : ""}</TableCell>
                 <TableCell align="left">
-                  <button
-                    onClick={(event) => this.props.onVisit(row.encounterId)}
+                  <ButtonGroup color="primary" aria-label="outlined primary button group">
+                    <Button size="small" variant="contained"
+                      onClick={(event: any) => this.onEdit(event, index)}
+                    >
+                      Edit
+                    </Button>
+                    <Button size="small" variant="contained"
+                      onClick={(event: any) => this.props.onVisit(row.encounterId)}
+                    >
+                      Go
+                    </Button>
+                  </ButtonGroup>
+                  <Popover
+                    open={this.state.editOpen}
+                    anchorEl={this.state.anchorEl}
+                    anchorOrigin={{
+                      vertical: "bottom",
+                      horizontal: "center",
+                    }}
+                    transformOrigin={{
+                      vertical: "top",
+                      horizontal: "center",
+                    }}
                   >
-                    Go
-                  </button>
+                    <div className={this.props.classes.editEncounterPopover}>
+                      <EncounterForm isNewEncounter={false} previousEncounter={row} onComplete={this.onEditComplete}></EncounterForm>
+                    </div>
+                  </Popover>                  
                 </TableCell>
               </TableRow>
             ))}
