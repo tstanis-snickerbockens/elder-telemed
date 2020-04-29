@@ -6,7 +6,7 @@ import {
 } from "@material-ui/core/styles";
 import Button from "@material-ui/core/Button";
 import TextField from "@material-ui/core/TextField";
-import { Encounter } from "./encounter";
+import { Encounter, EncounterUpdate } from "./encounter";
 import * as firebase from "firebase/app";
 import DateFnsUtils from '@date-io/date-fns';
 import {
@@ -51,6 +51,7 @@ export default function EncounterForm({isNewEncounter, previousEncounter, onComp
         newEncounter.encounter.patient = patient;
         newEncounter.encounter.advocate = advocate;
         newEncounter.encounter.when = when.getTime();
+        newEncounter.updateType = EncounterUpdate.FULL;
 
         console.log("Saving: " + JSON.stringify(newEncounter));
         serverFunction(newEncounter).then(function (response) {

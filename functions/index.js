@@ -67,9 +67,17 @@ exports.createEncounter = functions.https.onRequest((request, response) => {
     });
 });
 
+
+const ENCOUNTER_UPDATE_FULL = "full";
+const ENCOUNTER_UPDATE_GENERAL_STATE = "general_state";
+const ENCOUNTER_UPDATE_PATIENT_STATE = "patient_state";
+const ENCOUNTER_UPDATE_ADVOCATE_STATE = "advocate_state";
+const ENCOUNTER_UPDATE_DOCTOR_STATE = "doctor_state";
+
 exports.updateEncounter = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         console.log("updateEncounter: " + JSON.stringify(request.body.data, null, 2))
+        let updateType = request.body.data.updateType;
         var encounterId = request.body.data.encounterId;
         var encounter = request.body.data.encounter;
 
@@ -96,7 +104,20 @@ exports.updateEncounter = functions.https.onRequest((request, response) => {
                         if (!doc.exists) {
                             return Promise.reject({code: 404, msg:"Encounter ID doesn't exists: " + encounterId});
                         } else {
-                            t.set(ref, encounter);
+                            let newEncounter = doc.data();
+                            if (updateType == ENCOUNTER_UPDATE_GENERAL_STATE) {
+                                newEncounter.state = encounter.state;
+                            } else if (updateType == ENCOUNTER_UPDATE_PATIENT_STATE) {
+                                newEncounter.patientState = encounter.patientState;
+                            } else if (updateType == ENCOUNTER_UPDATE_ADVOCATE_STATE) {
+                                newEncounter.advocateState = encounter.advocateState;
+                            } else if (updateType == ENCOUNTER_UPDATE_DOCTOR_STATE) {
+                                newEncounter.doctorState = encounter.doctorState;
+                            } else {
+                                newEncounter = encounter;
+                            }
+                            console.log("Updating encounter to: " + JSON.stringify(newEncounter));
+                            t.set(ref, newEncounter);
                             return Promise.resolve("Saved");
                         }
                     });

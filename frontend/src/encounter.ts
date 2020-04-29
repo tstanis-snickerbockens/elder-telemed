@@ -9,8 +9,17 @@ export enum PersonState {
 
 enum EncounterState {
     SCHEDULED = 'scheduled',
+    IN_PROGRESS = 'in_progress',
     COMPLETE = 'complete',
     DELETED = 'deleted'
+}
+
+export enum EncounterUpdate {
+    FULL = "full",
+    GENERAL_STATE = "general_state",
+    PATIENT_STATE = "patient_state",
+    ADVOCATE_STATE = "advocate_state",
+    DOCTOR_STATE = "doctor_state",
 }
 
 export interface PersonTimedState {
@@ -31,6 +40,7 @@ export interface Encounter {
         doctorState: PersonTimedState;
         state: EncounterState;
     }
+    updateType?: EncounterUpdate;
 }
 
 export function newEncounter(): Encounter {

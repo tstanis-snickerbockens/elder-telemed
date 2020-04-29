@@ -6,7 +6,7 @@ import { PatientMode } from "./PatientMode";
 import PreVisitWork from "./PreVisitWork";
 import Typography from "@material-ui/core/Typography";
 import {QuestionType, PreVisitQuestion} from "./PreVisitQuestion";
-import {Encounter, PersonState, PersonTimedState, newPersonTimedState} from "./encounter";
+import {Encounter, PersonState, PersonTimedState, newPersonTimedState, EncounterUpdate} from "./encounter";
 import * as firebase from "firebase/app";
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
@@ -256,6 +256,7 @@ export default function UserPage(props: Props) {
         if (encounterRole.state !== getStateByRole(props.encounter, props.role).state) {
             encounterRole.stateTransitionTime = now;
         }
+        updatedEncounter.updateType = props.role === Role.PATIENT ? EncounterUpdate.PATIENT_STATE : EncounterUpdate.ADVOCATE_STATE;
         console.log("Saving Encounter: " + JSON.stringify(updatedEncounter));
         updateEncounter(updatedEncounter);
 
@@ -292,9 +293,9 @@ export default function UserPage(props: Props) {
             </div>
             <div className={props.mode === PatientMode.WAITING_ROOM ? classes.waitingRoomWorkspace: classes.hidden}>
                 <PreVisitWork 
-                    encounterId={props.encounter.encounterId} 
-                    questions={pre_work_questions} 
-                    dataChannel={dataChannel} 
+                    encounterId={props.encounter.encounterId}
+                    questions={pre_work_questions}
+                    dataChannel={dataChannel}
                     role={props.role}
                     onComplete={onPreWorkComplete}></PreVisitWork>
             </div>
