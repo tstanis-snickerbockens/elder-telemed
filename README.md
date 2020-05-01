@@ -42,6 +42,8 @@ Produce a working demo of a telemedicine app aimed at the elderly and their care
 - git pull
 - Install firebase CLI
 - Run firebase login
+- Goto https://console.firebase.google.com/u/0/project/elder-telemed/settings/serviceaccounts/adminsdk and generate a private key.  Download it.
+- export GOOGLE_APPLICATION_CREDENTIALS="/Users/yourusername/Downloads/service-account-file.json"
 - Run firebase emulators:start
 - cd frontend
 - npm start
