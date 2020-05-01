@@ -260,6 +260,8 @@ export default function UserPage(props: Props) {
         console.log("Saving Encounter: " + JSON.stringify(updatedEncounter));
         updateEncounter(updatedEncounter);
 
+        // Auto-update the encounter state periodically to update lastUpdateTime so that we can
+        // detect a patient that has closed the window and gone away.
         const onTimer = (() => {
             setUpdateTimer(updateTimer + 1);
         });

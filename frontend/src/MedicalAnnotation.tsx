@@ -14,7 +14,6 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     annotation: {
         textDecoration: 'underline',
-        fontSize: "30pt"
     }
   }),
 );

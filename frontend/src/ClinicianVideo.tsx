@@ -5,239 +5,301 @@ import { startVideo, DataChannel } from "./video";
 import Speech from "./speech";
 import { Encounter, EncounterState, EncounterUpdate } from "./encounter";
 import {
-  createStyles,
-  Theme,
-  WithStyles,
-  withStyles,
+    createStyles,
+    Theme,
+    WithStyles,
+    withStyles,
 } from "@material-ui/core/styles";
 import AnnotatedText from "./AnnotatedText";
 import { Role } from "./Role";
+import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 
 const styles = (theme: Theme) =>
-  createStyles({
-    typography: {
-      padding: theme.spacing(2),
-    },
-    container: {
-      display: "flex",
-      flexWrap: "wrap",
-    },
-    textField: {
-      marginLeft: theme.spacing(1),
-      marginRight: theme.spacing(1),
-      width: 200,
-    },
-    localVideo: {
-      position: "absolute",
-      bottom: "20px",
-      right: "20px",
-      width: "calc(100% / 4)",
-      height: "calc(100% / 5)",
-      zIndex: 1,
-    },
-    patientVideo: {
-      position: "absolute",
-      top: 0,
-      right: 0,
-      height: "100%",
-      width: "100%",
-    },
-    advocateVideo: {
-      position: "absolute",
-      bottom: "150px",
-      right: "20px",
-      width: "calc(100% / 4)",
-      height: "calc(100% / 5)",
-      zIndex: 1,
-    },
-    videoContainer: {
-      position: "relative",
-      top: 0,
-      left: 0,
-      height: "calc(100vh - 64px)",
-      width: "100%",
-    },
-    transcription: {
-      position: "absolute",
-      bottom: "20px",
-      left: "20px",
-      width: "60%",
-      height: "20%",
-      background:
-        "rgba(76, 76, 76, 0.3)" /* Green background with 30% opacity */,
-      zIndex: 1,
-      fontSize: "30pt",
-      overflow: "scroll",
-    },
-    closeButton: {
-      position: "absolute",
-      top: "20px",
-      right: "20px",
-      zIndex: 1,
-    },
-  });
+    createStyles({
+        typography: {
+            padding: theme.spacing(2),
+        },
+        topContainer: {
+            display: "flex",
+            flexDirection: "row",
+            backgroundColor: '#3D3B3B',
+        },
+        container: {
+            display: "flex",
+            flexWrap: "wrap",
+        },
+        textField: {
+            marginLeft: theme.spacing(1),
+            marginRight: theme.spacing(1),
+            width: 200,
+        },
+        nonPatientVideoArea: {
+            flex: "1 1 auto",
+            display: "flex",
+            flexDirection: 'row',
+            margin: '10px'
+        },
+        localVideoContainer: {
+            flex: "2 1 auto",
+            position: "relative",
+            marginRight: "10px"
+        },
+        localVideo: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: '#E5E5E5',
+        },
+        patientVideoContainer: {
+            flex: "4 1 auto",
+            position: "relative",
+            marginLeft: '10px',
+            marginRight: '10px'
+        },
+        patientVideo: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '80%',
+            backgroundColor: '#E5E5E5',  
+        },
+        advocateVideoContainer: {
+            flex: "1 1 auto",
+            position: "relative"
+        },
+        advocateVideo: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: '#E5E5E5',
+        },
+        videoContainer: {
+            position: "relative",
+            flex: "3 1 auto",
+            display: "flex",
+            flexDirection: 'column',
+            top: 0,
+            left: 0,
+            height: "calc(100vh - 111px)",
+            width: "100%",
+            backgroundColor: '#3D3B3B',
+        },
+        transcription: {
+            position: "absolute",
+            top: '80%',
+            left: 0,
+            width: "100%",      
+            height: '20%',
+            background:
+                "rgba(76, 76, 76, 0.3)" /* Green background with 30% opacity */,
+            color: 'white',
+            zIndex: 1,
+            overflowX: 'hidden', /* Hide horizontal scrollbar */
+            overflowY: 'scroll',
+            fontSize: "18pt",            
+            '& ::-webkit-scrollbar': {
+                display: 'none'
+            }
+        },
+        closeButton: {
+            position: "absolute",
+            top: "20px",
+            right: "20px",
+            zIndex: 1,
+        },
+        divider: {
+            verticalAlign: 'middle'
+        },
+        workingArea: {
+            flex: "1 1 auto",
+            minWidth: "33%",
+            backgroundColor: '#E5E5E5',
+            marginRight: '10px',
+            marginTop: '10px',
+            marginBottom: '10px',
+        }
+    });
 
 interface ClinicialVideoProps
-  extends RouteComponentProps<{}>,
+    extends RouteComponentProps<{}>,
     WithStyles<typeof styles> {
-  encounter: Encounter;
-  user: firebase.User;
-  onClose: () => void;
+    encounter: Encounter;
+    user: firebase.User;
+    onClose: () => void;
 }
 
 interface ClinicalVideoState {
-  transcription: Array<LineState>;
+    transcription: Array<LineState>;
 }
 
 interface LineState {
-  msg: string;
-  final: boolean;
-  id: number;
+    msg: string;
+    final: boolean;
+    id: number;
 }
 
 let next_id = 0;
 
 class ClinicianVideoImpl extends React.Component<
-  ClinicialVideoProps,
-  ClinicalVideoState
-> {
-  private localVideoRef = React.createRef<HTMLVideoElement>();
-  private patientVideoRef = React.createRef<HTMLVideoElement>();
-  private advocateVideoRef = React.createRef<HTMLVideoElement>();
-  private transcriptRef = React.createRef<HTMLDivElement>();
-  private speech: Speech;
+    ClinicialVideoProps,
+    ClinicalVideoState
+    > {
+    private localVideoRef = React.createRef<HTMLVideoElement>();
+    private patientVideoRef = React.createRef<HTMLVideoElement>();
+    private advocateVideoRef = React.createRef<HTMLVideoElement>();
+    private transcriptRef = React.createRef<HTMLDivElement>();
+    private speech: Speech;
 
-  constructor(props: ClinicialVideoProps) {
-    super(props);
-    this.state = { transcription: [] };
-    this.onSpeechText = this.onSpeechText.bind(this);
-    this.onPatientConnect = this.onPatientConnect.bind(this);
-    this.speech = new Speech({ onSpeechText: this.onSpeechText });
-  }
-
-  onSpeechText(message: string, is_final: boolean): void {
-    let to_add: Array<LineState>;
-
-    if (is_final) {
-      to_add = [
-        { msg: message, final: true, id: next_id++ },
-        { msg: "", final: false, id: next_id++ },
-      ];
-    } else {
-      to_add = [{ msg: message, final: false, id: next_id++ }];
+    constructor(props: ClinicialVideoProps) {
+        super(props);
+        this.state = { transcription: [] };
+        this.onSpeechText = this.onSpeechText.bind(this);
+        this.onPatientConnect = this.onPatientConnect.bind(this);
+        this.speech = new Speech({ onSpeechText: this.onSpeechText });
     }
-    this.setState((prevState) => ({
-      ...prevState,
-      transcription: prevState.transcription
-        .slice(0, prevState.transcription.length - 1)
-        .concat(to_add),
-    }));
-    if (this.transcriptRef.current) {
-      this.transcriptRef.current.scrollTop = this.transcriptRef.current.scrollHeight;
+
+    onSpeechText(message: string, is_final: boolean): void {
+        let to_add: Array<LineState>;
+
+        if (is_final) {
+            to_add = [
+                { msg: message, final: true, id: next_id++ },
+                { msg: "", final: false, id: next_id++ },
+            ];
+        } else {
+            to_add = [{ msg: message, final: false, id: next_id++ }];
+        }
+        this.setState((prevState) => ({
+            ...prevState,
+            transcription: prevState.transcription
+                .slice(0, prevState.transcription.length - 1)
+                .concat(to_add),
+        }));
+        if (this.transcriptRef.current) {
+            this.transcriptRef.current.scrollTop = this.transcriptRef.current.scrollHeight;
+        }
     }
-  }
 
-  onPatientConnect() {
-     // Consider the appointment started when this happens.
-    const updateEncounter = firebase.functions().httpsCallable("updateEncounter");  
-    let updatedEncounter: Encounter = JSON.parse(JSON.stringify(this.props.encounter));
-    updatedEncounter.encounter.state = EncounterState.IN_PROGRESS;
-    updatedEncounter.updateType = EncounterUpdate.GENERAL_STATE;
-    updateEncounter(updatedEncounter);
-  }
-
-  onAdvocateConnect() {}
-
-  componentDidMount() {
-    if (this.localVideoRef.current && this.patientVideoRef.current) {
-      startVideo(
-        this.localVideoRef.current,
-        this.patientVideoRef.current,
-        Role.CLINICIAN,
-        Role.PATIENT,
-        this.props.encounter.encounterId,
-        true,
-        this.onPatientConnect,
-        new DataChannel(()=>{})
-      );
-      this.speech.start();
+    onPatientConnect() {
+        // Consider the appointment started when this happens.
+        const updateEncounter = firebase.functions().httpsCallable("updateEncounter");
+        let updatedEncounter: Encounter = JSON.parse(JSON.stringify(this.props.encounter));
+        updatedEncounter.encounter.state = EncounterState.IN_PROGRESS;
+        updatedEncounter.updateType = EncounterUpdate.GENERAL_STATE;
+        updateEncounter(updatedEncounter);
     }
-    if (this.localVideoRef.current && this.advocateVideoRef.current) {
-      startVideo(
-        this.localVideoRef.current,
-        this.advocateVideoRef.current,
-        Role.CLINICIAN,
-        Role.ADVOCATE,
-        this.props.encounter.encounterId,
-        true,
-        this.onAdvocateConnect,
-        new DataChannel(()=>{})
-      );
+
+    onAdvocateConnect() { }
+
+    componentDidMount() {
+        if (this.localVideoRef.current && this.patientVideoRef.current) {
+            startVideo(
+                this.localVideoRef.current,
+                this.patientVideoRef.current,
+                Role.CLINICIAN,
+                Role.PATIENT,
+                this.props.encounter.encounterId,
+                true,
+                this.onPatientConnect,
+                new DataChannel(() => { })
+            );
+            this.speech.start();
+        }
+        if (this.localVideoRef.current && this.advocateVideoRef.current) {
+            startVideo(
+                this.localVideoRef.current,
+                this.advocateVideoRef.current,
+                Role.CLINICIAN,
+                Role.ADVOCATE,
+                this.props.encounter.encounterId,
+                true,
+                this.onAdvocateConnect,
+                new DataChannel(() => { })
+            );
+        }
     }
-  }
 
-  componentWillUnmount() {
-    console.log("Video unomount!");
+    componentWillUnmount() {
+        console.log("Video unomount!");
 
-    const updateEncounter = firebase.functions().httpsCallable("updateEncounter");  
-    let updatedEncounter: Encounter = JSON.parse(JSON.stringify(this.props.encounter));
-    updatedEncounter.encounter.state = EncounterState.COMPLETE;
-    updatedEncounter.updateType = EncounterUpdate.GENERAL_STATE;
-    updateEncounter(updatedEncounter);
+        const updateEncounter = firebase.functions().httpsCallable("updateEncounter");
+        let updatedEncounter: Encounter = JSON.parse(JSON.stringify(this.props.encounter));
+        updatedEncounter.encounter.state = EncounterState.COMPLETE;
+        updatedEncounter.updateType = EncounterUpdate.GENERAL_STATE;
+        updateEncounter(updatedEncounter);
 
-    const createTranscript =  firebase.functions().httpsCallable('createTranscript');
-    try {
-      createTranscript({transcript: this.state.transcription, uid: this.props.user.uid, encounterId: this.props.encounter.encounterId})
-      .then(function (response) {
-        console.log("Wrote transcript");
-      });
-    } catch(err) {
-      console.log(err);
+        const createTranscript = firebase.functions().httpsCallable('createTranscript');
+        try {
+            createTranscript({ transcript: this.state.transcription, uid: this.props.user.uid, encounterId: this.props.encounter.encounterId })
+                .then(function (response) {
+                    console.log("Wrote transcript");
+                });
+        } catch (err) {
+            console.log(err);
+        }
     }
-  }
-  
-  render() {
-    return (
-      <>
-        <div className={this.props.classes.videoContainer}>
-          <video
-            className={this.props.classes.localVideo}
-            ref={this.localVideoRef}
-            playsInline
-            autoPlay
-          ></video>
-          <video
-            className={this.props.classes.patientVideo}
-            ref={this.patientVideoRef}
-            playsInline
-            autoPlay
-          ></video>
-          <video
-            className={this.props.classes.advocateVideo}
-            ref={this.advocateVideoRef}
-            playsInline
-            autoPlay
-          ></video>
-          <div
-            ref={this.transcriptRef}
-            className={this.props.classes.transcription}
-          >
-            {this.state.transcription.map((line: LineState) => (
-              <div key={line.id}>
-                {line.final ? (
-                  <AnnotatedText message={line.msg}></AnnotatedText>
-                ) : (
-                  line.msg
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </>
-    );
-  }
+
+    render() {
+        return (
+            <>
+                <div className={this.props.classes.topContainer}>
+                    <div className={this.props.classes.videoContainer}>
+                        <div className={this.props.classes.nonPatientVideoArea}>
+                            <div className={this.props.classes.localVideoContainer}>
+                                <video
+                                    className={this.props.classes.localVideo}
+                                            ref={this.localVideoRef}
+                                            playsInline
+                                            autoPlay
+                                ></video>
+                            </div>                    
+                            <div className={this.props.classes.advocateVideoContainer}>
+                                <video
+                                    className={this.props.classes.advocateVideo}
+                                    ref={this.advocateVideoRef}
+                                    playsInline
+                                    autoPlay
+                                ></video>
+                            </div>
+                        </div>
+                        <div className={this.props.classes.patientVideoContainer}>
+                            <video
+                                className={this.props.classes.patientVideo}
+                                ref={this.patientVideoRef}
+                                playsInline
+                                autoPlay
+                            ></video>
+                            <div
+                                ref={this.transcriptRef}
+                                className={this.props.classes.transcription}
+                            >
+                                {this.state.transcription.map((line: LineState) => (                                
+                                    <span key={line.id}>
+                                        <ChevronRightIcon className={this.props.classes.divider} fontSize="small"></ChevronRightIcon>
+                                        {line.final ? (
+                                            <AnnotatedText message={line.msg}></AnnotatedText>
+                                        ) : (
+                                                line.msg
+                                            )}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>             
+                    </div>
+                    <div className={this.props.classes.workingArea}>
+                        Working Area.
+                    </div>
+                </div>
+            </>
+        );
+    }
 }
 
 export const ClinicianVideo = withStyles(styles)(
-  withRouter(ClinicianVideoImpl)
+    withRouter(ClinicianVideoImpl)
 );

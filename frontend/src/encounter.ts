@@ -25,7 +25,10 @@ export enum EncounterUpdate {
 export interface PersonTimedState {
     state: PersonState;
     lastUpdateTime: number;
+    // First time when the person went from state NONE -> PREPARING.  Used for showing
+    // how long they have been waiting.
     arrivalTime: number;
+    // Time of last state transition.
     stateTransitionTime: number;
 }
 
@@ -35,10 +38,10 @@ export interface Encounter {
         patient: string;
         advocate: string;
         when: number;
-        patientState: PersonTimedState;
-        advocateState: PersonTimedState;
-        doctorState: PersonTimedState;
-        state: EncounterState;
+        patientState: PersonTimedState | null;
+        advocateState: PersonTimedState | null;
+        doctorState: PersonTimedState | null;
+        state: EncounterState | null;
     }
     updateType?: EncounterUpdate;
 }
