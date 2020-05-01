@@ -3,8 +3,14 @@ import React from "react";
 import * as firebase from "firebase/app";
 import "firebase/auth";
 
+<<<<<<< HEAD
 import ClinicianVideo from "./ClinicianVideo";
 import EncounterPage from "./EncounterPage";
+=======
+import { ClinicianVideo } from "./ClinicianVideo";
+import { EncounterPage } from "./EncounterPage";
+import {PastEncounterPage} from "./PastEncounterPage";
+>>>>>>> b668dd3... WIP checkin. Add new past encounter page on ClinicianApp, needs to query past encounters and fetch transcript files and display them
 import { PatientPage } from "./PatientPage";
 import { Box, Tabs, Tab } from "@material-ui/core";
 import { StoryContext } from "./StoryHome";
@@ -47,12 +53,16 @@ const MainClinicianPanel = ({ onVisit, user }: MainClinicianPanelProps) => {
       >
         <Tab label="Encounters" />
         <Tab label="Patients" />
+        <Tab label="Previous Visits" />
       </Tabs>
       <TabPanel value={value} index={0}>
         <EncounterPage onVisit={onVisit} user={user}></EncounterPage>
       </TabPanel>
       <TabPanel value={value} index={1}>
         <PatientPage user={user}></PatientPage>
+      </TabPanel>
+      <TabPanel value={value} index={2}>
+        <PastEncounterPage onVisit={onVisit} user={user}></PastEncounterPage>
       </TabPanel>
     </div>
   );
