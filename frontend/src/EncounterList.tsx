@@ -170,8 +170,8 @@ class EncounterListImpl extends React.Component<
   }
 
   getStatus(role: Role, encounter: Encounter) {    
-    let state = role == Role.PATIENT ? encounter.encounter.patientState : encounter.encounter.advocateState;
-    if (state.arrivalTime > 0) {
+    let state = role === Role.PATIENT ? encounter.encounter.patientState : encounter.encounter.advocateState;
+    if (state && state.arrivalTime && state.arrivalTime > 0) {
       // TODO: Need to check whether the timestamps are recent... otherwise assume that they aren't here.
       let timeSinceArrivedMinutes = timeSinceMinutes(state.arrivalTime);
       
@@ -204,9 +204,9 @@ class EncounterListImpl extends React.Component<
 
   getEncounterStatusDisplay(encounter: Encounter) {
     let encounterDate = new Date(encounter.encounter.when)
-    if (encounter.encounter.state == EncounterState.IN_PROGRESS) {
+    if (encounter.encounter.state === EncounterState.IN_PROGRESS) {
       return <span className={this.props.classes.inProgress}>In Progress</span>;
-    } else if (encounter.encounter.state == EncounterState.COMPLETE) {
+    } else if (encounter.encounter.state === EncounterState.COMPLETE) {
       return <span>Complete</span>
     }
     let diff_minutes = Math.floor(((encounterDate.getTime() - new Date().getTime()) / 1000) / 60);
@@ -287,6 +287,7 @@ class EncounterListImpl extends React.Component<
                 </TableCell>
                 <TableCell align="right">
                   <ButtonGroup color="primary" aria-label="outlined primary button group">
+                    
                     <Button size="small" variant="contained"
                       onClick={(event: any) => this.onEdit(event, index)}
                     >

@@ -19,6 +19,11 @@ const styles = (theme: Theme) =>
         typography: {
             padding: theme.spacing(2),
         },
+        topContainer: {
+            display: "flex",
+            flexDirection: "row",
+            backgroundColor: '#3D3B3B',
+        },
         container: {
             display: "flex",
             flexWrap: "wrap",
@@ -35,7 +40,7 @@ const styles = (theme: Theme) =>
             margin: '10px'
         },
         localVideoContainer: {
-            flex: "1 1 auto",
+            flex: "2 1 auto",
             position: "relative",
             marginRight: "10px"
         },
@@ -48,7 +53,7 @@ const styles = (theme: Theme) =>
             backgroundColor: '#E5E5E5',
         },
         patientVideoContainer: {
-            flex: "3 1 auto",
+            flex: "4 1 auto",
             position: "relative",
             marginLeft: '10px',
             marginRight: '10px'
@@ -75,6 +80,7 @@ const styles = (theme: Theme) =>
         },
         videoContainer: {
             position: "relative",
+            flex: "3 1 auto",
             display: "flex",
             flexDirection: 'column',
             top: 0,
@@ -91,6 +97,7 @@ const styles = (theme: Theme) =>
             height: '20%',
             background:
                 "rgba(76, 76, 76, 0.3)" /* Green background with 30% opacity */,
+            color: 'white',
             zIndex: 1,
             overflowX: 'hidden', /* Hide horizontal scrollbar */
             overflowY: 'scroll',
@@ -108,6 +115,14 @@ const styles = (theme: Theme) =>
         divider: {
             verticalAlign: 'middle'
         },
+        workingArea: {
+            flex: "1 1 auto",
+            minWidth: "33%",
+            backgroundColor: '#E5E5E5',
+            marginRight: '10px',
+            marginTop: '10px',
+            marginBottom: '10px',
+        }
     });
 
 interface ClinicialVideoProps
@@ -232,48 +247,53 @@ class ClinicianVideoImpl extends React.Component<
     render() {
         return (
             <>
-                <div className={this.props.classes.videoContainer}>
-                    <div className={this.props.classes.nonPatientVideoArea}>
-                        <div className={this.props.classes.localVideoContainer}>
+                <div className={this.props.classes.topContainer}>
+                    <div className={this.props.classes.videoContainer}>
+                        <div className={this.props.classes.nonPatientVideoArea}>
+                            <div className={this.props.classes.localVideoContainer}>
+                                <video
+                                    className={this.props.classes.localVideo}
+                                            ref={this.localVideoRef}
+                                            playsInline
+                                            autoPlay
+                                ></video>
+                            </div>                    
+                            <div className={this.props.classes.advocateVideoContainer}>
+                                <video
+                                    className={this.props.classes.advocateVideo}
+                                    ref={this.advocateVideoRef}
+                                    playsInline
+                                    autoPlay
+                                ></video>
+                            </div>
+                        </div>
+                        <div className={this.props.classes.patientVideoContainer}>
                             <video
-                                className={this.props.classes.localVideo}
-                                        ref={this.localVideoRef}
-                                        playsInline
-                                        autoPlay
-                            ></video>
-                        </div>                    
-                        <div className={this.props.classes.advocateVideoContainer}>
-                            <video
-                                className={this.props.classes.advocateVideo}
-                                ref={this.advocateVideoRef}
+                                className={this.props.classes.patientVideo}
+                                ref={this.patientVideoRef}
                                 playsInline
                                 autoPlay
                             ></video>
-                        </div>
+                            <div
+                                ref={this.transcriptRef}
+                                className={this.props.classes.transcription}
+                            >
+                                {this.state.transcription.map((line: LineState) => (                                
+                                    <span key={line.id}>
+                                        <ChevronRightIcon className={this.props.classes.divider} fontSize="small"></ChevronRightIcon>
+                                        {line.final ? (
+                                            <AnnotatedText message={line.msg}></AnnotatedText>
+                                        ) : (
+                                                line.msg
+                                            )}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>             
                     </div>
-                    <div className={this.props.classes.patientVideoContainer}>
-                        <video
-                            className={this.props.classes.patientVideo}
-                            ref={this.patientVideoRef}
-                            playsInline
-                            autoPlay
-                        ></video>
-                        <div
-                            ref={this.transcriptRef}
-                            className={this.props.classes.transcription}
-                        >
-                            {this.state.transcription.map((line: LineState) => (                                
-                                <span key={line.id}>
-                                    <ChevronRightIcon className={this.props.classes.divider} fontSize="small"></ChevronRightIcon>
-                                    {line.final ? (
-                                        <AnnotatedText message={line.msg}></AnnotatedText>
-                                    ) : (
-                                            line.msg
-                                        )}
-                                </span>
-                            ))}
-                        </div>
-                    </div>             
+                    <div className={this.props.classes.workingArea}>
+                        Working Area.
+                    </div>
                 </div>
             </>
         );

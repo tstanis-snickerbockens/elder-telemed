@@ -35,10 +35,10 @@ export interface Encounter {
         patient: string;
         advocate: string;
         when: number;
-        patientState: PersonTimedState;
-        advocateState: PersonTimedState;
-        doctorState: PersonTimedState;
-        state: EncounterState;
+        patientState: PersonTimedState | null;
+        advocateState: PersonTimedState | null;
+        doctorState: PersonTimedState | null;
+        state: EncounterState | null;
     }
     updateType?: EncounterUpdate;
 }
