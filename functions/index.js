@@ -7,6 +7,7 @@ admin.initializeApp();
 const express = require('express');
 const cors = require('cors')({origin: true});
 const app = express();
+const transcriptFolderName = "transcripts";
 
 app.use(cors);
 let db = admin.firestore();
@@ -456,7 +457,7 @@ exports.createTranscript = functions.https.onRequest((request, response) => {
             var encounterId = request.body.data.encounterId;
             var uid = request.body.data.uid;
             // Use uid so that we can quickly list all files for a user later
-            var fileName = "transcripts/" + uid + "_" + encounterId + ".txt";
+            var fileName = transcriptFolderName + "/" + uid + "_" + encounterId + ".txt";
             var transcriptText = "";
             if (!transcript || transcript.length === 0) {
                 console.log("Empty transcript.");
@@ -484,5 +485,26 @@ exports.createTranscript = functions.https.onRequest((request, response) => {
             console.log(e);
             response.status(500).send(e);
         }
+    });
+});
+
+exports.getEncounterTranscript = functions.https.onRequest((request, response) => {
+    return cors(request, response, () => {
+        /*try {
+            var userId = request.body.data.userId;
+            const options = {
+                prefix: transcriptFolderName + "/" + userId,
+                };
+            const [files] = await storage.bucket().getFiles(options);
+            fileNames = [];
+            files.forEach(file => fileNames.push(file.name));
+            console.log("Got previous visits.");
+            response.status(200).send({data: fileNames});
+        }
+        catch(e) {
+            console.log(e);
+            response.status(500).send(e);
+        }*/
+        // Hookup actual file read, and call this function from where transcript is shown
     });
 });
