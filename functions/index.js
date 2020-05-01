@@ -67,6 +67,78 @@ exports.createEncounter = functions.https.onRequest((request, response) => {
     });
 });
 
+
+const ENCOUNTER_UPDATE_FULL = "full";
+const ENCOUNTER_UPDATE_GENERAL_STATE = "general_state";
+const ENCOUNTER_UPDATE_PATIENT_STATE = "patient_state";
+const ENCOUNTER_UPDATE_ADVOCATE_STATE = "advocate_state";
+const ENCOUNTER_UPDATE_DOCTOR_STATE = "doctor_state";
+
+exports.updateEncounter = functions.https.onRequest((request, response) => {
+    return cors(request, response, () => {
+        console.log("updateEncounter: " + JSON.stringify(request.body.data, null, 2))
+        let updateType = request.body.data.updateType;
+        var encounterId = request.body.data.encounterId;
+        var encounter = request.body.data.encounter;
+
+        if (!encounter.patient || 0 === encounter.patient.length) {
+            response.status(400).send("No patient specified.");
+            return;
+        }
+
+        // Check patient exists and rewrite it as a firebase reference
+        db.collection('patients').doc(encounter.patient).get()
+        .then(doc => {
+            console.log("Check Patient: " + doc.exists + " " + JSON.stringify(doc.data()))
+            if (!doc.exists) {
+                console.log("Rejecting!");
+                return Promise.reject({code: 400, msg:"Patient doesn't exist: " + encounter.patient});
+            } else {
+                encounter.patient = db.doc('patients/' + encounter.patient);
+            }
+        }).then(() => {
+            let ref = db.collection('encounters').doc(encounterId);
+            let transaction = db.runTransaction(t => {
+                return t.get(ref)
+                    .then(doc => {
+                        if (!doc.exists) {
+                            return Promise.reject({code: 404, msg:"Encounter ID doesn't exists: " + encounterId});
+                        } else {
+                            let newEncounter = doc.data();
+                            if (updateType == ENCOUNTER_UPDATE_GENERAL_STATE) {
+                                newEncounter.state = encounter.state;
+                            } else if (updateType == ENCOUNTER_UPDATE_PATIENT_STATE) {
+                                newEncounter.patientState = encounter.patientState;
+                            } else if (updateType == ENCOUNTER_UPDATE_ADVOCATE_STATE) {
+                                newEncounter.advocateState = encounter.advocateState;
+                            } else if (updateType == ENCOUNTER_UPDATE_DOCTOR_STATE) {
+                                newEncounter.doctorState = encounter.doctorState;
+                            } else {
+                                newEncounter = encounter;
+                            }
+                            console.log("Updating encounter to: " + JSON.stringify(newEncounter));
+                            t.set(ref, newEncounter);
+                            return Promise.resolve("Saved");
+                        }
+                    });
+            }).then(result => {
+                console.log('Transaction success!');
+                response.status(200).send({data:'ok'});
+            }).catch(err => {
+                console.log('Transaction failure:', err.msg?err.msg:err);
+                if (err.code) {
+                    response.status(err.code).send(err.msg);
+                } else {
+                    response.status(500).send();
+                }
+            });
+        }).catch(err => {
+            response.status(err.code).send(err.msg);
+            return;
+        });
+    });
+});
+
 // Rewrite encounter to replace all references with actual patient Ids which
 // can be returned through the API.
 function rewriteEncounterReferences(encounter) {
@@ -152,7 +224,7 @@ exports.queryEncounters = functions.https.onRequest((request, response) => {
 // curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/createPatient -d '{"data": {"patientEmail": "mypatient", "patient":{"name": "foo bar"}}}'
 exports.createPatient = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
-        console.log("createPatient: " + JSON.stringify(request.body.data, null, 2))
+        console.log("createPatient: " + JSON.stringify(request.body.data, null, 2));
         var patientEmail = request.body.data.patientEmail;
         var patient = request.body.data.patient;
         let ref = db.collection('patients').doc(patientEmail);
@@ -167,7 +239,36 @@ exports.createPatient = functions.https.onRequest((request, response) => {
                     }
                 });
         }).then(result => {
-            //ref.collection('webrtc_signal_queue').doc('queue').set({});
+            console.log('Transaction success!');
+            response.status(200).send({data:'ok'});
+        }).catch(err => {
+            console.log('Transaction failure:', err.msg?err.msg:err);
+            if (err.code) {
+                response.status(err.code).send(err.msg);
+            } else {
+                response.status(500).send();
+            }
+        });
+    });
+});
+
+exports.updatePatient = functions.https.onRequest((request, response) => {
+    return cors(request, response, () => {
+        console.log("updatePatient: " + JSON.stringify(request.body.data, null, 2));
+        var patientEmail = request.body.data.patientEmail;
+        var patient = request.body.data.patient;
+        let ref = db.collection('patients').doc(patientEmail);
+        db.runTransaction(t => {
+            return t.get(ref)
+                .then(doc => {
+                    if (doc.exists) {                    
+                        t.set(ref, patient);
+                        return Promise.resolve("Saved");
+                    } else {
+                        return Promise.reject({code: 404, msg:"Patient doesn't exist: " + patientEmail});
+                    }
+                });
+        }).then(result => {
             console.log('Transaction success!');
             response.status(200).send({data:'ok'});
         }).catch(err => {

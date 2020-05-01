@@ -10,6 +10,7 @@ import CardContent from '@material-ui/core/CardContent';
 import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
 import Grid from '@material-ui/core/Grid';
+import { Encounter } from "./encounter"
 import { Role } from './Role';
 import { green } from '@material-ui/core/colors';
 
@@ -61,18 +62,18 @@ const styles = (theme: Theme) => createStyles({
 
 interface PatientHomePageProps extends RouteComponentProps<{}>, WithStyles<typeof styles> {
   user: firebase.User;
-  onStartAppointment: (encounterId: string, role: Role) => void;
+  onStartAppointment: (encounter: Encounter, role: Role) => void;
 };
 
 interface PatientHomePageState {
-    encounterId: string | null;
+    encounter: Encounter | null;
     role: Role;
 }
 
 class PatientHomePageImpl extends React.Component<PatientHomePageProps, PatientHomePageState> {
     constructor(props: PatientHomePageProps) {
         super(props);
-        this.state = {encounterId: null, role: Role.PATIENT}
+        this.state = {encounter: null, role: Role.PATIENT}
         this.startAppointment = this.startAppointment.bind(this);
     }
     componentDidMount() {
@@ -86,14 +87,14 @@ class PatientHomePageImpl extends React.Component<PatientHomePageProps, PatientH
                     console.log("Advocate: " + advocate);
                     let role = this.props.user.email === advocate ? Role.ADVOCATE : Role.PATIENT;
                     console.log("Our role:" + role);
-                    this.setState({encounterId: response.data[0].encounterId, role: role});
+                    this.setState({encounter: response.data[0], role: role});
                 }
             });
     }
     
     startAppointment() {
-        if (this.state.encounterId) {
-            this.props.onStartAppointment(this.state.encounterId, this.state.role);
+        if (this.state.encounter) {
+            this.props.onStartAppointment(this.state.encounter, this.state.role);
         }
     }
 

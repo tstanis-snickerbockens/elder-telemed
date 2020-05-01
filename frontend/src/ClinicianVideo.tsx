@@ -3,6 +3,7 @@ import { RouteComponentProps, withRouter } from "react-router-dom";
 import * as firebase from "firebase/app";
 import { startVideo, DataChannel } from "./video";
 import Speech from "./speech";
+import { Encounter, EncounterState, EncounterUpdate } from "./encounter";
 import {
   createStyles,
   Theme,
@@ -79,7 +80,7 @@ const styles = (theme: Theme) =>
 interface ClinicialVideoProps
   extends RouteComponentProps<{}>,
     WithStyles<typeof styles> {
-  encounterId: string;
+  encounter: Encounter;
   user: firebase.User;
   onClose: () => void;
 }
@@ -110,6 +111,7 @@ class ClinicianVideoImpl extends React.Component<
     super(props);
     this.state = { transcription: [] };
     this.onSpeechText = this.onSpeechText.bind(this);
+    this.onPatientConnect = this.onPatientConnect.bind(this);
     this.speech = new Speech({ onSpeechText: this.onSpeechText });
   }
 
@@ -135,7 +137,14 @@ class ClinicianVideoImpl extends React.Component<
     }
   }
 
-  onPatientConnect() {}
+  onPatientConnect() {
+     // Consider the appointment started when this happens.
+    const updateEncounter = firebase.functions().httpsCallable("updateEncounter");  
+    let updatedEncounter: Encounter = JSON.parse(JSON.stringify(this.props.encounter));
+    updatedEncounter.encounter.state = EncounterState.IN_PROGRESS;
+    updatedEncounter.updateType = EncounterUpdate.GENERAL_STATE;
+    updateEncounter(updatedEncounter);
+  }
 
   onAdvocateConnect() {}
 
@@ -146,7 +155,7 @@ class ClinicianVideoImpl extends React.Component<
         this.patientVideoRef.current,
         Role.CLINICIAN,
         Role.PATIENT,
-        this.props.encounterId,
+        this.props.encounter.encounterId,
         true,
         this.onPatientConnect,
         new DataChannel(()=>{})
@@ -159,7 +168,7 @@ class ClinicianVideoImpl extends React.Component<
         this.advocateVideoRef.current,
         Role.CLINICIAN,
         Role.ADVOCATE,
-        this.props.encounterId,
+        this.props.encounter.encounterId,
         true,
         this.onAdvocateConnect,
         new DataChannel(()=>{})
@@ -168,9 +177,17 @@ class ClinicianVideoImpl extends React.Component<
   }
 
   componentWillUnmount() {
+    console.log("Video unomount!");
+
+    const updateEncounter = firebase.functions().httpsCallable("updateEncounter");  
+    let updatedEncounter: Encounter = JSON.parse(JSON.stringify(this.props.encounter));
+    updatedEncounter.encounter.state = EncounterState.COMPLETE;
+    updatedEncounter.updateType = EncounterUpdate.GENERAL_STATE;
+    updateEncounter(updatedEncounter);
+
     const createTranscript =  firebase.functions().httpsCallable('createTranscript');
     try {
-      createTranscript({transcript: this.state.transcription, uid: this.props.user.uid, encounterId: this.props.encounterId})
+      createTranscript({transcript: this.state.transcription, uid: this.props.user.uid, encounterId: this.props.encounter.encounterId})
       .then(function (response) {
         console.log("Wrote transcript");
       });

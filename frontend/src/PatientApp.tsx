@@ -5,18 +5,19 @@ import { PatientHomePage } from "./PatientHomePage";
 import { Role } from "./Role";
 import { PatientMode } from "./PatientMode";
 import { StoryContext, StoryTopButton } from "./StoryHome";
+import { Encounter } from "./encounter";
 
 interface PatientAppProps extends RouteComponentProps<{}> {}
 
 const PatientAppImpl: React.FC<PatientAppProps> = () => {
-  const [encounterId, setEncounterId] = useState<string | null>(null);
+  const [encounter, setEncounter] = useState<Encounter | null>(null);
   const [role, setRole] = useState<Role>(Role.PATIENT);
   const [mode, setMode] = useState(PatientMode.HOME);
   const [clinicianReady] = useState(false);
   const { user, setUserTopButton } = useContext(StoryContext);
 
-  const startAppointment = (encounterId: string, role: Role) => {
-    setEncounterId(encounterId);
+  const startAppointment = (encounter: Encounter, role: Role) => {
+    setEncounter(encounter);
     setRole(role);
     setMode(PatientMode.WAITING_ROOM);
   };
@@ -39,10 +40,10 @@ const PatientAppImpl: React.FC<PatientAppProps> = () => {
     }
   }, [mode, user, setUserTopButton]);
 
-  if (encounterId) {
+  if (encounter) {
     return (
       <UserPage
-        encounterId={encounterId}
+        encounter={encounter}
         role={role}
         mode={mode}
         clinicianReady={clinicianReady}

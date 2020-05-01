@@ -1,10 +1,8 @@
 import React from "react";
-import { RouteComponentProps, withRouter } from "react-router-dom";
 import {
   createStyles,
   Theme,
-  WithStyles,
-  withStyles,
+  makeStyles,
 } from "@material-ui/core/styles";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
@@ -13,10 +11,11 @@ import TableContainer from "@material-ui/core/TableContainer";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import Paper from "@material-ui/core/Paper";
+import Popover from "@material-ui/core/Popover";
+import PatientForm from "./PatientForm";
 import * as firebase from "firebase/app";
 
-const styles = (theme: Theme) =>
-  createStyles({
+const useStyles = makeStyles((theme: Theme) => createStyles({
     root: {
       width: "100%",
     },
@@ -38,7 +37,10 @@ const styles = (theme: Theme) =>
       top: 20,
       width: 1,
     },
-  });
+    editPatientPopover: {
+      padding: '10px'
+    }
+}));
 
 interface PatientRow {
   email: string;
@@ -46,17 +48,11 @@ interface PatientRow {
   advocate: string;
 }
 
-interface PatientListProps
-  extends RouteComponentProps<{}>,
-    WithStyles<typeof styles> {
+interface PatientListProps {
   orderBy: string;
   order: string;
   user: firebase.User | null;
   refresh: boolean; // Used to force refresh from server.
-}
-
-interface PatientListState {
-  patients: Array<PatientRow>;
 }
 
 interface ListPatientEntry {
@@ -67,37 +63,25 @@ interface ListPatientEntry {
   };
 }
 
-class PatientListImpl extends React.Component<
-  PatientListProps,
-  PatientListState
-> {
-  constructor(props: PatientListProps) {
-    super(props);
-    this.state = { patients: [] };
-  }
+const headers = [
+  { id: "email", numeric: false, disablePadding: false, label: "Email" },
+  { id: "name", numeric: false, disablePadding: false, label: "Name" },
+  {
+    id: "advocates",
+    numeric: false,
+    disablePadding: false,
+    label: "Advocates",
+  },
+  { id: 'edit', numeric: false, disablePadding: false, label: ""}
+];
 
-  private headers = [
-    { id: "email", numeric: false, disablePadding: true, label: "Email" },
-    { id: "name", numeric: false, disablePadding: false, label: "Name" },
-    {
-      id: "advocates",
-      numeric: false,
-      disablePadding: false,
-      label: "Advocates",
-    },
-  ];
+export function PatientList(props: PatientListProps) {
+  const classes = useStyles();
+  const [patients, setPatients] = React.useState<Array<PatientRow>>([]);
+  const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>();
+  const [editOpen, setEditOpen] = React.useState<boolean>(false);
 
-  componentDidMount() {
-    this.refreshPatients();
-  }
-
-  componentWillReceiveProps(props: PatientListProps) {
-    if (props.refresh !== this.props.refresh) {
-      this.refreshPatients();
-    }
-  }
-
-  refreshPatients() {
+  const refreshPatients = React.useCallback(() => {
     console.log("refreshPatients");
     let listPatients = firebase.functions().httpsCallable("listPatients");
     listPatients({ userId: "myuser" })
@@ -110,47 +94,80 @@ class PatientListImpl extends React.Component<
             advocate: entry.patient.advocate,
           };
         });
-        this.setState((state) => {
-          return { patients: newPatients };
-        });
+        setPatients(newPatients);
       })
       .catch((err) => {
         console.log("ERROR: " + JSON.stringify(err));
       });
-  }
+  }, []);
 
-  render() {
-    return (
-      <TableContainer component={Paper}>
-        <Table className={this.props.classes.table} aria-label="simple table">
-          <TableHead>
-            <TableRow>
-              {this.headers.map((headCell) => (
-                <TableCell
-                  key={headCell.id}
-                  align={headCell.numeric ? "right" : "left"}
-                  padding={headCell.disablePadding ? "none" : "default"}
-                >
-                  {headCell.label}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {this.state.patients.map((row) => (
-              <TableRow key={row.email}>
-                <TableCell component="th" scope="row">
-                  {row.email}
-                </TableCell>
-                <TableCell align="right">{row.name}</TableCell>
-                <TableCell align="right">{row.advocate}</TableCell>
-              </TableRow>
+  React.useEffect(() => {
+    refreshPatients();    
+  }, [props.refresh, refreshPatients]);
+
+  const onEditPatient = React.useCallback((event, index) => {
+    setAnchorEl(event.target);
+    setEditOpen(!editOpen);
+  }, [editOpen]);
+
+  const onEditComplete = React.useCallback((changed: boolean) => {
+    if (changed) {
+      refreshPatients();
+    }
+    setEditOpen(false);
+  }, [refreshPatients]);
+  
+  return (
+    <TableContainer component={Paper}>
+      <Table className={classes.table} aria-label="simple table">
+        <TableHead>
+          <TableRow>
+            {headers.map((headCell) => (
+              <TableCell
+                key={headCell.id}
+                align={headCell.numeric ? "right" : "left"}
+                padding={headCell.disablePadding ? "none" : "default"}
+              >
+                {headCell.label}
+              </TableCell>
             ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    );
-  }
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {patients.map((row, index) => (
+            <TableRow key={row.email}>
+              <TableCell component="th" scope="row">
+                {row.email}
+              </TableCell>
+              <TableCell align="left">{row.name}</TableCell>
+              <TableCell align="left">{row.advocate}</TableCell>
+              <TableCell align="right">
+                <button
+                    onClick={(event) => onEditPatient(event, index)}
+                >
+                    Edit
+                </button>
+                <Popover
+                  open={editOpen}
+                  anchorEl={anchorEl}
+                  anchorOrigin={{
+                    vertical: "bottom",
+                    horizontal: "center",
+                  }}
+                  transformOrigin={{
+                    vertical: "top",
+                    horizontal: "center",
+                  }}
+                >
+                  <div className={classes.editPatientPopover}>
+                    <PatientForm previousName={row.name} previousEmail={row.email} newPatient={false} onComplete={onEditComplete}></PatientForm>
+                  </div>
+                </Popover>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
 }
-
-export const PatientList = withStyles(styles)(withRouter(PatientListImpl));
