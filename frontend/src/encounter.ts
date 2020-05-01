@@ -25,7 +25,10 @@ export enum EncounterUpdate {
 export interface PersonTimedState {
     state: PersonState;
     lastUpdateTime: number;
+    // First time when the person went from state NONE -> PREPARING.  Used for showing
+    // how long they have been waiting.
     arrivalTime: number;
+    // Time of last state transition.
     stateTransitionTime: number;
 }
 
