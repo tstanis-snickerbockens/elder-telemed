@@ -297,5 +297,3 @@ export default function EncounterList({ user, refresh, onVisit }: EncounterListP
     </>
   );
 }
-
-EncounterList.whyDidYouRender = true

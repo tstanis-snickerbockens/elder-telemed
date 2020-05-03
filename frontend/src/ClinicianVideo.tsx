@@ -148,9 +148,10 @@ interface TranscribedAnnotatedAudioProps {
     encounter: Encounter;
     user: firebase.User;
     addAnnotations: (annotations: Array<EncounterAudioAnnotation>) => void;
+    parentAddFinalTranscriptions: (finalAnnotation: LineState) => void;
 }
 
-function TranscribedAnnotatedAudio({encounter, user, addAnnotations} : TranscribedAnnotatedAudioProps) {
+function TranscribedAnnotatedAudio({encounter, user, addAnnotations, parentAddFinalTranscriptions} : TranscribedAnnotatedAudioProps) {
     const classes = useStyles();
     const transcriptRef = React.useRef<HTMLDivElement>(null);
     const [transcriptions, setTranscriptions] = React.useState<Array<LineState>>();
@@ -158,8 +159,10 @@ function TranscribedAnnotatedAudio({encounter, user, addAnnotations} : Transcrib
     const onSpeechText = React.useCallback((message: string, is_final: boolean): void => {
         let to_add: Array<LineState>;
         if (is_final) {
-            to_add = [{ msg: message, final: true, id: next_id++, annotationResult: null },
+            let final_line = { msg: message, final: true, id: next_id++, annotationResult: null };
+            to_add = [final_line,
                     { msg: "", final: false, id: next_id++, annotationResult: null }]
+            parentAddFinalTranscriptions(final_line);
         } else {
             to_add = [{ msg: message, final: false, id: next_id++, annotationResult: null }];
         }
@@ -177,10 +180,10 @@ function TranscribedAnnotatedAudio({encounter, user, addAnnotations} : Transcrib
     React.useEffect(() => {
         const speech: Speech = new Speech({ onSpeechText: onSpeechText });
         speech.start();
+        return () => {
+            speech.stop();
+        };
     }, [onSpeechText]);
-
-
-
 
     return (
         <div
@@ -207,6 +210,7 @@ export default function ClinicianVideo({encounter, user, onClose} : ClinicialVid
     const patientVideoRef = React.useRef<HTMLVideoElement>(null);
     const advocateVideoRef = React.useRef<HTMLVideoElement>(null);
     const [annotations, setAnnotations] = React.useState<Array<EncounterAudioAnnotation>>([]);
+    const [transcriptions, setTranscriptions] = React.useState<Array<LineState>>([]);
 
     const onPatientConnect = React.useCallback(() => {
         // Consider the appointment started when this happens.
@@ -261,21 +265,25 @@ export default function ClinicianVideo({encounter, user, onClose} : ClinicialVid
         updatedEncounter.updateType = EncounterUpdate.GENERAL_STATE;
         updateEncounter(updatedEncounter);
 
-        // const createTranscript = firebase.functions().httpsCallable('createTranscript');
-        // createTranscript({ transcript: transcriptions, uid: user.uid, encounterId: encounter.encounterId })
-        //     .then(function (response) {
-        //         console.log("Wrote transcript");
-        //     }).catch(function (err) {
-        //         console.log(err);
-        //     });
+        console.log("Write Transcipt to Server");
+        const createTranscript = firebase.functions().httpsCallable('createTranscript');
+        createTranscript({ transcript: transcriptions, uid: user.uid, encounterId: encounter.encounterId })
+            .then(function (response) {
+                console.log("Wrote transcript");
+            }).catch(function (err) {
+                console.log(err);
+            });
 
         onClose();
-    }, [encounter, user.uid, onClose]);
+    }, [encounter, transcriptions, user.uid, onClose]);
 
     const onAnnotations = React.useCallback((newAnnotations: Array<EncounterAudioAnnotation>) => {
-        setAnnotations((orig) => {return orig.concat(newAnnotations)});
+        setAnnotations((orig) => orig.concat(newAnnotations));
     }, [setAnnotations]);
 
+    const onFinalTranscriptions = React.useCallback((finalTranscription: LineState) => {
+        setTranscriptions((orig) => orig.concat(finalTranscription));
+    }, [setTranscriptions]);
 
     return (
         <>
@@ -310,7 +318,7 @@ export default function ClinicianVideo({encounter, user, onClose} : ClinicialVid
                             playsInline
                             autoPlay
                         ></video>
-                        <TranscribedAnnotatedAudio encounter={encounter} user={user} addAnnotations={onAnnotations}></TranscribedAnnotatedAudio>
+                        <TranscribedAnnotatedAudio encounter={encounter} user={user} addAnnotations={onAnnotations} parentAddFinalTranscriptions={onFinalTranscriptions}></TranscribedAnnotatedAudio>
                     </div>
                 </div>
                 <div className={classes.workingArea}>

@@ -211,7 +211,7 @@ exports.queryEncounters = functions.https.onRequest((request, response) => {
                         returnEncounters.push({'encounterId' : doc.id, 'encounter': rewriteEncounterReferences(doc.data())});
                     });
                 }
-                
+
                 response.status(200).send({'data':returnEncounters});
             })
             .catch(err => {
@@ -261,7 +261,7 @@ exports.updatePatient = functions.https.onRequest((request, response) => {
         db.runTransaction(t => {
             return t.get(ref)
                 .then(doc => {
-                    if (doc.exists) {                    
+                    if (doc.exists) {
                         t.set(ref, patient);
                         return Promise.resolve("Saved");
                     } else {
@@ -311,7 +311,10 @@ function getref(msgdb, encounterId, toRole, fromRole) {
 
 exports.clearMessages = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
-        let encounterId = request.body.data.encounterId;
+        if (!request.body.data.encounterId) {
+            response.status(400).send("Missing Encounter Id");
+            return;
+        }
         if (!request.body.data.toRole) {
             response.status(400).send("Missing To Role");
             return;
@@ -320,13 +323,14 @@ exports.clearMessages = functions.https.onRequest((request, response) => {
             response.status(400).send("Missing From Role");
             return;
         }
+        let encounterId = request.body.data.encounterId;
         let ref = getref(msgdb, encounterId, request.body.data.toRole, request.body.data.fromRole);
         ref.set({'queue': []}).then(() => {
             response.status(200).send({"data": "ok"})
         }).catch((e) => {
             console.log(e);
             response.status(500).send();
-        })
+        });
     });
 });
 
@@ -345,7 +349,7 @@ exports.sendMessage = functions.https.onRequest((request, response) => {
             response.status(400).send("Missing From Role");
             return;
         }
-        
+
         let sequenceNumber = request.body.data.seqNum;
         let ref = getref(msgdb, encounterId, request.body.data.toRole, request.body.data.fromRole);
         ref.transaction(function (current_value) {
@@ -356,7 +360,7 @@ exports.sendMessage = functions.https.onRequest((request, response) => {
             console.log("Write to " + requesterId);
             let inserted = false;
             for (let i = 0 ; i < current_value.queue.length; ++i) {
-                if (current_value.queue[i].id == requesterId && 
+                if (current_value.queue[i].id == requesterId &&
                     current_value.queue[i].seqNum > sequenceNumber) {
                     current_value.queue.splice(i, 0, request.body.data)
                     inserted = true;
@@ -373,7 +377,7 @@ exports.sendMessage = functions.https.onRequest((request, response) => {
 });
 
 exports.readMessage = functions.https.onRequest((request, response) => {
-    
+
     return cors(request, response, () => {
         let requesterId = request.body.data.id;
         let encounterId = request.body.data.encounterId;
@@ -428,7 +432,7 @@ exports.annotateTranscription = functions.https.onRequest((request, response) =>
                 'Text': message
             };
             var comprehendmedical = new AWS.ComprehendMedical();
-            comprehendmedical.detectEntitiesV2(params, 
+            comprehendmedical.detectEntitiesV2(params,
                 function(err, data) {
                     if (err) {
                         response.status(500).send(err);
@@ -478,7 +482,7 @@ exports.createTranscript = functions.https.onRequest((request, response) => {
                 else {
                     console.log(err, err.stack);
                     response.status(500).send(err);
-                }    
+                }
             });
         } catch(e) {
             console.log(e);

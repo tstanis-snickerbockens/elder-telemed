@@ -113,7 +113,7 @@ export function startVideo(
 
   console.log("Start Video");
   const clearMessages = firebase.functions().httpsCallable("clearMessages");
-  clearMessages({ encoutnerId: encounterId, toRole: remoteRole, fromRole: localRole }).then(() => {
+  clearMessages({ encounterId: encounterId, toRole: remoteRole, fromRole: localRole }).then(() => {
     getMediaStream().then((mediaStream) => {
       console.log("mediaStream", mediaStream);
 

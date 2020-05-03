@@ -57,7 +57,6 @@ const MainClinicianPanel = ({ onVisit, user }: MainClinicianPanelProps) => {
     </div>
   );
 };
-MainClinicianPanel.whyDidYouRender = true
 export default function ClinicianApp() {
 
   const [encounter, setEncounter] = React.useState<Encounter | null>(null);
@@ -82,4 +81,3 @@ export default function ClinicianApp() {
     <MainClinicianPanel onVisit={beginVisit} user={user}></MainClinicianPanel>
   );
 };
-ClinicianApp.whyDidYouRender = true

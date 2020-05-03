@@ -155,4 +155,3 @@ export function StoryHome({ children }: StoryHomeProps) {
     </div>
   );
 };
-StoryHome.whyDidYouRender = true
