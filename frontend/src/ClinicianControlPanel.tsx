@@ -81,24 +81,24 @@ export default function ClinicianControlPanel({ encounter, onEndEncounter }: Cli
             <div className={classes.allButtons}>
                 <ButtonGroup color="primary">
                     <Button size="small" variant="contained"
-                    onClick={onPrivate}
+                        onClick={onPrivate}
                     >
-                    Private
+                        Private
                     </Button>
                     <Button size="small" variant="contained"
-                    onClick={onShowGoals}
+                        onClick={onShowGoals}
                     >
-                    Goals
+                        Goals
                     </Button>
                 </ButtonGroup>
                 <div>
-                <Button
-                    variant="contained"
-                    color="inherit"
-                    className={classes.endEncounterButton}
-                    onClick={onEndEncounterClick}
+                    <Button
+                        variant="contained"
+                        color="inherit"
+                        className={classes.endEncounterButton}
+                        onClick={onEndEncounterClick}
                     >
-                    End Encounter
+                        End Encounter
                 </Button>
                 </div>
             </div>

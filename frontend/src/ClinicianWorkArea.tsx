@@ -9,6 +9,9 @@ import ClinicianAudioInsights from "./ClinicianAudioInsights";
 
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
+    insights: {
+
+    }
 }));
 
 interface ClinicianWorkAreaProps {
@@ -20,6 +23,7 @@ export default function ClinicianWorkArea({ encounter, audioAnnotations }: Clini
     const classes = useStyles();
     return (
         <>
+            <div className={classes.insights}></div>
             <ClinicianAudioInsights encounter={encounter} audioAnnotations={audioAnnotations}></ClinicianAudioInsights>
         </>
     );

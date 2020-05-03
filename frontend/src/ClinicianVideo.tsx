@@ -8,126 +8,126 @@ import {
     Theme,
     makeStyles
 } from "@material-ui/core/styles";
-import AnnotatedText, {AnnotationResult} from "./AnnotatedText";
+import AnnotatedText, { AnnotationResult } from "./AnnotatedText";
 import { Role } from "./Role";
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ClinicianWorkArea from "./ClinicianWorkArea";
 import ClinicianControlPanel from "./ClinicianControlPanel";
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
-        typography: {
-            padding: theme.spacing(2),
-        },
-        topContainer: {
-            display: "flex",
-            flexDirection: "row",
-            backgroundColor: '#E5E5E5',
-        },
-        container: {
-            display: "flex",
-            flexWrap: "wrap",
-        },
-        textField: {
-            marginLeft: theme.spacing(1),
-            marginRight: theme.spacing(1),
-            width: 200,
-        },
-        nonPatientVideoArea: {
-            flex: "1 1 auto",
-            display: "flex",
-            flexDirection: 'row',
-            margin: '10px'
-        },
-        localVideoContainer: {
-            flex: "2 1 auto",
-            position: "relative",
-            marginRight: "10px"
-        },
-        localVideo: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: '#E5E5E5',
-        },
-        patientVideoContainer: {
-            flex: "4 1 auto",
-            position: "relative",
-            marginLeft: '10px',
-            marginRight: '10px'
-        },
-        patientVideo: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '80%',
-            backgroundColor: '#E5E5E5',
-        },
-        advocateVideoContainer: {
-            flex: "1 1 auto",
-            position: "relative"
-        },
-        advocateVideo: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: '#E5E5E5',
-        },
-        controlPanel: {
-            flex: "1 1 auto",
-            position: "relative",
-            margin: '10px',
-        },
-        videoContainer: {
-            position: "relative",
-            flex: "3 1 auto",
-            display: "flex",
-            flexDirection: 'column',
-            top: 0,
-            left: 0,
-            height: "calc(100vh - 111px)",
-            width: "100%",
-            backgroundColor: '#E5E5E5',
-        },
-        transcription: {
-            position: "absolute",
-            top: '80%',
-            left: 0,
-            width: "100%",
-            height: '20%',
-            background:
-                "rgba(76, 76, 76, 0.3)" /* Green background with 30% opacity */,
-            color: 'white',
-            zIndex: 1,
-            overflowX: 'hidden', /* Hide horizontal scrollbar */
-            overflowY: 'scroll',
-            fontSize: "18pt",
-            '& ::-webkit-scrollbar': {
-                display: 'none'
-            }
-        },
-        closeButton: {
-            position: "absolute",
-            top: "20px",
-            right: "20px",
-            zIndex: 1,
-        },
-        divider: {
-            verticalAlign: 'middle'
-        },
-        workingArea: {
-            flex: "1 1 auto",
-            minWidth: "33%",
-            backgroundColor: '#E5E5E5',
-            marginRight: '10px',
-            marginTop: '10px',
-            marginBottom: '10px',
+    typography: {
+        padding: theme.spacing(2),
+    },
+    topContainer: {
+        display: "flex",
+        flexDirection: "row",
+        backgroundColor: '#E5E5E5',
+    },
+    container: {
+        display: "flex",
+        flexWrap: "wrap",
+    },
+    textField: {
+        marginLeft: theme.spacing(1),
+        marginRight: theme.spacing(1),
+        width: 200,
+    },
+    nonPatientVideoArea: {
+        flex: "1 1 auto",
+        display: "flex",
+        flexDirection: 'row',
+        margin: '10px'
+    },
+    localVideoContainer: {
+        flex: "2 1 auto",
+        position: "relative",
+        marginRight: "10px"
+    },
+    localVideo: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#E5E5E5',
+    },
+    patientVideoContainer: {
+        flex: "4 1 auto",
+        position: "relative",
+        marginLeft: '10px',
+        marginRight: '10px'
+    },
+    patientVideo: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '80%',
+        backgroundColor: '#E5E5E5',
+    },
+    advocateVideoContainer: {
+        flex: "1 1 auto",
+        position: "relative"
+    },
+    advocateVideo: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#E5E5E5',
+    },
+    controlPanel: {
+        flex: "1 1 auto",
+        position: "relative",
+        margin: '10px',
+    },
+    videoContainer: {
+        position: "relative",
+        flex: "3 1 auto",
+        display: "flex",
+        flexDirection: 'column',
+        top: 0,
+        left: 0,
+        height: "calc(100vh - 111px)",
+        width: "100%",
+        backgroundColor: '#E5E5E5',
+    },
+    transcription: {
+        position: "absolute",
+        top: '80%',
+        left: 0,
+        width: "100%",
+        height: '20%',
+        background:
+            "rgba(76, 76, 76, 0.3)" /* Green background with 30% opacity */,
+        color: 'white',
+        zIndex: 1,
+        overflowX: 'hidden', /* Hide horizontal scrollbar */
+        overflowY: 'scroll',
+        fontSize: "18pt",
+        '& ::-webkit-scrollbar': {
+            display: 'none'
         }
-    }));
+    },
+    closeButton: {
+        position: "absolute",
+        top: "20px",
+        right: "20px",
+        zIndex: 1,
+    },
+    divider: {
+        verticalAlign: 'middle'
+    },
+    workingArea: {
+        flex: "1 1 auto",
+        minWidth: "33%",
+        backgroundColor: '#E5E5E5',
+        marginRight: '10px',
+        marginTop: '10px',
+        marginBottom: '10px',
+    }
+}));
 
 interface ClinicialVideoProps {
     encounter: Encounter;
@@ -151,7 +151,7 @@ interface TranscribedAnnotatedAudioProps {
     parentAddFinalTranscriptions: (finalAnnotation: LineState) => void;
 }
 
-function TranscribedAnnotatedAudio({encounter, user, addAnnotations, parentAddFinalTranscriptions} : TranscribedAnnotatedAudioProps) {
+function TranscribedAnnotatedAudio({ encounter, user, addAnnotations, parentAddFinalTranscriptions }: TranscribedAnnotatedAudioProps) {
     const classes = useStyles();
     const transcriptRef = React.useRef<HTMLDivElement>(null);
     const [transcriptions, setTranscriptions] = React.useState<Array<LineState>>();
@@ -161,7 +161,7 @@ function TranscribedAnnotatedAudio({encounter, user, addAnnotations, parentAddFi
         if (is_final) {
             let final_line = { msg: message, final: true, id: next_id++, annotationResult: null };
             to_add = [final_line,
-                    { msg: "", final: false, id: next_id++, annotationResult: null }]
+                { msg: "", final: false, id: next_id++, annotationResult: null }]
             parentAddFinalTranscriptions(final_line);
         } else {
             to_add = [{ msg: message, final: false, id: next_id++, annotationResult: null }];
@@ -175,7 +175,7 @@ function TranscribedAnnotatedAudio({encounter, user, addAnnotations, parentAddFi
         if (transcriptRef.current) {
             transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
         }
-    }, [setTranscriptions, transcriptRef]);
+    }, [setTranscriptions, transcriptRef, parentAddFinalTranscriptions]);
 
     React.useEffect(() => {
         const speech: Speech = new Speech({ onSpeechText: onSpeechText });
@@ -204,7 +204,7 @@ function TranscribedAnnotatedAudio({encounter, user, addAnnotations, parentAddFi
     );
 }
 
-export default function ClinicianVideo({encounter, user, onClose} : ClinicialVideoProps) {
+export default function ClinicianVideo({ encounter, user, onClose }: ClinicialVideoProps) {
     const classes = useStyles();
     const localVideoRef = React.useRef<HTMLVideoElement>(null);
     const patientVideoRef = React.useRef<HTMLVideoElement>(null);
@@ -224,7 +224,7 @@ export default function ClinicianVideo({encounter, user, onClose} : ClinicialVid
     const onAdvocateConnect = React.useCallback(() => { }, []);
 
     React.useEffect(() => {
-        let patientClose : (( )=> void) | null = null;
+        let patientClose: (() => void) | null = null;
         if (localVideoRef.current && patientVideoRef.current) {
             patientClose = startVideo(
                 localVideoRef.current,
@@ -237,7 +237,7 @@ export default function ClinicianVideo({encounter, user, onClose} : ClinicialVid
                 new DataChannel(() => { })
             );
         }
-        let advocateClose : (( )=> void) | null = null;
+        let advocateClose: (() => void) | null = null;
         if (localVideoRef.current && advocateVideoRef.current) {
             advocateClose = startVideo(
                 localVideoRef.current,
@@ -258,7 +258,6 @@ export default function ClinicianVideo({encounter, user, onClose} : ClinicialVid
     }, [localVideoRef, patientVideoRef, advocateVideoRef, encounter, onPatientConnect, onAdvocateConnect]);
 
     const onEndEncounter = React.useCallback(() => {
-
         const updateEncounter = firebase.functions().httpsCallable("updateEncounter");
         let updatedEncounter: Encounter = JSON.parse(JSON.stringify(encounter));
         updatedEncounter.encounter.state = EncounterState.COMPLETE;
@@ -289,7 +288,6 @@ export default function ClinicianVideo({encounter, user, onClose} : ClinicialVid
         <>
             <div className={classes.topContainer}>
                 <div className={classes.videoContainer}>
-
                     <div className={classes.nonPatientVideoArea}>
                         <div className={classes.controlPanel}>
                             <ClinicianControlPanel encounter={encounter} onEndEncounter={onEndEncounter}></ClinicianControlPanel>
@@ -297,9 +295,9 @@ export default function ClinicianVideo({encounter, user, onClose} : ClinicialVid
                         <div className={classes.localVideoContainer}>
                             <video
                                 className={classes.localVideo}
-                                        ref={localVideoRef}
-                                        playsInline
-                                        autoPlay
+                                ref={localVideoRef}
+                                playsInline
+                                autoPlay
                             ></video>
                         </div>
                         <div className={classes.advocateVideoContainer}>

@@ -46,7 +46,10 @@ export interface Encounter {
         patient: string;
         advocate: string;
         when: number;
+        // Title of the encounter.  Displayed to clinician and patient to
+        // indicate the purpose of the encounter.
         title?: string;
+        // Scheduled duration of the encounter in milliseconds.
         scheduledDuration? : number;
         patientState: PersonTimedState | null;
         advocateState: PersonTimedState | null;
