@@ -21,7 +21,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     topContainer: {
         display: "flex",
         flexDirection: "row",
-        backgroundColor: '#E5E5E5',
+        backgroundColor: 'white',
     },
     container: {
         display: "flex",
@@ -36,7 +36,8 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
         flex: "1 1 auto",
         display: "flex",
         flexDirection: 'row',
-        margin: '10px'
+        margin: '10px',
+        marginTop: 0
     },
     localVideoContainer: {
         flex: "2 1 auto",
@@ -89,9 +90,10 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
         flexDirection: 'column',
         top: 0,
         left: 0,
-        height: "calc(100vh - 111px)",
+        height: "calc(100vh - 121px)",
         width: "100%",
-        backgroundColor: '#E5E5E5',
+        backgroundColor: 'white',
+        marginTop: '10px',
     },
     transcription: {
         position: "absolute",
@@ -122,7 +124,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     workingArea: {
         flex: "1 1 auto",
         minWidth: "33%",
-        backgroundColor: '#E5E5E5',
+        backgroundColor: 'white',
         marginRight: '10px',
         marginTop: '10px',
         marginBottom: '10px',
