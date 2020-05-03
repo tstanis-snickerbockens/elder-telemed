@@ -6,10 +6,11 @@ import {
   Redirect,
 } from "react-router-dom";
 import { PatientApp } from "./PatientApp";
-import { ClinicianApp } from "./ClinicianApp";
+import ClinicianApp from "./ClinicianApp";
 import { StoryHome } from "./StoryHome";
 
 function App() {
+  console.log("Root App");
   return (
     <Router>
       <StoryHome>

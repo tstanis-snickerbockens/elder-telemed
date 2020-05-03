@@ -53,6 +53,7 @@ type StoryTopButtonProps = {
   children: React.ReactNode;
   onClick: (e: unknown) => void;
 };
+
 export const StoryTopButton: React.FC<StoryTopButtonProps> = ({
   children,
   onClick,
@@ -71,7 +72,7 @@ export const StoryTopButton: React.FC<StoryTopButtonProps> = ({
   );
 };
 
-export const StoryHome: React.FC<StoryHomeProps> = ({ children }) => {
+export function StoryHome({ children }: StoryHomeProps) {
   const classes = styles();
   // user has three possible settings: the user, null (signed out), undefined (dunno)
   // the page is rendered differently in each case
@@ -154,3 +155,4 @@ export const StoryHome: React.FC<StoryHomeProps> = ({ children }) => {
     </div>
   );
 };
+StoryHome.whyDidYouRender = true

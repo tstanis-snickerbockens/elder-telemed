@@ -1,52 +1,14 @@
-import React, { useState, useContext } from "react";
-import { RouteComponentProps, withRouter } from "react-router-dom";
+import React from "react";
 
-import {
-  createStyles,
-  Theme,
-  WithStyles,
-  withStyles,
-} from "@material-ui/core/styles";
 import * as firebase from "firebase/app";
 import "firebase/auth";
 
-import { ClinicianVideo } from "./ClinicianVideo";
-import { EncounterPage } from "./EncounterPage";
+import ClinicianVideo from "./ClinicianVideo";
+import EncounterPage from "./EncounterPage";
 import { PatientPage } from "./PatientPage";
 import { Box, Tabs, Tab } from "@material-ui/core";
-import { StoryContext, StoryTopButton } from "./StoryHome";
+import { StoryContext } from "./StoryHome";
 import { Encounter } from "./encounter";
-
-const styles = (theme: Theme) =>
-  createStyles({
-    root: {
-      flexGrow: 1,
-    },
-    menuButton: {
-      marginRight: theme.spacing(2),
-    },
-    title: {
-      flexGrow: 1,
-      fontFmily: "Roboto",
-      fontStyle: "normal",
-      fontWeight: "bold",
-      fontSize: "18px",
-      letterSpacing: "0.03em",
-      fontVariant: "small-caps",
-    },
-    actionButton: {
-      backgroundColor: "#FCD446",
-    },
-    bottomBar: {
-      top: "auto",
-      bottom: 0,
-      height: "47px",
-    },
-  });
-
-interface ClinicianAppProps
-  extends RouteComponentProps<{}>,
-    WithStyles<typeof styles> {}
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -54,8 +16,7 @@ interface TabPanelProps {
   value: any;
 }
 
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
+function TabPanel( { children, value, index, ...other }: TabPanelProps) {
 
   return (
     <div hidden={value !== index} id={`simple-tabpanel-${index}`} {...other}>
@@ -70,18 +31,19 @@ type MainClinicianPanelProps = {
 };
 
 const MainClinicianPanel = ({ onVisit, user }: MainClinicianPanelProps) => {
+
   const [value, setValue] = React.useState(0);
 
-  const handleChange = (_: any, newValue: number) => {
+  const handleChange = React.useCallback((_: any, newValue: number) => {
     setValue(newValue);
-  };
+  }, [setValue]);
 
+  console.log("MainClinicianPanel");
   return (
     <div>
       <Tabs
         value={value}
         onChange={handleChange}
-        aria-label="simple tabs example"
       >
         <Tab label="Encounters" />
         <Tab label="Patients" />
@@ -95,23 +57,21 @@ const MainClinicianPanel = ({ onVisit, user }: MainClinicianPanelProps) => {
     </div>
   );
 };
-const ClinicianAppImpl: React.FC<ClinicianAppProps> = () => {
-  const [encounter, setEncounter] = useState<Encounter | null>(null);
-  const { user, setUserTopButton } = useContext(StoryContext);
+MainClinicianPanel.whyDidYouRender = true
+export default function ClinicianApp() {
 
-  const endVisit = () => {
+  const [encounter, setEncounter] = React.useState<Encounter | null>(null);
+  const { user } = React.useContext(StoryContext);
+
+  const endVisit = React.useCallback(() => {
     setEncounter(null);
-    setUserTopButton(null);
-  };
+  }, [setEncounter]);
 
-  const beginVisit = (encounter: Encounter) => {
+  const beginVisit = React.useCallback((encounter: Encounter) => {
     console.log("Begin encounter " + encounter.encounterId);
     setEncounter(encounter);
-    setUserTopButton(
-      <StoryTopButton onClick={endVisit}>End Appointment</StoryTopButton>
-    );
-  };
-
+  }, [setEncounter]);
+  console.log("ClinicianApp");
   return encounter ? (
     <ClinicianVideo
       user={user}
@@ -122,5 +82,4 @@ const ClinicianAppImpl: React.FC<ClinicianAppProps> = () => {
     <MainClinicianPanel onVisit={beginVisit} user={user}></MainClinicianPanel>
   );
 };
-
-export const ClinicianApp = withStyles(styles)(withRouter(ClinicianAppImpl));
+ClinicianApp.whyDidYouRender = true
