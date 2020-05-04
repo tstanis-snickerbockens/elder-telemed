@@ -9,6 +9,8 @@ import TextField from "@material-ui/core/TextField";
 import { Encounter, EncounterUpdate } from "./encounter";
 import * as firebase from "firebase/app";
 import DateFnsUtils from '@date-io/date-fns';
+import InputLabel from '@material-ui/core/InputLabel';
+import Select from '@material-ui/core/Select';
 import {
     MuiPickersUtilsProvider,
     DateTimePicker,
@@ -43,6 +45,7 @@ export default function EncounterForm({isNewEncounter, previousEncounter, onComp
     const [advocate, setAdvocate] = React.useState(previousEncounter.encounter.advocate);
     const [when, setWhen] = React.useState(new Date(previousEncounter.encounter.when));
     const [title, setTitle] = React.useState(previousEncounter.encounter.title);
+    const [scheduledDurationMinutes, setScheduledDurationMinutes] = React.useState(previousEncounter.encounter.scheduledDuration);
 
     const handleSave = React.useCallback(() => {
         console.log("Previous Encounter: "+ JSON.stringify(previousEncounter));
@@ -53,6 +56,7 @@ export default function EncounterForm({isNewEncounter, previousEncounter, onComp
         newEncounter.encounter.advocate = advocate;
         newEncounter.encounter.title = title;
         newEncounter.encounter.when = when.getTime();
+        newEncounter.encounter.scheduledDuration = scheduledDurationMinutes;
         newEncounter.updateType = EncounterUpdate.FULL;
 
         console.log("Saving: " + JSON.stringify(newEncounter));
@@ -67,7 +71,7 @@ export default function EncounterForm({isNewEncounter, previousEncounter, onComp
             console.log(err);
             onComplete(false);
         });
-    }, [patient, advocate, when, title, isNewEncounter, previousEncounter, onComplete]);
+    }, [patient, advocate, when, title, scheduledDurationMinutes, isNewEncounter, previousEncounter, onComplete]);
 
     const handleCancel = React.useCallback(() => {
         onComplete(false);
@@ -76,6 +80,7 @@ export default function EncounterForm({isNewEncounter, previousEncounter, onComp
     return (
         <>
         <form className={classes.container} noValidate>
+
             <TextField
                 name="patient"
                 onChange={(e) => setPatient(e.target.value)}
@@ -100,6 +105,21 @@ export default function EncounterForm({isNewEncounter, previousEncounter, onComp
                 value={title}
                 variant="outlined"
             />
+            <InputLabel htmlFor="duration-native-simple">Duration</InputLabel>
+            <Select
+                native
+                value={scheduledDurationMinutes}
+                onChange={(e) => setScheduledDurationMinutes(Number(e.target.value))}
+                inputProps={{
+                    name: 'duration',
+                    id: 'duration-native-simple',
+                }}
+                >
+                <option aria-label="None" value="" />
+                <option value={7}>7 minutes</option>
+                <option value={15}>15 minutes</option>
+                <option value={30}>30 minutes</option>
+            </Select>
             <MuiPickersUtilsProvider utils={DateFnsUtils}>
                 <DateTimePicker
                     label="Appointment Time"

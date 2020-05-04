@@ -19,7 +19,7 @@ const styles = (theme: Theme) =>
       padding: theme.spacing(2),
     },
 
-    
+
     newPatientPopover: {
       padding: '10px'
     }
@@ -57,12 +57,12 @@ class PatientPageImpl extends React.Component<
 
 
   onEditComplete(changed: boolean) {
-      
+
     this.setState((prevState) => ({
       ...prevState,
       refresh_patient_list: !prevState.refresh_patient_list,
     }));
-      
+
     this.setState({ anchorEl: null, open: false });
   }
 
@@ -86,7 +86,7 @@ class PatientPageImpl extends React.Component<
           }}
         >
           <div className={this.props.classes.newPatientPopover}>
-            <PatientForm previousName='' previousEmail='' newPatient={true} onComplete={this.onEditComplete}></PatientForm>
+            <PatientForm previousName='' previousEmail='' previousPhone='' newPatient={true} onComplete={this.onEditComplete}></PatientForm>
           </div>
         </Popover>
         <PatientList
