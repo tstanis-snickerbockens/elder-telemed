@@ -37,19 +37,21 @@ interface EncounterFormProps {
 }
 
 export default function EncounterForm({isNewEncounter, previousEncounter, onComplete}: EncounterFormProps) {
-    
+
     const classes = useStyles();
     const [patient, setPatient] = React.useState(previousEncounter.encounter.patient);
     const [advocate, setAdvocate] = React.useState(previousEncounter.encounter.advocate);
     const [when, setWhen] = React.useState(new Date(previousEncounter.encounter.when));
+    const [title, setTitle] = React.useState(previousEncounter.encounter.title);
 
     const handleSave = React.useCallback(() => {
         console.log("Previous Encounter: "+ JSON.stringify(previousEncounter));
-        const serverFunction = firebase.functions().httpsCallable(isNewEncounter ? 'createEncounter' : "updateEncounter");  
+        const serverFunction = firebase.functions().httpsCallable(isNewEncounter ? 'createEncounter' : "updateEncounter");
         let newEncounter: Encounter = Object.assign({}, previousEncounter);
         Object.assign(newEncounter.encounter, previousEncounter.encounter);
         newEncounter.encounter.patient = patient;
         newEncounter.encounter.advocate = advocate;
+        newEncounter.encounter.title = title;
         newEncounter.encounter.when = when.getTime();
         newEncounter.updateType = EncounterUpdate.FULL;
 
@@ -65,7 +67,7 @@ export default function EncounterForm({isNewEncounter, previousEncounter, onComp
             console.log(err);
             onComplete(false);
         });
-    }, [patient, advocate, when, isNewEncounter, previousEncounter, onComplete]);
+    }, [patient, advocate, when, title, isNewEncounter, previousEncounter, onComplete]);
 
     const handleCancel = React.useCallback(() => {
         onComplete(false);
@@ -88,6 +90,14 @@ export default function EncounterForm({isNewEncounter, previousEncounter, onComp
                 id="advocate-name"
                 label="Advocate"
                 value={advocate}
+                variant="outlined"
+            />
+            <TextField
+                name="title"
+                onChange={(e) => setTitle(e.target.value)}
+                id="title"
+                label="Title"
+                value={title}
                 variant="outlined"
             />
             <MuiPickersUtilsProvider utils={DateFnsUtils}>

@@ -65,7 +65,7 @@ export default function ClinicianAudioInsights({ category, type, annotations, on
             <div className={classes.chipsContainer}>
                 {annotations.map((annotation, index) => {
                     if (annotation.category !== category || (type ? annotation.type !== type : false)) {
-                        return;
+                        return "";
                     }
                     let result = <></>;
                     if (annotations[index].clinicianImpression === ClinicianImpression.UNCONFIRMED) {
