@@ -19,7 +19,8 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 
 interface ClinicianWorkAreaProps {
     encounter: Encounter,
-    audioAnnotations: Array<EncounterAudioAnnotation>
+    audioAnnotations: Array<EncounterAudioAnnotation>,
+    onUpdateAnnotation: (index: number, e: EncounterAudioAnnotation) => void
 }
 
 interface TabPanelProps {
@@ -47,13 +48,14 @@ function TabPanel({ children, value, index, ...other }: TabPanelProps) {
     );
 }
 
-export default function ClinicianWorkArea({ encounter, audioAnnotations }: ClinicianWorkAreaProps) {
+export default function ClinicianWorkArea({ encounter, audioAnnotations, onUpdateAnnotation }: ClinicianWorkAreaProps) {
     const classes = useStyles();
     const [tab, setTab] = React.useState(0);
 
     const handleTabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
         setTab(newValue);
     };
+
 
     return (
         <>
@@ -72,16 +74,16 @@ export default function ClinicianWorkArea({ encounter, audioAnnotations }: Clini
                 </Tabs>
             </Paper>
             <TabPanel value={tab} index={0}>
-                <ClinicianAudioInsights category={Category.MEDICAL_CONDITION} annotations={audioAnnotations}></ClinicianAudioInsights>
+                <ClinicianAudioInsights onUpdateAnnotation={onUpdateAnnotation} category={Category.MEDICAL_CONDITION} annotations={audioAnnotations}></ClinicianAudioInsights>
             </TabPanel>
             <TabPanel value={tab} index={1}>
-                <ClinicianAudioInsights category={Category.MEDICATION} annotations={audioAnnotations}></ClinicianAudioInsights>
+                <ClinicianAudioInsights onUpdateAnnotation={onUpdateAnnotation} category={Category.MEDICATION} annotations={audioAnnotations}></ClinicianAudioInsights>
             </TabPanel>
             <TabPanel value={tab} index={2}>
-                <ClinicianAudioInsights category={Category.TEST_TREATMENT_PROCEDURE} type={Type.TEST_NAME} annotations={audioAnnotations}></ClinicianAudioInsights>
+                <ClinicianAudioInsights onUpdateAnnotation={onUpdateAnnotation} category={Category.TEST_TREATMENT_PROCEDURE} type={Type.TEST_NAME} annotations={audioAnnotations}></ClinicianAudioInsights>
             </TabPanel>
             <TabPanel value={tab} index={3}>
-                <ClinicianAudioInsights category={Category.TEST_TREATMENT_PROCEDURE} type={Type.PROCEDURE_NAME} annotations={audioAnnotations}></ClinicianAudioInsights>
+                <ClinicianAudioInsights onUpdateAnnotation={onUpdateAnnotation} category={Category.TEST_TREATMENT_PROCEDURE} type={Type.PROCEDURE_NAME} annotations={audioAnnotations}></ClinicianAudioInsights>
             </TabPanel>
         </>
     );
