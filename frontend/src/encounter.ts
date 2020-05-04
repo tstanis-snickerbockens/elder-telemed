@@ -32,12 +32,18 @@ export interface PersonTimedState {
     stateTransitionTime: number;
 }
 
+export enum ClinicianImpression {
+    UNCONFIRMED,
+    CONFIRMED,
+    DELETED
+}
+
 export interface EncounterAudioAnnotation {
     category: string;
     type: string;
     text: string;
     score: number;
-    clinicianAccepted?: boolean;
+    clinicianImpression: ClinicianImpression;
 }
 
 export interface Encounter {
