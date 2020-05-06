@@ -11,11 +11,35 @@ const app = express();
 app.use(cors);
 let db = admin.firestore();
 let storage = admin.storage();
+var Promise = require('promise');
 
 var AWS = require("aws-sdk");
-var Promise = require('promise');
+
+let aws_loaded = false;
+function lazyInitAWS() {
+    if (aws_loaded) {
+        return;
+    }
+    AWS.config.loadFromPath("aws_credentials.json");
+    aws_loaded = true;
+}
+
 const twilio = require('twilio');
 const fs = require('fs');
+let twilio_client = null;
+
+function lazyInitTwilio() {
+    if (twilio_client) {
+        return;
+    }
+    try {
+        const twilio_creds = JSON.parse(fs.readFileSync('twilio_credentials.json'));
+        twilio_client = twilio(twilio_creds.ACCOUNT_SID, twilio_creds.AUTH_TOKEN);
+    } catch (e) {
+        console.log("Error initializing twilio: " + e);
+    }
+}
+
 
 // curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/createEncounter -d '{"data": {"encounterId": "myencounter4", "encounter": {"patient":"mypatient"}}}'
 exports.createEncounter = functions.https.onRequest((request, response) => {
@@ -439,10 +463,10 @@ exports.readMessage = functions.https.onRequest((request, response) => {
     });
 });
 
-AWS.config.loadFromPath("aws_credentials.json");
 
 exports.annotateTranscription = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
+        lazyInitAWS();
         try {
             var message = request.body.data.message;
             if (message.trim() == "") {
@@ -512,14 +536,10 @@ exports.createTranscript = functions.https.onRequest((request, response) => {
     });
 });
 
-try {
-    const twilio_creds = JSON.parse(fs.readFileSync('twilio_credentials.json'));
-    const twilio_client = twilio(twilio_creds.ACCOUNT_SID, twilio_creds.AUTH_TOKEN);
-} catch (e) {
-    console.log("Error initializing twilio: " + e);
-}
+
 exports.txtParticipant = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
+        lazyInitTwilio();
         const encounterId = request.body.data.encounterId;
         const patientEmail = request.body.data.patientEmail;
         const patientRef = db.collection('patients').doc(patientEmail);
