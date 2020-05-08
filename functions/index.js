@@ -557,8 +557,6 @@ exports.createTranscript = functions.https.onRequest((request, response) => {
     });
 });
 
-<<<<<<< HEAD
-
 exports.txtParticipant = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         lazyInitTwilio();
@@ -578,7 +576,9 @@ exports.txtParticipant = functions.https.onRequest((request, response) => {
         }).catch((err) => {
             response.status(500).send(err);
         });
-=======
+    });
+});
+
 exports.getEncounterTranscript = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         try {
@@ -602,12 +602,6 @@ exports.getEncounterTranscript = functions.https.onRequest((request, response) =
         } catch(e) {
             console.log(e);
             response.status(500).send(e);
-<<<<<<< HEAD
-        }*/
-        // Hookup actual file read, and call this function from where transcript is shown
->>>>>>> b668dd3... WIP checkin. Add new past encounter page on ClinicianApp, needs to query past encounters and fetch transcript files and display them
-=======
         }
->>>>>>> d9ae521... Update past encounter tab, and hook up correct functions
     });
 });

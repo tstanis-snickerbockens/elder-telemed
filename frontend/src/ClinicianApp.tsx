@@ -3,14 +3,9 @@ import React from "react";
 import * as firebase from "firebase/app";
 import "firebase/auth";
 
-<<<<<<< HEAD
 import ClinicianVideo from "./ClinicianVideo";
 import EncounterPage from "./EncounterPage";
-=======
-import { ClinicianVideo } from "./ClinicianVideo";
-import { EncounterPage } from "./EncounterPage";
-import {PastEncounterPage} from "./PastEncounterPage";
->>>>>>> b668dd3... WIP checkin. Add new past encounter page on ClinicianApp, needs to query past encounters and fetch transcript files and display them
+import PastEncounterPage from "./PastEncounterPage";
 import { PatientPage } from "./PatientPage";
 import { Box, Tabs, Tab } from "@material-ui/core";
 import { StoryContext } from "./StoryHome";
