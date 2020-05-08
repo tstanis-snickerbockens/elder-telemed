@@ -1,7 +1,7 @@
 import React from 'react';
 import * as firebase from "firebase/app";
 import {MedicalAnnotation, AnnotationEntity} from "./MedicalAnnotation"
-import {EncounterAudioAnnotation} from "./encounter"
+import {EncounterAudioAnnotation, ClinicianImpression} from "./encounter"
 
 
 export interface AnnotationResult {
@@ -32,7 +32,11 @@ async function getAnnotation(message: string) {
 function toEncounterAudioAnnotation(annotations: any): Array<EncounterAudioAnnotation> {
     let result: Array<EncounterAudioAnnotation> = [];
     annotations.data.Entities.map((entity: AnnotationEntity) =>
-        result.push({category: entity.Category, type: entity.Type, text: entity.Text, score: entity.Score})
+        result.push({category: entity.Category,
+            type: entity.Type,
+            text: entity.Text,
+            score: entity.Score,
+            clinicianImpression: ClinicianImpression.UNCONFIRMED})
     );
     return result;
 }

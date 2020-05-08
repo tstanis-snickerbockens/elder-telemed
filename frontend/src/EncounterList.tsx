@@ -105,6 +105,7 @@ const headers = [
     label: "Scheduled Time",
   },
   { id: "name", numeric: false, disablePadding: false, label: "Patient" },
+  { id: "title", numeric: false, disablePadding: false, label: "Title" },
   {
     id: "advocates",
     numeric: false,
@@ -250,6 +251,9 @@ export default function EncounterList({ user, refresh, onVisit }: EncounterListP
                 <TableCell component="th" scope="row">
                   {row.encounter.patient}<br />
                   {getStatus(Role.PATIENT, row)}
+                </TableCell>
+                <TableCell align="left">
+                  {row.encounter.title}
                 </TableCell>
                 <TableCell align="left">
                   {row.encounter.advocate}<br />

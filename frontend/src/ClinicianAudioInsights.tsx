@@ -4,11 +4,20 @@ import {
     Theme,
     makeStyles,
 } from "@material-ui/core/styles";
-import { Encounter, EncounterAudioAnnotation } from "./encounter";
+import { Encounter, EncounterAudioAnnotation, ClinicianImpression } from "./encounter";
+import Chip from '@material-ui/core/Chip';
+import DoneIcon from '@material-ui/icons/Done';
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
     annotationTable: {
     },
+    chipsContainer: {
+        display: 'flex',
+        flexWrap: 'wrap',
+        '& > *': {
+            margin: theme.spacing(0.5),
+        },
+    }
 }));
 
 interface ClinicianAudioInsightsProps {
@@ -16,14 +25,15 @@ interface ClinicianAudioInsightsProps {
     audioAnnotations: Array<EncounterAudioAnnotation>
 }
 
-enum Category {
+
+export enum Category {
     MEDICAL_CONDITION = "MEDICAL_CONDITION",
     TEST_TREATMENT_PROCEDURE = "TEST_TREATMENT_PROCEDURE",
     MEDICATION = "MEDICATION",
     ANATOMY = "ANATOMY"
 };
 
-enum Type {
+export enum Type {
     PROCEDURE_NAME = "PROCEDURE_NAME",
     TEST_NAME = "TEST_NAME"
 };
@@ -32,39 +42,54 @@ interface AnnotationListProps {
     category: Category;
     type?: Type;
     annotations: Array<EncounterAudioAnnotation>;
+    onUpdateAnnotation: (index: number, e: EncounterAudioAnnotation) => void;
 };
 
-export function AnnotationList({ category, type, annotations }: AnnotationListProps) {
+export default function ClinicianAudioInsights({ category, type, annotations, onUpdateAnnotation }: AnnotationListProps) {
     const classes = useStyles();
-    return (
-        <>
-            <h2>{type ? type : category}</h2>
-            <table className={classes.annotationTable}>
-                <thead>
-                    <tr><th>Phrase</th><th>Rating</th><th>Score</th></tr>
-                </thead>
-                <tbody>
-                    {annotations.filter(a => a.category === category && (type ? a.type === type : true)).map((annotation, index) => {
-                        return (
-                            <tr key={index}>
-                                <td>{annotation.text}</td>
-                                <td>{annotation.score}</td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
-        </>
-    );
-}
-export default function ClinicianAudioInsights({ encounter, audioAnnotations }: ClinicianAudioInsightsProps) {
+    const handleClick = React.useCallback((index) => {
+        let copy = JSON.parse(JSON.stringify(annotations[index]));
+        const newImpression = annotations[index].clinicianImpression === ClinicianImpression.CONFIRMED ? ClinicianImpression.UNCONFIRMED : ClinicianImpression.CONFIRMED;
+        copy.clinicianImpression = newImpression;
+        onUpdateAnnotation(index, copy);
+    }, [annotations, onUpdateAnnotation]);
+
+    const handleDelete = React.useCallback((index) => {
+        let copy = JSON.parse(JSON.stringify(annotations[index]));
+        copy.clinicianImpression = ClinicianImpression.DELETED;
+        onUpdateAnnotation(index, copy);
+    }, [annotations, onUpdateAnnotation]);
 
     return (
         <>
-            <AnnotationList category={Category.MEDICAL_CONDITION} annotations={audioAnnotations}></AnnotationList>
-            <AnnotationList category={Category.TEST_TREATMENT_PROCEDURE} type={Type.PROCEDURE_NAME} annotations={audioAnnotations}></AnnotationList>
-            <AnnotationList category={Category.TEST_TREATMENT_PROCEDURE} type={Type.TEST_NAME} annotations={audioAnnotations}></AnnotationList>
-            <AnnotationList category={Category.MEDICATION} annotations={audioAnnotations}></AnnotationList>
+            <div className={classes.chipsContainer}>
+                {annotations.map((annotation, index) => {
+                    if (annotation.category !== category || (type ? annotation.type !== type : false)) {
+                        return "";
+                    }
+                    let result = <></>;
+                    if (annotations[index].clinicianImpression === ClinicianImpression.UNCONFIRMED) {
+                        result = <Chip
+                            size="small"
+                            key={index}
+                            label={annotation.text}
+                            onClick={() => handleClick(index)}
+                            onDelete={() => handleDelete(index)}/>
+                    } else if (annotations[index].clinicianImpression === ClinicianImpression.CONFIRMED) {
+                        result =<Chip
+                            size="small"
+                            key={index}
+                            label={annotation.text}
+                            onClick={() => handleClick(index)}
+                            onDelete={() => handleDelete(index)}
+                            color="primary"
+                            deleteIcon={<DoneIcon />}/>
+                    } else {
+                        result = <span key={index}></span>
+                    }
+                    return result;
+                })}
+            </div>
         </>
     );
-}
+};

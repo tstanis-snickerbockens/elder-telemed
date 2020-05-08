@@ -28,20 +28,22 @@ interface PatientFormProps {
     newPatient: boolean,
     previousEmail: string,
     previousName: string,
+    previousPhone: string,
     onComplete: (changed: boolean) => void
 }
 
-export default function PatientForm({newPatient, previousEmail, previousName, onComplete}: PatientFormProps) {
-    
+export default function PatientForm({newPatient, previousEmail, previousName, previousPhone, onComplete}: PatientFormProps) {
+
     const classes = useStyles();
     const [email, setEmail] = React.useState(previousEmail);
     const [name, setName] = React.useState(previousName);
+    const [phone, setPhone] = React.useState(previousPhone);
 
     const handleSave = React.useCallback(() => {
-        const serverFunction = firebase.functions().httpsCallable(newPatient ? 'createPatient' : "updatePatient");        
+        const serverFunction = firebase.functions().httpsCallable(newPatient ? 'createPatient' : "updatePatient");
         serverFunction({
             patientEmail: email,
-            patient: { email: email, name: name },
+            patient: { email: email, name: name, phone: phone },
         }).then(function (response) {
             console.log(
                 "Create/Update Patient Response: " +
@@ -53,7 +55,7 @@ export default function PatientForm({newPatient, previousEmail, previousName, on
             console.log(err);
             onComplete(false);
         });
-    }, [email, name, newPatient, onComplete]);
+    }, [email, name, phone, newPatient, onComplete]);
 
     const handleCancel = React.useCallback(() => {
         onComplete(false);
@@ -76,6 +78,14 @@ export default function PatientForm({newPatient, previousEmail, previousName, on
                 id="patient-name"
                 label="Name"
                 value={name}
+                variant="outlined"
+            />
+            <TextField
+                name="new_patient_phone"
+                onChange={(e) => setPhone(e.target.value)}
+                id="patient-phone"
+                label="Phone"
+                value={phone}
                 variant="outlined"
             />
         </form>

@@ -45,6 +45,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 interface PatientRow {
   email: string;
   name: string;
+  phone: string;
   advocate: string;
 }
 
@@ -60,12 +61,14 @@ interface ListPatientEntry {
   patient: {
     name: string;
     advocate: string;
+    phone: string;
   };
 }
 
 const headers = [
   { id: "email", numeric: false, disablePadding: false, label: "Email" },
   { id: "name", numeric: false, disablePadding: false, label: "Name" },
+  { id: "phone", numeric: false, disablePadding: false, label: "Phone"},
   {
     id: "advocates",
     numeric: false,
@@ -91,6 +94,7 @@ export function PatientList(props: PatientListProps) {
           return {
             email: entry.patientEmail,
             name: entry.patient.name,
+            phone: entry.patient.phone,
             advocate: entry.patient.advocate,
           };
         });
@@ -102,7 +106,7 @@ export function PatientList(props: PatientListProps) {
   }, []);
 
   React.useEffect(() => {
-    refreshPatients();    
+    refreshPatients();
   }, [props.refresh, refreshPatients]);
 
   const onEditPatient = React.useCallback((event, index) => {
@@ -116,7 +120,7 @@ export function PatientList(props: PatientListProps) {
     }
     setEditOpen(false);
   }, [refreshPatients]);
-  
+
   return (
     <TableContainer component={Paper}>
       <Table className={classes.table} aria-label="simple table">
@@ -140,6 +144,7 @@ export function PatientList(props: PatientListProps) {
                 {row.email}
               </TableCell>
               <TableCell align="left">{row.name}</TableCell>
+              <TableCell align="left">{row.phone}</TableCell>
               <TableCell align="left">{row.advocate}</TableCell>
               <TableCell align="right">
                 <button
@@ -160,7 +165,7 @@ export function PatientList(props: PatientListProps) {
                   }}
                 >
                   <div className={classes.editPatientPopover}>
-                    <PatientForm previousName={row.name} previousEmail={row.email} newPatient={false} onComplete={onEditComplete}></PatientForm>
+                    <PatientForm previousName={row.name} previousEmail={row.email} previousPhone={row.phone} newPatient={false} onComplete={onEditComplete}></PatientForm>
                   </div>
                 </Popover>
               </TableCell>

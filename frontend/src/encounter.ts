@@ -32,12 +32,18 @@ export interface PersonTimedState {
     stateTransitionTime: number;
 }
 
+export enum ClinicianImpression {
+    UNCONFIRMED,
+    CONFIRMED,
+    DELETED
+}
+
 export interface EncounterAudioAnnotation {
     category: string;
     type: string;
     text: string;
     score: number;
-    clinicianAccepted?: boolean;
+    clinicianImpression: ClinicianImpression;
 }
 
 export interface Encounter {
@@ -49,7 +55,7 @@ export interface Encounter {
         // Title of the encounter.  Displayed to clinician and patient to
         // indicate the purpose of the encounter.
         title?: string;
-        // Scheduled duration of the encounter in milliseconds.
+        // Scheduled duration of the encounter in minutes.
         scheduledDuration? : number;
         patientState: PersonTimedState | null;
         advocateState: PersonTimedState | null;

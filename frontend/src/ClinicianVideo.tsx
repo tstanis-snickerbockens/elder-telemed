@@ -286,6 +286,12 @@ export default function ClinicianVideo({ encounter, user, onClose }: ClinicialVi
         setTranscriptions((orig) => orig.concat(finalTranscription));
     }, [setTranscriptions]);
 
+    const onUpdateAnnotation = React.useCallback((index: number, e: EncounterAudioAnnotation) => {
+        setAnnotations((orig) => orig.map((origAnnotation, origIndex) => {
+            return origIndex === index ? e : origAnnotation;
+        }));
+    }, [setAnnotations]);
+
     return (
         <>
             <div className={classes.topContainer}>
@@ -322,7 +328,7 @@ export default function ClinicianVideo({ encounter, user, onClose }: ClinicialVi
                     </div>
                 </div>
                 <div className={classes.workingArea}>
-                    <ClinicianWorkArea encounter={encounter} audioAnnotations={annotations} ></ClinicianWorkArea>
+                    <ClinicianWorkArea onUpdateAnnotation={onUpdateAnnotation} encounter={encounter} audioAnnotations={annotations} ></ClinicianWorkArea>
                 </div>
             </div>
         </>
