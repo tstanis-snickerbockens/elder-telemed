@@ -5,7 +5,7 @@ import "firebase/auth";
 
 import ClinicianVideo from "./ClinicianVideo";
 import EncounterPage from "./EncounterPage";
-import PastEncounterPage from "./PastEncounterPage";
+import { PastEncounterPage } from "./PastEncounterPage";
 import { PatientPage } from "./PatientPage";
 import { Box, Tabs, Tab } from "@material-ui/core";
 import { StoryContext } from "./StoryHome";
