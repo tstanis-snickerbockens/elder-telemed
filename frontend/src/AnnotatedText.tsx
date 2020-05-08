@@ -1,7 +1,8 @@
 import React from 'react';
 import * as firebase from "firebase/app";
-import {MedicalAnnotation, AnnotationEntity} from "./MedicalAnnotation"
+import {MedicalAnnotation, AnnotationEntity, AnnotationEntityTraitName} from "./MedicalAnnotation"
 import {EncounterAudioAnnotation, ClinicianImpression} from "./encounter"
+
 
 
 export interface AnnotationResult {
@@ -29,6 +30,19 @@ async function getAnnotation(message: string) {
     return result;
 };
 
+function isNegation(entity: AnnotationEntity): boolean {
+    let negation: boolean = false;
+    entity.Traits.map((trait) => negation = (negation || trait.Name === AnnotationEntityTraitName.NEGATION));
+    return negation;
+}
+
+function isSymptom(entity: AnnotationEntity): boolean {
+    let symptom: boolean = false;
+    entity.Traits.map((trait) => symptom = (symptom ||
+        (trait.Name === AnnotationEntityTraitName.SYMPTOM || trait.Name === AnnotationEntityTraitName.SIGN)));
+    return symptom;
+}
+
 function toEncounterAudioAnnotation(annotations: any): Array<EncounterAudioAnnotation> {
     let result: Array<EncounterAudioAnnotation> = [];
     annotations.data.Entities.map((entity: AnnotationEntity) =>
@@ -36,6 +50,8 @@ function toEncounterAudioAnnotation(annotations: any): Array<EncounterAudioAnnot
             type: entity.Type,
             text: entity.Text,
             score: entity.Score,
+            negation: isNegation(entity),
+            symptom: isSymptom(entity),
             clinicianImpression: ClinicianImpression.UNCONFIRMED})
     );
     return result;

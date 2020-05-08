@@ -11,9 +11,35 @@ const app = express();
 app.use(cors);
 let db = admin.firestore();
 let storage = admin.storage();
+var Promise = require('promise');
 
 var AWS = require("aws-sdk");
-var Promise = require('promise');
+
+let aws_loaded = false;
+function lazyInitAWS() {
+    if (aws_loaded) {
+        return;
+    }
+    AWS.config.loadFromPath("aws_credentials.json");
+    aws_loaded = true;
+}
+
+const twilio = require('twilio');
+const fs = require('fs');
+let twilio_client = null;
+
+function lazyInitTwilio() {
+    if (twilio_client) {
+        return;
+    }
+    try {
+        const twilio_creds = JSON.parse(fs.readFileSync('twilio_credentials.json'));
+        twilio_client = twilio(twilio_creds.ACCOUNT_SID, twilio_creds.AUTH_TOKEN);
+    } catch (e) {
+        console.log("Error initializing twilio: " + e);
+    }
+}
+
 
 // curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/createEncounter -d '{"data": {"encounterId": "myencounter4", "encounter": {"patient":"mypatient"}}}'
 exports.createEncounter = functions.https.onRequest((request, response) => {
@@ -303,6 +329,24 @@ exports.listPatients = functions.https.onRequest((request, response) => {
     });
 });
 
+exports.getPatient = functions.https.onRequest((request, response) => {
+    return cors(request, response, () => {
+        let userId = request.body.data.userId;
+        let patientEmail = request.body.data.patientEmail;
+        let patientRef = db.collection('patients').doc(patientEmail);
+        patientRef.get().then(doc => {
+            response.status(200).send({'data': {'patientEmail' : doc.id, 'patient': doc.data()}});
+        })
+        .catch(err => {
+            console.log('Error getting patient', err);
+            response.status(500).send();
+        });
+    });
+});
+
+
+
+
 const msgdb = admin.database();
 
 function getref(msgdb, encounterId, toRole, fromRole) {
@@ -419,10 +463,11 @@ exports.readMessage = functions.https.onRequest((request, response) => {
     });
 });
 
+// curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/annotateTranscription -d '{"data": {"message": "patient denies chest pain"}}'
 exports.annotateTranscription = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
+        lazyInitAWS();
         try {
-            AWS.config.loadFromPath("aws_credentials.json");
             var message = request.body.data.message;
             if (message.trim() == "") {
                 response.status(200).send({'data':""});
@@ -488,5 +533,28 @@ exports.createTranscript = functions.https.onRequest((request, response) => {
             console.log(e);
             response.status(500).send(e);
         }
+    });
+});
+
+
+exports.txtParticipant = functions.https.onRequest((request, response) => {
+    return cors(request, response, () => {
+        lazyInitTwilio();
+        const encounterId = request.body.data.encounterId;
+        const patientEmail = request.body.data.patientEmail;
+        const patientRef = db.collection('patients').doc(patientEmail);
+        patientRef.get().then(doc => {
+            const phone = doc.data().phone;
+            twilio_client.messages
+                .create({
+                    body: 'Time for your Dr. Appointment. https://app.storyhealth.ai/p?e=' + encounterId,
+                    from: '+17692077601',
+                    to: '+1'+ phone
+                })
+                .then(message => console.log(message.sid));
+            response.status(200).send("ok");
+        }).catch((err) => {
+            response.status(500).send(err);
+        });
     });
 });

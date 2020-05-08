@@ -16,6 +16,7 @@ import EncounterForm from "./EncounterForm";
 import Popover from "@material-ui/core/Popover";
 import Button from "@material-ui/core/Button";
 import ButtonGroup from "@material-ui/core/ButtonGroup";
+import TxtForm from "./TxtForm"
 import { Role } from "./Role";
 import * as firebase from "firebase/app";
 import { yellow, green, purple } from '@material-ui/core/colors';
@@ -127,8 +128,10 @@ export default function EncounterList({ user, refresh, onVisit }: EncounterListP
   console.log("EncounterList");
   const [encounters, setEncounters] = React.useState<Array<Encounter>>([])
   const [editOpen, setEditOpen] = React.useState(false);
+  const [txtOpen, setTxtOpen] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
   const [editEncounterIndex, setEditEncounterIndex] = React.useState<number>(0);
+  const [txtEncounterIndex, setTxtEncounterIndex] = React.useState<number>(0);
 
   const refreshEncounters = React.useCallback(() => {
     console.log("refreshEncounters");
@@ -227,6 +230,17 @@ export default function EncounterList({ user, refresh, onVisit }: EncounterListP
     setAnchorEl(null);
   }, [setEditOpen, setAnchorEl]);
 
+  const onTxt = React.useCallback((event: any, index: number) => {
+    setTxtOpen(true);
+    setAnchorEl(event.target);
+    setTxtEncounterIndex(index);
+  }, [setTxtEncounterIndex, setTxtOpen, setAnchorEl]);
+
+  const onTxtComplete = React.useCallback(() => {
+    setTxtOpen(false);
+    setAnchorEl(null);
+  }, [setTxtOpen, setAnchorEl]);
+
   return (
     <>
       <TableContainer component={Paper}>
@@ -271,6 +285,11 @@ export default function EncounterList({ user, refresh, onVisit }: EncounterListP
                       Edit
                     </Button>
                     <Button size="small" variant="contained"
+                      onClick={(event: any) => onTxt(event, index)}
+                    >
+                      TXT
+                    </Button>
+                    <Button size="small" variant="contained"
                       onClick={(event: any) => onVisit(row)}
                     >
                       Go
@@ -296,6 +315,22 @@ export default function EncounterList({ user, refresh, onVisit }: EncounterListP
       >
         <div className={classes.editEncounterPopover}>
           <EncounterForm isNewEncounter={false} previousEncounter={encounters[editEncounterIndex]} onComplete={onEditComplete}></EncounterForm>
+        </div>
+      </Popover>
+      <Popover
+        open={txtOpen}
+        anchorEl={anchorEl}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "center",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "center",
+        }}
+      >
+        <div className={classes.editEncounterPopover}>
+          <TxtForm encounter={encounters[txtEncounterIndex]} onComplete={onTxtComplete}></TxtForm>
         </div>
       </Popover>
     </>

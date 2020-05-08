@@ -42,6 +42,8 @@ export interface EncounterAudioAnnotation {
     category: string;
     type: string;
     text: string;
+    symptom: boolean;
+    negation: boolean;
     score: number;
     clinicianImpression: ClinicianImpression;
 }

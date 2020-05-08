@@ -41,7 +41,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
         flex: '1 1 auto',
         position: 'relative',
         height: '100%',
-        margin: '10px',
+        width: '100%',
     },
     clinicianVideo: {
         position: 'absolute',
@@ -85,7 +85,6 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
         flex: "2 1 auto",
         position: 'relative',
         backgroundColor: '#C4C4C4',
-        margin: '10px',
         '& p' : {
             margin: 0,
             position: 'absolute',
@@ -130,7 +129,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     encounterVideoContainer: {
         backgroundColor: '#C4C4C4',
         display: 'flex',
-        flexDirection: 'row-reverse',
+        flexDirection: 'column',
         alignItems: 'start',
         alignContent: 'space-between',
         flex: '1 0 auto',
@@ -140,12 +139,12 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     },
     waitingRoomWorkspace: {
         flex: "1 1 auto",
-        backgroundColor: '#E5E5E5',  
-        position: "relative",      
+        backgroundColor: '#E5E5E5',
+        position: "relative",
     },
     flexContainer: {
         display: 'flex',
-        flexDirection: 'row',
+        flexDirection: 'column',
         flexWrap: 'nowrap',
         alignItems: 'stretch',
         alignContent: 'space-between',
@@ -161,6 +160,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     },
     encounterTopContainer: {
         display: 'flex',
+        width: '100%',
         flexDirection: 'row-reverse',
         flexWrap: 'nowrap',
         alignItems: 'top',
@@ -188,7 +188,7 @@ const pre_work_questions : Array<PreVisitQuestion> = [
     {type: QuestionType.MULTI_CHOICE, options: ["yes", "no", "I don't know"], queryText: "Have you ever been diagnosed with Heart Disease?"},
     {type: QuestionType.MULTI_CHOICE, options: ["yes", "no", "I don't know"], queryText: "Have you ever been diagnosed with Stroke?"},
     {type: QuestionType.MULTI_CHOICE, options: ["yes", "no", "I don't know"], queryText: "Have you ever been diagnosed with Shingles?"},
-    {type: QuestionType.TEXT, options: [], queryText: "What are you here to discuss?"}, 
+    {type: QuestionType.TEXT, options: [], queryText: "What are you here to discuss?"},
     ];
 
 function getStateByRole(encounter: Encounter, role: Role): PersonTimedState {
@@ -228,23 +228,23 @@ export default function UserPage(props: Props) {
     });
 
     React.useEffect(() => {
-        if (localVideoRef.current && clinicianVideoRef.current && 
+        if (localVideoRef.current && clinicianVideoRef.current &&
             otherPartyVideoRef.current) {
             if (props.mode === PatientMode.WAITING_ROOM) {
                 let other = props.role === Role.PATIENT ? Role.ADVOCATE : Role.PATIENT;
-                startVideo(localVideoRef.current, otherPartyVideoRef.current, 
+                startVideo(localVideoRef.current, otherPartyVideoRef.current,
                     props.role, other, props.encounter.encounterId, props.role === Role.ADVOCATE ? true : false,
                     onAdvocateVideoConnect, dataChannel);
             } else {
-                startVideo(localVideoRef.current, clinicianVideoRef.current, 
+                startVideo(localVideoRef.current, clinicianVideoRef.current,
                     props.role, Role.CLINICIAN, props.encounter.encounterId, false, onClinicianVideoConnect, dataChannel);
             }
         }
     }, [props.mode, props.encounter.encounterId, props.role, dataChannel]);
-    
+
     // Update encounter to know that we are here.
     React.useEffect(() => {
-        const updateEncounter = firebase.functions().httpsCallable("updateEncounter");  
+        const updateEncounter = firebase.functions().httpsCallable("updateEncounter");
         let updatedEncounter: Encounter = JSON.parse(JSON.stringify(props.encounter));
         let encounterRole: PersonTimedState = getStateByRole(updatedEncounter, props.role);
         encounterRole.state = props.mode === PatientMode.IN_ENCOUNTER ? PersonState.ENCOUNTER : (preWorkComplete ? PersonState.READY : PersonState.PREPARING);
@@ -280,7 +280,7 @@ export default function UserPage(props: Props) {
                             <Typography>The doctor will be with you shortly.</Typography>
                         </div>
                         <div className={classes.localVideoContainer}>
-                            <video className={classes.localVideo} ref={localVideoRef} playsInline autoPlay></video>                
+                            <video className={classes.localVideo} ref={localVideoRef} playsInline autoPlay></video>
                         </div>
                     </div>
                     <div className={props.mode === PatientMode.WAITING_ROOM ? classes.otherVideoWaitingRoomContainer : classes.otherVideoEncounterContainer}>
@@ -294,7 +294,7 @@ export default function UserPage(props: Props) {
                 </div>
             </div>
             <div className={props.mode === PatientMode.WAITING_ROOM ? classes.waitingRoomWorkspace: classes.hidden}>
-                <PreVisitWork 
+                <PreVisitWork
                     encounterId={props.encounter.encounterId}
                     questions={pre_work_questions}
                     dataChannel={dataChannel}
