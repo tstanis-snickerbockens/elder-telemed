@@ -22,5 +22,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-aws_credentials.json
-twilio_credentials.json
+# credentials
+functions/aws_credentials.json
+functions/twilio_credentials.json
