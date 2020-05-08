@@ -15,6 +15,9 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     root: {
         flexGrow: 1,
     },
+    tabPanel: {
+        height: '100%'
+    }
 }));
 
 interface ClinicianWorkAreaProps {
@@ -31,16 +34,18 @@ interface TabPanelProps {
 }
 
 function TabPanel({ children, value, index, ...other }: TabPanelProps) {
+    var classes = useStyles();
     return (
         <div
             role="tabpanel"
+            className={classes.tabPanel}
             hidden={value !== index}
             id={`full-width-tabpanel-${index}`}
             aria-labelledby={`full-width-tab-${index}`}
             {...other}
         >
             {value === index && (
-                <Box p={3}>
+                <Box className={classes.tabPanel}>
                     {children}
                 </Box>
             )}

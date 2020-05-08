@@ -85,7 +85,6 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
         flex: "2 1 auto",
         position: 'relative',
         backgroundColor: '#C4C4C4',
-        margin: '10px',
         '& p' : {
             margin: 0,
             position: 'absolute',
@@ -145,7 +144,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     },
     flexContainer: {
         display: 'flex',
-        flexDirection: 'row',
+        flexDirection: 'column',
         flexWrap: 'nowrap',
         alignItems: 'stretch',
         alignContent: 'space-between',

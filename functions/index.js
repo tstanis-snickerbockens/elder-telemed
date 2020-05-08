@@ -463,7 +463,7 @@ exports.readMessage = functions.https.onRequest((request, response) => {
     });
 });
 
-
+// curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/annotateTranscription -d '{"data": {"message": "patient denies chest pain"}}'
 exports.annotateTranscription = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         lazyInitAWS();
