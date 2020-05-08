@@ -13,14 +13,10 @@ import TableContainer from "@material-ui/core/TableContainer";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import Paper from "@material-ui/core/Paper";
-import {Encounter, PersonState, EncounterState} from "./encounter";
-import EncounterForm from "./EncounterForm";
-import Popover from "@material-ui/core/Popover";
+import {Encounter} from "./encounter";
 import Button from "@material-ui/core/Button";
 import ButtonGroup from "@material-ui/core/ButtonGroup";
-import { Role } from "./Role";
 import * as firebase from "firebase/app";
-import { yellow, green, purple } from '@material-ui/core/colors';
 
 const styles = (theme: Theme) =>
   createStyles({
@@ -63,10 +59,6 @@ interface PastEncounterListState {
   anchorEl: HTMLElement | null,
   editEncounterIndex: number,
   timer: number
-}
-
-function timeSinceMinutes(timestamp: number) {
-  return Math.floor((new Date().getTime() - new Date(timestamp).getTime()) / (60 * 1000));
 }
 
 class PastEncounterListImpl extends React.Component<
@@ -116,12 +108,6 @@ class PastEncounterListImpl extends React.Component<
     if (props.refresh !== this.props.refresh) {
       this.refreshPastEncounters();
     }
-  }
-
-  formatMinutes(minutes: number) {
-    let hours = Math.floor(minutes / 60);
-    let remainingMinutes = minutes % 60;
-    return hours + ":" + (remainingMinutes < 10 ? "0" : "") + remainingMinutes;
   }
 
   getPastEncounterStatusDisplay(encounter: Encounter) {
@@ -200,19 +186,6 @@ class PastEncounterListImpl extends React.Component<
           </TableBody>
         </Table>
       </TableContainer>
-      <Popover
-        open={this.state.editOpen}
-        anchorEl={this.state.anchorEl}
-        anchorOrigin={{
-          vertical: "bottom",
-          horizontal: "center",
-        }}
-        transformOrigin={{
-          vertical: "top",
-          horizontal: "center",
-        }}
-      >
-      </Popover>
       </>
     );
   }

@@ -86,7 +86,7 @@ const MainClinicianPanel = ({ onVisit, user }: MainClinicianPanelProps) => {
       >
         <Tab label="Encounters" />
         <Tab label="Patients" />
-        <Tab label="Previous Visits" />
+        <Tab label="Previous Encounters" />
       </Tabs>
       <TabPanel value={value} index={0}>
         <EncounterPage onVisit={onVisit} user={user}></EncounterPage>
