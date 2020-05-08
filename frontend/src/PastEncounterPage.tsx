@@ -1,13 +1,10 @@
-import React, { MouseEvent, ChangeEvent } from "react";
+import React, { ChangeEvent } from "react";
 import {
   createStyles,
   Theme,
   WithStyles,
   withStyles,
 } from "@material-ui/core/styles";
-import Popover from "@material-ui/core/Popover";
-import AddCircleIcon from "@material-ui/icons/AddCircle";
-import IconButton from "@material-ui/core/IconButton";
 import { Encounter } from "./encounter";
 import { PastEncounterList } from "./PastEncounterList";
 import { RouteComponentProps, withRouter } from "react-router-dom";
@@ -42,7 +39,7 @@ interface PastEncounterPageProps
 interface PastEncounterPageState {
   anchorEl: HTMLElement | null;
   open: boolean;
-  refresh_encounter_list: boolean;
+  refresh_past_encounter_list: boolean;
 }
 
 class PastEncounterPageImpl extends React.Component<
@@ -54,7 +51,7 @@ class PastEncounterPageImpl extends React.Component<
     this.state = {
       anchorEl: null,
       open: false,
-      refresh_encounter_list: false,
+      refresh_past_encounter_list: false,
     };
     this.handleInputChange = this.handleInputChange.bind(this);
   }
@@ -76,7 +73,7 @@ class PastEncounterPageImpl extends React.Component<
           <PastEncounterList
             user={this.props.user}
             onVisit={this.props.onVisit}
-            refresh={this.state.refresh_encounter_list}
+            refresh={this.state.refresh_past_encounter_list}
             orderBy=""
             order=""
           ></PastEncounterList>
