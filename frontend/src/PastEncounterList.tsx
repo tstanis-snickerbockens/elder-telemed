@@ -45,49 +45,6 @@ const styles = (theme: Theme) =>
       top: 20,
       width: 1,
     },
-    editEncounterPopover: {
-      margin: theme.spacing(1)
-    }, 
-    startsSoon: {
-      display: 'inline-block',
-      padding: '4px 8px',
-      borderRadius: '8px',
-      margin: '3px',
-      color: theme.palette.getContrastText(yellow[700]),
-      backgroundColor: yellow[700],
-    },
-    patientPreparingStatus: {
-      display: 'inline-block',
-      padding: '4px 8px',
-      borderRadius: '8px',
-      margin: '3px',
-      color: theme.palette.getContrastText(purple[700]),
-      backgroundColor: purple[700],
-    },
-    patientReadyStatus: {
-      display: 'inline-block',
-      padding: '4px 8px',
-      borderRadius: '8px',
-      margin: '3px',
-      color: theme.palette.getContrastText(green[700]),
-      backgroundColor: green[700],
-    }, 
-    patientNotHere: {
-      display: 'inline-block',
-      padding: '4px 8px',
-      borderRadius: '8px',
-      margin: '3px',
-      color: theme.palette.getContrastText(yellow[700]),
-      backgroundColor: yellow[700],
-    }, 
-    inProgress: {
-      display: 'inline-block',
-      padding: '4px 8px',
-      borderRadius: '8px',
-      margin: '3px',
-      color: theme.palette.getContrastText(green[700]),
-      backgroundColor: green[700],
-    }
   });
 
 interface PastEncounterListProps
@@ -120,8 +77,6 @@ class PastEncounterListImpl extends React.Component<
     super(props);
     console.log("PastEncounterListImpl");
     this.state = { encounters: [], editOpen: false, anchorEl: null, editEncounterIndex: 0, timer: 0 };
-    this.onEdit = this.onEdit.bind(this);
-    this.onEditComplete = this.onEditComplete.bind(this);
     this.getPastEncounterStatusDisplay = this.getPastEncounterStatusDisplay.bind(this);
     this.refreshPastEncounters = this.refreshPastEncounters.bind(this);
   }
@@ -169,86 +124,34 @@ class PastEncounterListImpl extends React.Component<
     return hours + ":" + (remainingMinutes < 10 ? "0" : "") + remainingMinutes;
   }
 
-  getStatus(role: Role, encounter: Encounter) {    
-    let state = role === Role.PATIENT ? encounter.encounter.patientState : encounter.encounter.advocateState;
-    if (state && state.arrivalTime && state.arrivalTime > 0) {
-      // TODO: Need to check whether the timestamps are recent... otherwise assume that they aren't here.
-      let timeSinceArrivedMinutes = timeSinceMinutes(state.arrivalTime);
-      
-      if (state.state === PersonState.PREPARING) {
-        return (<>
-          <span className={this.props.classes.patientPreparingStatus}>PreWork.  Arrived {this.formatMinutes(timeSinceArrivedMinutes)} ago.</span>
-        </>);
-      } else if (state.state === PersonState.READY) {
-        return (<>
-          <span className={this.props.classes.patientReadyStatus}>Ready.  Arrived {this.formatMinutes(timeSinceArrivedMinutes)} ago.</span>
-        </>);
-      } else if (state.state === PersonState.ENCOUNTER) {
-        let timeSinceInEncounter = timeSinceMinutes(state.stateTransitionTime);
-        return (<>
-          <span className={this.props.classes.patientReadyStatus}>In Encounter.  Elapsed {this.formatMinutes(timeSinceInEncounter)}</span>
-        </>);
-      }
-    } else {
-      let timeTillAppointment = -timeSinceMinutes(encounter.encounter.when);
-      console.log("Time Till Appointment: " + timeTillAppointment);
-      if (timeTillAppointment > 0 && timeTillAppointment < 15) {
-        return (<>
-          <span className={this.props.classes.patientNotHere}>Patient not yet arrived.</span>
-        </>);
-      } else {
-        return "";
-      }
-    }
-  }
-
   getPastEncounterStatusDisplay(encounter: Encounter) {
-    let encounterDate = new Date(encounter.encounter.when)
-    if (encounter.encounter.state === EncounterState.IN_PROGRESS) {
-      return <span className={this.props.classes.inProgress}>In Progress</span>;
-    } else if (encounter.encounter.state === EncounterState.COMPLETE) {
-      return <span>Complete</span>
-    }
-    let diff_minutes = Math.floor(((encounterDate.getTime() - new Date().getTime()) / 1000) / 60);
-    if (diff_minutes < 0 && diff_minutes > -60) {
-      return "Imminent";
-    } else if (diff_minutes < -60) {
-      return "Missed";
-    } else if (diff_minutes < 60) {
-      return (
-        <>
-          <span className={this.props.classes.startsSoon}>
-            {"Starts in 0:" + (diff_minutes < 10 ? "0" + diff_minutes : diff_minutes)}
-          </span>
-        </>
-      ) 
-    } else {
-      return "Upcoming";
-    }
+    return <span>Complete</span>;
   }
 
   refreshPastEncounters() {
     console.log("refreshPastEncounters");
-    let listEncounters = firebase.functions().httpsCallable("listEncounters");
-    listEncounters({ userId: "myuser" })
+    let listPastEncounters = firebase.functions().httpsCallable("listEncountersByStatus");
+    listPastEncounters({ userId: this.props.user, status: 'COMPLETE' })
       .then((response) => {
-        let newEncounters = response.data.map((entry: Encounter) => {
+        let pastEncounters = response.data.map((entry: Encounter) => {
           console.log(JSON.stringify(entry));
           return entry;
         });        
-        this.setState({ encounters: newEncounters, editOpen: this.state.editOpen, anchorEl: this.state.anchorEl });
+        this.setState({ encounters: pastEncounters, anchorEl: this.state.anchorEl });
       })
       .catch((err) => {
         console.log("ERROR: " + JSON.stringify(err));
       });
   }
 
-  onEdit(event: any, index: number) {
-    this.setState({editOpen: true, anchorEl: event.target, editEncounterIndex: index});
-  }
-
-  onEditComplete() {
-    this.setState({editOpen: false, anchorEl: null});
+  onOpen(encounterId: String) {
+    console.log("open encounter");
+    let downloadTranscript = firebase.functions().httpsCallable("getEncounterTranscript");
+    try {
+      downloadTranscript({userId: this.props.user, encounterId: encounterId})
+    } catch(err) {
+      console.log("ERROR: " + JSON.stringify(err));
+    }
   }
 
   render() {
@@ -276,27 +179,19 @@ class PastEncounterListImpl extends React.Component<
                 <TableCell align="left">{new Date(row.encounter.when).toLocaleString()}</TableCell>
                 <TableCell component="th" scope="row">
                   {row.encounter.patient}<br/>
-                  {this.getStatus(Role.PATIENT, row)}
                 </TableCell>
                 <TableCell align="left">
                   {row.encounter.advocate}<br/>
-                  {this.getStatus(Role.ADVOCATE, row)}
                 </TableCell>
                 <TableCell>
                   {this.getPastEncounterStatusDisplay(row)}
                 </TableCell>
                 <TableCell align="right">
                   <ButtonGroup color="primary" aria-label="outlined primary button group">
-                    
                     <Button size="small" variant="contained"
-                      onClick={(event: any) => this.onEdit(event, index)}
+                      onClick={(event: any) => this.onOpen(row.encounterId)}
                     >
-                      Edit
-                    </Button>
-                    <Button size="small" variant="contained"
-                      onClick={(event: any) => this.props.onVisit(row)}
-                    >
-                      Go
+                      View
                     </Button>
                   </ButtonGroup>
                 </TableCell>
@@ -317,9 +212,6 @@ class PastEncounterListImpl extends React.Component<
           horizontal: "center",
         }}
       >
-        <div className={this.props.classes.editEncounterPopover}>
-          <EncounterForm isNewEncounter={false} previousEncounter={this.state.encounters[this.state.editEncounterIndex]} onComplete={this.onEditComplete}></EncounterForm>
-        </div>
       </Popover>
       </>
     );

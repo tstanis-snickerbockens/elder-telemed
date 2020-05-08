@@ -217,6 +217,27 @@ exports.listEncounters = functions.https.onRequest((request, response) => {
     });
 });
 
+exports.listEncountersByStatus = functions.https.onRequest((request, response) => {
+    return cors(request, response, () => {
+        var userId = request.body.data.userId;
+        var status = request.body.data.status;
+        let encountersRef = db.collection('encounters').where('state', '==', status);
+        let allEncounters = encountersRef.get()
+            .then(encounters => {
+                var returnEncounters = []
+                encounters.forEach(doc => {
+                    console.log(doc.id, '=>', doc.data());
+                    returnEncounters.push({'encounterId' : doc.id, 'encounter': rewriteEncounterReferences(doc.data())});
+                });
+                response.status(200).send({'data':returnEncounters});
+            })
+            .catch(err => {
+                console.log('Error getting documents', err);
+                response.status(500).send();
+            });
+    });
+});
+
 // curl -X POST -H "Content-Type:application/json" http://localhost:5001/elder-telemed/us-central1/queryEncounters -d '{"data": {"patientId": "mypatient"}}'
 exports.queryEncounters = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
@@ -505,7 +526,6 @@ exports.createTranscript = functions.https.onRequest((request, response) => {
             var transcript = request.body.data.transcript;
             var encounterId = request.body.data.encounterId;
             var uid = request.body.data.uid;
-            // Use uid so that we can quickly list all files for a user later
             var fileName = transcriptFolderName + "/" + uid + "_" + encounterId + ".txt";
             var transcriptText = "";
             if (!transcript || transcript.length === 0) {
@@ -561,22 +581,33 @@ exports.txtParticipant = functions.https.onRequest((request, response) => {
 =======
 exports.getEncounterTranscript = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
-        /*try {
+        try {
             var userId = request.body.data.userId;
+            var encounterId = request.body.data.encounterId;
+            const bucket = storage.bucket();
+            var fileName = transcriptFolderName + "/" + userId + "_" + encounterId + ".txt";
             const options = {
-                prefix: transcriptFolderName + "/" + userId,
-                };
-            const [files] = await storage.bucket().getFiles(options);
-            fileNames = [];
-            files.forEach(file => fileNames.push(file.name));
-            console.log("Got previous visits.");
-            response.status(200).send({data: fileNames});
-        }
-        catch(e) {
+                destination: userId + "_" + encounterId + ".txt",
+              };
+            bucket.file(fileName).download(options, function(err) {
+                if(!err) {
+                    console.log("Downloaded transcript file:" + fileName);
+                    response.status(200).send({data:'ok'});
+                }
+                else {
+                    console.log(err, err.stack);
+                    response.status(500).send(err);
+                }
+            });
+        } catch(e) {
             console.log(e);
             response.status(500).send(e);
+<<<<<<< HEAD
         }*/
         // Hookup actual file read, and call this function from where transcript is shown
 >>>>>>> b668dd3... WIP checkin. Add new past encounter page on ClinicianApp, needs to query past encounters and fetch transcript files and display them
+=======
+        }
+>>>>>>> d9ae521... Update past encounter tab, and hook up correct functions
     });
 });
