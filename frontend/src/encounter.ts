@@ -32,16 +32,30 @@ export interface PersonTimedState {
     stateTransitionTime: number;
 }
 
+export interface EncounterAudioAnnotation {
+    category: string;
+    type: string;
+    text: string;
+    score: number;
+    clinicianAccepted?: boolean;
+}
+
 export interface Encounter {
     encounterId: string;
     encounter: {
         patient: string;
         advocate: string;
         when: number;
+        // Title of the encounter.  Displayed to clinician and patient to
+        // indicate the purpose of the encounter.
+        title?: string;
+        // Scheduled duration of the encounter in milliseconds.
+        scheduledDuration? : number;
         patientState: PersonTimedState | null;
         advocateState: PersonTimedState | null;
         doctorState: PersonTimedState | null;
         state: EncounterState | null;
+        audioAnnotations?: Array<EncounterAudioAnnotation>;
     }
     updateType?: EncounterUpdate;
 }
@@ -62,6 +76,6 @@ export function newEncounter(): Encounter {
     }
 }
 
-export function newPersonTimedState(): PersonTimedState { 
+export function newPersonTimedState(): PersonTimedState {
     return { state: PersonState.NONE, lastUpdateTime: 0, arrivalTime: 0, stateTransitionTime: 0 };
 }

@@ -13,6 +13,7 @@
     "@types/react": "^16.9.0",
     "@types/react-dom": "^16.9.0",
     "@types/react-router-dom": "^5.1.3",
+    "@welldone-software/why-did-you-render": "^4.1.3",
     "date-fns": "^2.12.0",
     "fibers": "^5.0.0",
     "firebase": "^7.14.2",

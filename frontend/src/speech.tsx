@@ -38,10 +38,16 @@ export default class Speech {
 
   start() {
     if (!this.recognizing) {
-      console.log("speech.start")
+      console.log("speech.start");
       this.initWebsocket(this.getUserMedia(), this.handleTranscription);
       this.recognizing = true;
     }
+  }
+
+  stop() {
+    console.log("speech.stop");
+    this.audioContext.close();
+    this.recognizing = false;
   }
 
   private createAudioContext(): any {
