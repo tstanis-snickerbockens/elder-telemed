@@ -579,6 +579,7 @@ exports.txtParticipant = functions.https.onRequest((request, response) => {
     });
 });
 
+// Downloads file to memory - revisit this.
 exports.getEncounterTranscript = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         try {
@@ -586,19 +587,10 @@ exports.getEncounterTranscript = functions.https.onRequest((request, response) =
             var encounterId = request.body.data.encounterId;
             const bucket = storage.bucket();
             var fileName = transcriptFolderName + "/" + userId + "_" + encounterId + ".txt";
-            const options = {
-                destination: userId + "_" + encounterId + ".txt",
-              };
-            bucket.file(fileName).download(options, function(err) {
-                if(!err) {
-                    console.log("Downloaded transcript file:" + fileName);
-                    response.status(200).send({data:'ok'});
-                }
-                else {
-                    console.log(err, err.stack);
-                    response.status(500).send(err);
-                }
-            });
+            bucket.file(fileName).download({}).then((data) => {
+                const contents = data[0];
+                response.status(200).send({data: contents});
+              });
         } catch(e) {
             console.log(e);
             response.status(500).send(e);

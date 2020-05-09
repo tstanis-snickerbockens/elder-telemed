@@ -1,10 +1,8 @@
 import React from "react";
-import { RouteComponentProps, withRouter } from "react-router-dom";
 import {
   createStyles,
   Theme,
-  WithStyles,
-  withStyles,
+  makeStyles
 } from "@material-ui/core/styles";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
@@ -13,142 +11,112 @@ import TableContainer from "@material-ui/core/TableContainer";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import Paper from "@material-ui/core/Paper";
-import {Encounter} from "./encounter";
+import { Encounter, EncounterState } from "./encounter";
+import Popover from "@material-ui/core/Popover";
+import PastEncounterView from "./PastEncounterView";
 import Button from "@material-ui/core/Button";
 import ButtonGroup from "@material-ui/core/ButtonGroup";
 import * as firebase from "firebase/app";
 
-const styles = (theme: Theme) =>
-  createStyles({
-    root: {
-      width: "100%",
-    },
-    paper: {
-      width: "100%",
-      marginBottom: theme.spacing(2),
-    },
-    table: {
-      minWidth: 750,
-    },
-    visuallyHidden: {
-      border: 0,
-      clip: "rect(0 0 0 0)",
-      height: 1,
-      margin: -1,
-      overflow: "hidden",
-      padding: 0,
-      position: "absolute",
-      top: 20,
-      width: 1,
-    },
-  });
+const useStyles = makeStyles((theme: Theme) => createStyles({
+  root: {
+    width: "100%",
+  },
+  paper: {
+    width: "100%",
+    marginBottom: theme.spacing(2),
+  },
+  table: {
+    minWidth: 750,
+  },
+  visuallyHidden: {
+    border: 0,
+    clip: "rect(0 0 0 0)",
+    height: 1,
+    margin: -1,
+    overflow: "hidden",
+    padding: 0,
+    position: "absolute",
+    top: 20,
+    width: 1,
+  },
+  viewEncounterPopover: {
+    margin: theme.spacing(1)
+  }
+}));
 
-interface PastEncounterListProps
-  extends RouteComponentProps<{}>,
-    WithStyles<typeof styles> {
-  orderBy: string;
-  order: string;
+interface PastEncounterListProps {
   user: firebase.User | null;
   refresh: boolean; // Used to force refresh from server.
   onVisit: (encounter: Encounter) => void;
 }
 
-interface PastEncounterListState {
-  encounters: Array<Encounter>;
-  editOpen: boolean,
-  anchorEl: HTMLElement | null,
-  editEncounterIndex: number,
-  timer: number
-}
+const headers = [
+  {
+    id: "time",
+    numeric: false,
+    disablePadding: false,
+    label: "Scheduled Time",
+  },
+  { id: "name", numeric: false, disablePadding: false, label: "Patient" },
+  { id: "title", numeric: false, disablePadding: false, label: "Title" },
+  {
+    id: "advocates",
+    numeric: false,
+    disablePadding: false,
+    label: "Advocates",
+  },
+  { id: "status", numeric: false, disablePadding: false, label: "Status" },
+  { id: "actions", numeric: false, disablePadding: false, label: "" },
+];
 
-class PastEncounterListImpl extends React.Component<
-  PastEncounterListProps,
-  PastEncounterListState
-> {
-  constructor(props: PastEncounterListProps) {
-    super(props);
-    console.log("PastEncounterListImpl");
-    this.state = { encounters: [], editOpen: false, anchorEl: null, editEncounterIndex: 0, timer: 0 };
-    this.getPastEncounterStatusDisplay = this.getPastEncounterStatusDisplay.bind(this);
-    this.refreshPastEncounters = this.refreshPastEncounters.bind(this);
-  }
+export default function PastEncounterList({ user, refresh, onVisit }: PastEncounterListProps) {
+  const classes = useStyles();
+  console.log("PastEncounterList");
+  const [encounters, setEncounters] = React.useState<Array<Encounter>>([])
+  const [viewOpen, setViewOpen] = React.useState(false);
+  const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
+  const [viewEncounterIndex, setViewEncounterIndex] = React.useState<number>(0);
 
-  private headers = [
-    {
-      id: "time",
-      numeric: false,
-      disablePadding: false,
-      label: "Scheduled Time",
-    },
-    { id: "name", numeric: false, disablePadding: false, label: "Patient" },
-    {
-      id: "advocates",
-      numeric: false,
-      disablePadding: false,
-      label: "Advocates",
-    },
-    { id: "status", numeric: false, disablePadding: false, label: "Status"},
-    { id: "actions", numeric: false, disablePadding: false, label: "" },
-  ];
-
-  private timer: NodeJS.Timeout | null = null;
-
-  componentDidMount() {
-    this.refreshPastEncounters();
-    this.timer = setInterval(this.refreshPastEncounters, 10 * 1000)
-  }
-
-  componentWillUnmount() {
-    if (this.timer) {
-      clearInterval(this.timer);
-    }
-  }
-
-  componentWillReceiveProps(props: PastEncounterListProps) {
-    if (props.refresh !== this.props.refresh) {
-      this.refreshPastEncounters();
-    }
-  }
-
-  getPastEncounterStatusDisplay(encounter: Encounter) {
-    return <span>Complete</span>;
-  }
-
-  refreshPastEncounters() {
-    console.log("refreshPastEncounters");
-    let listPastEncounters = firebase.functions().httpsCallable("listEncountersByStatus");
-    listPastEncounters({ userId: this.props.user, status: 'COMPLETE' })
+  const refreshEncounters = React.useCallback(() => {
+    console.log("Past Encounter List: refreshEncounters");
+    let listEncounters = firebase.functions().httpsCallable("listEncountersByStatus");
+    listEncounters({ userId: user, status: EncounterState.COMPLETE })
       .then((response) => {
-        let pastEncounters = response.data.map((entry: Encounter) => {
+        let newEncounters = response.data.map((entry: Encounter) => {
           console.log(JSON.stringify(entry));
           return entry;
-        });        
-        this.setState({ encounters: pastEncounters, anchorEl: this.state.anchorEl });
+        });
+        setEncounters(newEncounters);
       })
       .catch((err) => {
         console.log("ERROR: " + JSON.stringify(err));
       });
-  }
+  }, [user, setEncounters]);
 
-  onOpen(encounterId: String) {
-    console.log("open encounter");
-    let downloadTranscript = firebase.functions().httpsCallable("getEncounterTranscript");
-    try {
-      downloadTranscript({userId: this.props.user, encounterId: encounterId})
-    } catch(err) {
-      console.log("ERROR: " + JSON.stringify(err));
-    }
-  }
+  React.useEffect(() => {
+    refreshEncounters();
+    let timerHandle = setInterval(refreshEncounters, 10 * 1000);
+    return () => {
+      if (timerHandle) {
+        clearInterval(timerHandle);
+      }
+    };
+  }, [refreshEncounters, refresh]);
 
-  render() {
-    console.log("render");
-    return (
-      <>
+  const onView = React.useCallback((event: any, index: number) => {
+    setViewOpen(true);
+    setAnchorEl(event.target);
+    setViewEncounterIndex(index);
+  }, [setViewOpen, setAnchorEl, setViewEncounterIndex]);
+
+  return (
+    <>
       <TableContainer component={Paper}>
-        <Table className={this.props.classes.table} aria-label="simple table">
+        <Table className={classes.table} aria-label="simple table">
           <TableHead>
             <TableRow>
-              {this.headers.map((headCell) => (
+              {headers.map((headCell) => (
                 <TableCell
                   key={headCell.id}
                   align={"left"}
@@ -160,22 +128,25 @@ class PastEncounterListImpl extends React.Component<
             </TableRow>
           </TableHead>
           <TableBody>
-            {this.state.encounters.map((row, index) => (
+            {encounters.map((row, index) => (
               <TableRow key={row.encounterId}>
                 <TableCell align="left">{new Date(row.encounter.when).toLocaleString()}</TableCell>
                 <TableCell component="th" scope="row">
-                  {row.encounter.patient}<br/>
+                  {row.encounter.patient}<br />
                 </TableCell>
                 <TableCell align="left">
-                  {row.encounter.advocate}<br/>
+                  {row.encounter.title}
+                </TableCell>
+                <TableCell align="left">
+                  {row.encounter.advocate}<br />
                 </TableCell>
                 <TableCell>
-                  {this.getPastEncounterStatusDisplay(row)}
+                  Complete
                 </TableCell>
                 <TableCell align="right">
                   <ButtonGroup color="primary" aria-label="outlined primary button group">
                     <Button size="small" variant="contained"
-                      onClick={(event: any) => this.onOpen(row.encounterId)}
+                      onClick={(event: any) => onView(event, index)}
                     >
                       View
                     </Button>
@@ -186,9 +157,22 @@ class PastEncounterListImpl extends React.Component<
           </TableBody>
         </Table>
       </TableContainer>
-      </>
-    );
-  }
+      <Popover
+        open={viewOpen}
+        anchorEl={anchorEl}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "center",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "center",
+        }}
+      >
+        <div className={classes.viewEncounterPopover}>
+          <PastEncounterView userId={user} encounterToView={encounters[viewEncounterIndex]}></PastEncounterView>
+        </div>
+      </Popover>
+    </>
+  );
 }
-
-export const PastEncounterList = withStyles(styles)(withRouter(PastEncounterListImpl));
