@@ -524,7 +524,8 @@ exports.createTranscript = functions.https.onRequest((request, response) => {
             const metadata = {contentType: "text/html"};
             const bucket = storage.bucket();
             var transcript = request.body.data.transcript;
-            var encounterId = request.body.data.encounterId;
+            var encounter = request.body.data.encounter;
+            var encounterId = encounter.encounterId;
             var uid = request.body.data.uid;
             var fileName = transcriptFolderName + "/" + uid + "_" + encounterId + ".txt";
             var transcriptText = "";
@@ -534,7 +535,9 @@ exports.createTranscript = functions.https.onRequest((request, response) => {
                 return;
             }
 
-            transcript.forEach(element => transcriptText.concat(element.msg + "\n"));
+            transcriptText = transcript.map((element, i) => { return element.msg.trim() }).join("\n");    
+            console.log("Writing transcript content");
+            console.log(transcriptText);
 
             const transcriptBuffer = new Buffer.from(transcriptText);
             var file = bucket.file(fileName);
@@ -588,8 +591,10 @@ exports.getEncounterTranscript = functions.https.onRequest((request, response) =
             const bucket = storage.bucket();
             var fileName = transcriptFolderName + "/" + userId + "_" + encounterId + ".txt";
             bucket.file(fileName).download({}).then((data) => {
+                console.log(fileName);
+                console.log(data[0].toString());
                 const contents = data[0];
-                response.status(200).send({data: contents});
+                response.status(200).send({data: contents.toString()});
               });
         } catch(e) {
             console.log(e);

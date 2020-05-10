@@ -1,32 +1,30 @@
 import React from "react";
-import Text from "@material-ui/core/TextareaAutosize"
 import { Encounter } from "./encounter";
 import * as firebase from "firebase/app";
 
-
 interface PastEncounterViewProps {
-    userId: firebase.User | null,
+    user: firebase.User,
     encounterToView: Encounter
 }
 
-export default function PastEncounterView({userId, encounterToView}: PastEncounterViewProps) {
-    const serverFunction = firebase.functions().httpsCallable("getEncounterTranscript");
-    serverFunction({userId: userId, encounterId: encounterToView.encounterId}).then(function (response) {
-        console.log("Downloaded transcript to memory");
-        return (
-            <>
-            <Text>{response.data}</Text>
-            </>
-        );
-    }).catch((err) => {
-        console.log(err);
-        return (
-            <>      
-            </>
-        );
-    });
+export default function PastEncounterView({user, encounterToView}: PastEncounterViewProps) {
+    const [transcript, setTranscript] = React.useState<String>();
+
+    React.useEffect(() => {
+        console.log("Getting transcript");
+        let serverFunction = firebase.functions().httpsCallable("getEncounterTranscript");
+        serverFunction({userId: user.uid, encounterId: encounterToView.encounterId}).then(function (response) {
+            console.log("Downloaded transcript to memory");
+            console.log(response.data);
+            setTranscript(response.data);
+        }).catch((err) => {
+            console.log(err);
+        });
+    }, [user, encounterToView, setTranscript]);
+
     return (
-        <>
-        </>
+    <>
+    {transcript}
+    </>
     );
 };

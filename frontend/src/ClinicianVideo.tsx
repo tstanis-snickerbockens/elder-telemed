@@ -267,8 +267,9 @@ export default function ClinicianVideo({ encounter, user, onClose }: ClinicialVi
         updateEncounter(updatedEncounter);
 
         console.log("Write Transcipt to Server");
+        console.log(transcriptions);
         const createTranscript = firebase.functions().httpsCallable('createTranscript');
-        createTranscript({ transcript: transcriptions, uid: user.uid, encounterId: encounter.encounterId })
+        createTranscript({ transcript: transcriptions, uid: user.uid, encounter: encounter })
             .then(function (response) {
                 console.log("Wrote transcript");
             }).catch(function (err) {

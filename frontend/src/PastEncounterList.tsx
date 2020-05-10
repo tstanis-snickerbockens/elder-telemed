@@ -46,9 +46,8 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 }));
 
 interface PastEncounterListProps {
-  user: firebase.User | null;
+  user: firebase.User;
   refresh: boolean; // Used to force refresh from server.
-  onVisit: (encounter: Encounter) => void;
 }
 
 const headers = [
@@ -70,7 +69,7 @@ const headers = [
   { id: "actions", numeric: false, disablePadding: false, label: "" },
 ];
 
-export default function PastEncounterList({ user, refresh, onVisit }: PastEncounterListProps) {
+export default function PastEncounterList({ user, refresh }: PastEncounterListProps) {
   const classes = useStyles();
   console.log("PastEncounterList");
   const [encounters, setEncounters] = React.useState<Array<Encounter>>([])
@@ -81,7 +80,7 @@ export default function PastEncounterList({ user, refresh, onVisit }: PastEncoun
   const refreshEncounters = React.useCallback(() => {
     console.log("Past Encounter List: refreshEncounters");
     let listEncounters = firebase.functions().httpsCallable("listEncountersByStatus");
-    listEncounters({ userId: user, status: EncounterState.COMPLETE })
+    listEncounters({ userId: "myuser", status: EncounterState.COMPLETE })
       .then((response) => {
         let newEncounters = response.data.map((entry: Encounter) => {
           console.log(JSON.stringify(entry));
@@ -92,7 +91,7 @@ export default function PastEncounterList({ user, refresh, onVisit }: PastEncoun
       .catch((err) => {
         console.log("ERROR: " + JSON.stringify(err));
       });
-  }, [user, setEncounters]);
+  }, [setEncounters]);
 
   React.useEffect(() => {
     refreshEncounters();
@@ -170,7 +169,7 @@ export default function PastEncounterList({ user, refresh, onVisit }: PastEncoun
         }}
       >
         <div className={classes.viewEncounterPopover}>
-          <PastEncounterView userId={user} encounterToView={encounters[viewEncounterIndex]}></PastEncounterView>
+          <PastEncounterView user={user} encounterToView={encounters[viewEncounterIndex]}></PastEncounterView>
         </div>
       </Popover>
     </>

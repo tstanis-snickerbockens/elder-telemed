@@ -4,7 +4,6 @@ import {
   Theme,
   makeStyles,
 } from "@material-ui/core/styles";
-import { Encounter } from "./encounter";
 import PastEncounterList from "./PastEncounterList";
 import * as firebase from "firebase/app";
 
@@ -30,11 +29,10 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 }));
 
 interface PastEncounterPageProps {
-  user: firebase.User | null;
-  onVisit: (encounter: Encounter) => void;
+  user: firebase.User;
 }
 
-export default function PastEncounterPage({ user, onVisit }: PastEncounterPageProps) {
+export default function PastEncounterPage({ user }: PastEncounterPageProps) {
   const classes = useStyles();
   
   return (
@@ -42,7 +40,6 @@ export default function PastEncounterPage({ user, onVisit }: PastEncounterPagePr
       <div className={classes.mainContainer}>
         <PastEncounterList
           user={user}
-          onVisit={onVisit}
           refresh={true}
         ></PastEncounterList>
       </div>

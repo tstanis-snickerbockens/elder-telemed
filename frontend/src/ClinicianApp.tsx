@@ -57,7 +57,7 @@ const MainClinicianPanel = ({ onVisit, user }: MainClinicianPanelProps) => {
         <PatientPage user={user}></PatientPage>
       </TabPanel>
       <TabPanel value={value} index={2}>
-        <PastEncounterPage onVisit={onVisit} user={user}></PastEncounterPage>
+        <PastEncounterPage user={user}></PastEncounterPage>
       </TabPanel>
     </div>
   );
