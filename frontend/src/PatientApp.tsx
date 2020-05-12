@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import UserPage from "./UserPage";
-import { PatientHomePage } from "./PatientHomePage";
+import PatientHomePage from "./PatientHomePage";
 import { Role } from "./Role";
 import { PatientMode } from "./PatientMode";
 import { StoryContext, StoryTopButton } from "./StoryHome";

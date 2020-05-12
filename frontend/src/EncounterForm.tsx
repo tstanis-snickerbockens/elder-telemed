@@ -11,6 +11,7 @@ import * as firebase from "firebase/app";
 import DateFnsUtils from '@date-io/date-fns';
 import InputLabel from '@material-ui/core/InputLabel';
 import Select from '@material-ui/core/Select';
+import {StoryContext} from "./StoryHome";
 import {
     MuiPickersUtilsProvider,
     DateTimePicker,
@@ -43,9 +44,11 @@ export default function EncounterForm({isNewEncounter, previousEncounter, onComp
     const classes = useStyles();
     const [patient, setPatient] = React.useState(previousEncounter.encounter.patient);
     const [advocate, setAdvocate] = React.useState(previousEncounter.encounter.advocate);
+    const [doctor, setDoctor] = React.useState(previousEncounter.encounter.doctor);
     const [when, setWhen] = React.useState(new Date(previousEncounter.encounter.when));
     const [title, setTitle] = React.useState(previousEncounter.encounter.title);
     const [scheduledDurationMinutes, setScheduledDurationMinutes] = React.useState(previousEncounter.encounter.scheduledDuration);
+    const { setBusy } = React.useContext(StoryContext);
 
     const handleSave = React.useCallback(() => {
         console.log("Previous Encounter: "+ JSON.stringify(previousEncounter));
@@ -54,11 +57,13 @@ export default function EncounterForm({isNewEncounter, previousEncounter, onComp
         Object.assign(newEncounter.encounter, previousEncounter.encounter);
         newEncounter.encounter.patient = patient;
         newEncounter.encounter.advocate = advocate;
+        newEncounter.encounter.doctor = doctor;
         newEncounter.encounter.title = title;
         newEncounter.encounter.when = when.getTime();
         newEncounter.encounter.scheduledDuration = scheduledDurationMinutes;
         newEncounter.updateType = EncounterUpdate.FULL;
 
+        setBusy(true);
         console.log("Saving: " + JSON.stringify(newEncounter));
         serverFunction(newEncounter).then(function (response) {
             console.log(
@@ -70,8 +75,10 @@ export default function EncounterForm({isNewEncounter, previousEncounter, onComp
         .catch((err) => {
             console.log(err);
             onComplete(false);
+        }).finally(() => {
+            setBusy(false);
         });
-    }, [patient, advocate, when, title, scheduledDurationMinutes, isNewEncounter, previousEncounter, onComplete]);
+    }, [patient, advocate, doctor, when, title, scheduledDurationMinutes, isNewEncounter, previousEncounter, onComplete, setBusy]);
 
     const handleCancel = React.useCallback(() => {
         onComplete(false);
@@ -95,6 +102,14 @@ export default function EncounterForm({isNewEncounter, previousEncounter, onComp
                 id="advocate-name"
                 label="Advocate"
                 value={advocate}
+                variant="outlined"
+            />
+            <TextField
+                name="doctor"
+                onChange={(e) => setDoctor(e.target.value)}
+                id="doctor-name"
+                label="Doctor"
+                value={doctor}
                 variant="outlined"
             />
             <TextField

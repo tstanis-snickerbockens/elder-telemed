@@ -7,6 +7,9 @@ import * as firebase from "firebase/app";
 import "firebase/auth";
 import { WelcomePage } from "./WelcomePage";
 import { yellow } from "@material-ui/core/colors";
+import Backdrop from '@material-ui/core/Backdrop';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Typography from "@material-ui/core/Typography";
 
 const styles = makeStyles((theme: Theme) =>
   createStyles({
@@ -36,6 +39,10 @@ const styles = makeStyles((theme: Theme) =>
       bottom: 0,
       height: "47px",
     },
+    backdrop: {
+      zIndex: theme.zIndex.drawer + 1,
+      color: '#fff',
+    },
   })
 );
 
@@ -46,6 +53,7 @@ export type StoryHomeProps = {
 const defaultContext = {
   user: (undefined as unknown) as firebase.User,
   setUserTopButton: (button: React.ReactNode | null) => {},
+  setBusy: (loading: boolean, msgToShow?: string | null) => {},
 };
 export const StoryContext = React.createContext(defaultContext);
 
@@ -82,6 +90,8 @@ export function StoryHome({ children }: StoryHomeProps) {
   const [userTopButton, setUserTopButton] = useState<React.ReactNode | null>(
     null
   );
+  const [busy, setBusyMode] = useState<boolean>(false);
+  const [busyMsg, setBusyMsg] = useState<string | null | undefined>(null);
 
   useEffect(() => {
     (async () => {
@@ -122,10 +132,16 @@ export function StoryHome({ children }: StoryHomeProps) {
     );
   }, [user, userTopButton, setTopButton, classes.actionButton]);
 
+  const setBusy = React.useCallback((busy: boolean, msgToShow?: string | null) => {
+    setBusyMode(busy);
+    setBusyMsg(msgToShow);
+  }, [setBusyMode, setBusyMsg]);
+
   const userContext: typeof defaultContext = user
     ? {
         user,
         setUserTopButton,
+        setBusy,
       }
     : defaultContext;
   return (
@@ -152,6 +168,14 @@ export function StoryHome({ children }: StoryHomeProps) {
         color="primary"
         className={classes.bottomBar}
       ></AppBar>
+      <Backdrop className={classes.backdrop} open={busy}>
+        {busyMsg ?
+          <Typography>
+            {busyMsg}
+          </Typography>
+        : ""}
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </div>
   );
 };

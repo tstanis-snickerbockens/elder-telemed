@@ -53,6 +53,7 @@ export interface Encounter {
     encounter: {
         patient: string;
         advocate: string;
+        doctor: string;
         when: number;
         // Title of the encounter.  Displayed to clinician and patient to
         // indicate the purpose of the encounter.
@@ -75,6 +76,7 @@ export function newEncounter(): Encounter {
         encounter: {
             patient: "",
             advocate: "",
+            doctor: "",
             when: new Date().getTime(),
             patientState: newPersonTimedState(),
             advocateState: newPersonTimedState(),

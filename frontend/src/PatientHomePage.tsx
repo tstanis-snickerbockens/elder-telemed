@@ -1,9 +1,5 @@
 import React, { } from "react";
-import {
-    RouteComponentProps,
-    withRouter
-} from "react-router-dom";
-import { createStyles, Theme, WithStyles, withStyles } from "@material-ui/core/styles";
+import { createStyles, Theme, makeStyles } from "@material-ui/core/styles";
 import * as firebase from "firebase/app";
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
@@ -13,8 +9,9 @@ import Grid from '@material-ui/core/Grid';
 import { Encounter } from "./encounter"
 import { Role } from './Role';
 import { green } from '@material-ui/core/colors';
+import {StoryContext} from "./StoryHome";
 
-const styles = (theme: Theme) => createStyles({
+const useStyles = makeStyles((theme: Theme) => createStyles({
     root: {
         inWidth: 275,
         padding: 25,
@@ -58,9 +55,9 @@ const styles = (theme: Theme) => createStyles({
           backgroundColor: green[900],
         },
       },
-});
+}));
 
-interface PatientHomePageProps extends RouteComponentProps<{}>, WithStyles<typeof styles> {
+interface PatientHomePageProps {
   user: firebase.User;
   onStartAppointment: (encounter: Encounter, role: Role) => void;
 };
@@ -70,66 +67,84 @@ interface PatientHomePageState {
     role: Role;
 }
 
-class PatientHomePageImpl extends React.Component<PatientHomePageProps, PatientHomePageState> {
-    constructor(props: PatientHomePageProps) {
-        super(props);
-        this.state = {encounter: null, role: Role.PATIENT}
-        this.startAppointment = this.startAppointment.bind(this);
+function formatScheduledTime(time: number) {
+    const scheduledTime = new Date(time);
+    const now = new Date();
+
+    if (scheduledTime.getDate() === now.getDate() && scheduledTime.getMonth() === now.getMonth() && scheduledTime.getFullYear() === now.getFullYear()) {
+        return "Today at " + scheduledTime.toLocaleTimeString();
+    } else {
+        return scheduledTime.toLocaleDateString() + " at " + scheduledTime.toLocaleTimeString();
     }
-    componentDidMount() {
-        console.log("User: " + this.props.user.email);
+}
+
+export default function PatientHomePage({user, onStartAppointment} : PatientHomePageProps) {
+    const classes = useStyles();
+    const [encounter, setEncounter] = React.useState<Encounter | null>(null);
+    const [role, setRole] = React.useState<Role>(Role.PATIENT);
+    const { setBusy } = React.useContext(StoryContext);
+
+    React.useEffect(() => {
+        console.log("User: " + user.email);
         let queryEncounters = firebase.functions().httpsCallable('queryEncounters');
-        queryEncounters({'patientId': this.props.user.email, advocate: this.props.user.email})
+        setBusy(true);
+        queryEncounters({'patientId': user.email, advocate: user.email})
             .then(response => {
                 console.log("Encounters: " + JSON.stringify(response.data));
                 if (response.data && response.data.length > 0) {
                     let advocate = response.data[0].encounter.advocate;
                     console.log("Advocate: " + advocate);
-                    let role = this.props.user.email === advocate ? Role.ADVOCATE : Role.PATIENT;
+                    let role = user.email === advocate ? Role.ADVOCATE : Role.PATIENT;
                     console.log("Our role:" + role);
-                    this.setState({encounter: response.data[0], role: role});
+                    setEncounter(response.data[0]);
+                    setRole(role);
                 }
+            })
+            .finally(() => {
+                setBusy(false);
             });
-    }
-    
-    startAppointment() {
-        if (this.state.encounter) {
-            this.props.onStartAppointment(this.state.encounter, this.state.role);
+    }, [user, setBusy, setEncounter, setRole]);
+
+    const startAppointment = React.useCallback(() => {
+        if (encounter) {
+            onStartAppointment(encounter, role);
         }
-    }
+    }, [encounter, role, onStartAppointment]);
+    return (
+          <>
+            <Grid container justify="center" alignItems="center" className={classes.root} spacing={2}>
 
-    render() {
-        return (
-          <>  
-            <Grid container justify="center" alignItems="center" className={this.props.classes.root} spacing={2}>
-                <Card className={this.props.classes.card}>
-                    <Typography className={this.props.classes.title} color="textSecondary" gutterBottom>
-                    <img alt='' src='alarm_clock.png'/>
-                    It's time to start your doctor's visit.
-                    </Typography>
-                    <CardContent>
-                        <div className={this.props.classes.description}>
-                            <Typography variant="h5" component="h2">
-                            <b>Dr. Terry Hahn</b><br/>
-                            Cardiology Follow-up<br/>
-                            Today at 8:30am<br/>
+                    <Card className={classes.card}>
+                        {encounter ? <>
+                            <Typography className={classes.title} color="textSecondary" gutterBottom>
+                            <img alt='' src='alarm_clock.png'/>
+                            It's time to start your doctor's visit.
                             </Typography>
-                        </div>
-                        <div className={this.props.classes.pictures}>
-                            <img alt='' src="doctor_circle.png"/>
-                            <img alt='' src="advocate_circle.png"/>
-                        </div>
-                        <Button size='large' variant="contained" onClick={this.startAppointment} color="primary" className={this.props.classes.button}>
-                            Begin Video Visit
-                        </Button>
-                        
-                    </CardContent>
-                </Card>
-            </Grid>
-             
-          </>
-        );
-    }
-};
+                            <CardContent>
+                                <div className={classes.description}>
+                                    <Typography variant="h5" component="h2">
+                                    <b>{encounter.encounter.doctor}</b><br/>
+                                   {encounter.encounter.title}<br/>
+                                    {formatScheduledTime(encounter.encounter.when)}<br/>
+                                    {encounter.encounterId}
+                                    </Typography>
+                                </div>
+                                <div className={classes.pictures}>
+                                    <img alt='' src="doctor_circle.png"/>
+                                    <img alt='' src="advocate_circle.png"/>
+                                </div>
+                                <Button size='large' variant="contained" onClick={startAppointment} color="primary" className={classes.button}>
+                                    Enter Waiting Room
+                                </Button>
 
-export const PatientHomePage = withStyles(styles)(withRouter(PatientHomePageImpl));
+                            </CardContent>
+                        </> : <>
+                            <Typography>No Appointments for {user.email}</Typography>
+                        </>}
+                    </Card>
+
+            </Grid>
+
+          </>
+    )
+};

@@ -7,6 +7,7 @@ import {
 import Button from "@material-ui/core/Button";
 import TextField from "@material-ui/core/TextField";
 import * as firebase from "firebase/app";
+import {StoryContext} from "./StoryHome";
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
     textField: {
@@ -38,8 +39,10 @@ export default function PatientForm({newPatient, previousEmail, previousName, pr
     const [email, setEmail] = React.useState(previousEmail);
     const [name, setName] = React.useState(previousName);
     const [phone, setPhone] = React.useState(previousPhone);
+    const { setBusy } = React.useContext(StoryContext);
 
     const handleSave = React.useCallback(() => {
+        setBusy(true);
         const serverFunction = firebase.functions().httpsCallable(newPatient ? 'createPatient' : "updatePatient");
         serverFunction({
             patientEmail: email,
@@ -54,8 +57,11 @@ export default function PatientForm({newPatient, previousEmail, previousName, pr
         .catch((err) => {
             console.log(err);
             onComplete(false);
+        })
+        .finally(() => {
+            setBusy(false);
         });
-    }, [email, name, phone, newPatient, onComplete]);
+    }, [email, name, phone, newPatient, onComplete, setBusy]);
 
     const handleCancel = React.useCallback(() => {
         onComplete(false);

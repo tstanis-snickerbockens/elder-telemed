@@ -20,6 +20,7 @@ import TxtForm from "./TxtForm"
 import { Role } from "./Role";
 import * as firebase from "firebase/app";
 import { yellow, green, purple } from '@material-ui/core/colors';
+import {StoryContext} from "./StoryHome";
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
   root: {
@@ -107,6 +108,7 @@ const headers = [
   },
   { id: "name", numeric: false, disablePadding: false, label: "Patient" },
   { id: "title", numeric: false, disablePadding: false, label: "Title" },
+  { id: "doctor", numeric: false, disablePadding: false, label: "Doctor" },
   {
     id: "advocates",
     numeric: false,
@@ -132,9 +134,11 @@ export default function EncounterList({ user, refresh, onVisit }: EncounterListP
   const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
   const [editEncounterIndex, setEditEncounterIndex] = React.useState<number>(0);
   const [txtEncounterIndex, setTxtEncounterIndex] = React.useState<number>(0);
+  const { setBusy } = React.useContext(StoryContext);
 
   const refreshEncounters = React.useCallback(() => {
     console.log("refreshEncounters");
+    setBusy(true);
     let listEncounters = firebase.functions().httpsCallable("listEncounters");
     listEncounters({ userId: "myuser" })
       .then((response) => {
@@ -146,8 +150,10 @@ export default function EncounterList({ user, refresh, onVisit }: EncounterListP
       })
       .catch((err) => {
         console.log("ERROR: " + JSON.stringify(err));
+      }).finally(() => {
+        setBusy(false);
       });
-  }, [setEncounters]);
+  }, [setEncounters, setBusy]);
 
   React.useEffect(() => {
     refreshEncounters();
@@ -268,6 +274,9 @@ export default function EncounterList({ user, refresh, onVisit }: EncounterListP
                 </TableCell>
                 <TableCell align="left">
                   {row.encounter.title}
+                </TableCell>
+                <TableCell align="left">
+                  {row.encounter.doctor}
                 </TableCell>
                 <TableCell align="left">
                   {row.encounter.advocate}<br />
