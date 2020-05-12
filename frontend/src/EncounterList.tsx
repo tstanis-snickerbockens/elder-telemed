@@ -276,7 +276,7 @@ export default function EncounterList({ user, refresh, onVisit }: EncounterListP
                   {row.encounter.title}
                 </TableCell>
                 <TableCell align="left">
-                  {row.encounter.doctor}
+                  {row.encounter.doctor? row.encounter.doctor : ""}
                 </TableCell>
                 <TableCell align="left">
                   {row.encounter.advocate}<br />

@@ -176,20 +176,26 @@ function rewriteEncounterReferences(encounter) {
 }
 
 exports.getEncounter = functions.https.onRequest((request, response) => {
-    var encounterId = request.body.data.id;
     return cors(request, response, () => {
+        if (!request.body.data || !request.body.data.id) {
+            response.status(404).send("No ID set");
+            return;
+        }
+        var encounterId = request.body.data.id;
+        console.log("Looking up encounter " + encounterId);
         let ref = db.collection('encounters').doc(encounterId);
         ref.get().then(doc => {
             if (!doc.exists) {
                 console.log('No such document!');
-                response.status(404);
+                response.status(404).send();
               } else {
                 console.log('Document data:', doc.data());
-                response.status(200).send(rewriteEncounterReferences(doc.data()));
+                response.status(200).send({'data': {'encounterId' : doc.id, 'encounter': rewriteEncounterReferences(doc.data())}});
               }
             })
             .catch(err => {
               console.log('Error getting document', err);
+              response.status(500).send(err);
             });
     });
 });
@@ -547,7 +553,7 @@ exports.txtParticipant = functions.https.onRequest((request, response) => {
             const phone = doc.data().phone;
             twilio_client.messages
                 .create({
-                    body: 'Time for your Dr. Appointment. https://app.storyhealth.ai/p?e=' + encounterId,
+                    body: 'Time for your Dr. Appointment. https://app.storyhealth.ai/p/e/' + encounterId,
                     from: '+17692077601',
                     to: '+1'+ phone
                 })

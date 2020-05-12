@@ -151,7 +151,7 @@ export function StoryHome({ children }: StoryHomeProps) {
           <img
             alt="Story Health"
             className={classes.logo}
-            src="story_health.png"
+            src="/story_health.png"
           />
           {topButton}
         </Toolbar>

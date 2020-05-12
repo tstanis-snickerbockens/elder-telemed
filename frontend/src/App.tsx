@@ -15,7 +15,10 @@ function App() {
     <Router>
       <StoryHome>
         <Switch>
-          <Route path="/p">
+          <Route exact path="/p">
+            <PatientApp />
+          </Route>
+          <Route path="/p/e/:encounterId">
             <PatientApp />
           </Route>
           <Route path="/c">

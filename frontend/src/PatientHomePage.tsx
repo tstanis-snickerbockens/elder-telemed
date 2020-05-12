@@ -10,6 +10,7 @@ import { Encounter } from "./encounter"
 import { Role } from './Role';
 import { green } from '@material-ui/core/colors';
 import {StoryContext} from "./StoryHome";
+import {useParams} from "react-router-dom";
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
     root: {
@@ -83,27 +84,49 @@ export default function PatientHomePage({user, onStartAppointment} : PatientHome
     const [encounter, setEncounter] = React.useState<Encounter | null>(null);
     const [role, setRole] = React.useState<Role>(Role.PATIENT);
     const { setBusy } = React.useContext(StoryContext);
+    let { encounterId } = useParams();
 
     React.useEffect(() => {
         console.log("User: " + user.email);
-        let queryEncounters = firebase.functions().httpsCallable('queryEncounters');
-        setBusy(true);
-        queryEncounters({'patientId': user.email, advocate: user.email})
-            .then(response => {
-                console.log("Encounters: " + JSON.stringify(response.data));
-                if (response.data && response.data.length > 0) {
-                    let advocate = response.data[0].encounter.advocate;
-                    console.log("Advocate: " + advocate);
+        console.log("E: " + encounterId);
+        if (!encounterId) {
+            let queryEncounters = firebase.functions().httpsCallable('queryEncounters');
+            setBusy(true);
+            queryEncounters({'patientId': user.email, advocate: user.email})
+                .then(response => {
+                    console.log("Encounters: " + JSON.stringify(response.data));
+                    if (response.data && response.data.length > 0) {
+                        let advocate = response.data[0].encounter.advocate;
+                        console.log("Advocate: " + advocate);
+                        let role = user.email === advocate ? Role.ADVOCATE : Role.PATIENT;
+                        console.log("Our role:" + role);
+                        setEncounter(response.data[0]);
+                        setRole(role);
+                    }
+                })
+                .finally(() => {
+                    setBusy(false);
+                });
+        } else {
+            let getEncounter = firebase.functions().httpsCallable('getEncounter');
+            setBusy(true);
+            getEncounter({'id': encounterId})
+                .then(response => {
+                    console.log("Encounter: " + JSON.stringify(response.data));
+                    setEncounter(response.data);
+                    let advocate = response.data.encounter.advocate;
                     let role = user.email === advocate ? Role.ADVOCATE : Role.PATIENT;
-                    console.log("Our role:" + role);
-                    setEncounter(response.data[0]);
                     setRole(role);
-                }
-            })
-            .finally(() => {
-                setBusy(false);
-            });
-    }, [user, setBusy, setEncounter, setRole]);
+                })
+                .catch(err => {
+                    console.log("Error: " + JSON.stringify(err));
+                    setEncounter(null);
+                })
+                .finally(() => {
+                    setBusy(false);
+                });
+        }
+    }, [user, setBusy, setEncounter, setRole, encounterId]);
 
     const startAppointment = React.useCallback(() => {
         if (encounter) {
@@ -113,36 +136,34 @@ export default function PatientHomePage({user, onStartAppointment} : PatientHome
     return (
           <>
             <Grid container justify="center" alignItems="center" className={classes.root} spacing={2}>
+                <Card className={classes.card}>
+                    {encounter ? <>
+                        <Typography className={classes.title} color="textSecondary" gutterBottom>
+                        <img alt='' src='alarm_clock.png'/>
+                        It's time to start your doctor's visit.
+                        </Typography>
+                        <CardContent>
+                            <div className={classes.description}>
+                                <Typography variant="h5" component="h2">
+                                <b>{encounter.encounter.doctor ? encounter.encounter.doctor : ""}</b><br/>
+                                {encounter.encounter.title}<br/>
+                                {formatScheduledTime(encounter.encounter.when)}<br/>
+                                {encounter.encounterId}
+                                </Typography>
+                            </div>
+                            <div className={classes.pictures}>
+                                <img alt='' src="/doctor_circle.png"/>
+                                <img alt='' src="/advocate_circle.png"/>
+                            </div>
+                            <Button size='large' variant="contained" onClick={startAppointment} color="primary" className={classes.button}>
+                                Enter Waiting Room
+                            </Button>
 
-                    <Card className={classes.card}>
-                        {encounter ? <>
-                            <Typography className={classes.title} color="textSecondary" gutterBottom>
-                            <img alt='' src='alarm_clock.png'/>
-                            It's time to start your doctor's visit.
-                            </Typography>
-                            <CardContent>
-                                <div className={classes.description}>
-                                    <Typography variant="h5" component="h2">
-                                    <b>{encounter.encounter.doctor}</b><br/>
-                                   {encounter.encounter.title}<br/>
-                                    {formatScheduledTime(encounter.encounter.when)}<br/>
-                                    {encounter.encounterId}
-                                    </Typography>
-                                </div>
-                                <div className={classes.pictures}>
-                                    <img alt='' src="doctor_circle.png"/>
-                                    <img alt='' src="advocate_circle.png"/>
-                                </div>
-                                <Button size='large' variant="contained" onClick={startAppointment} color="primary" className={classes.button}>
-                                    Enter Waiting Room
-                                </Button>
-
-                            </CardContent>
-                        </> : <>
-                            <Typography>No Appointments for {user.email}</Typography>
-                        </>}
-                    </Card>
-
+                        </CardContent>
+                    </> : <>
+                        <Typography>No Appointments for {user.email}</Typography>
+                    </>}
+                </Card>
             </Grid>
 
           </>

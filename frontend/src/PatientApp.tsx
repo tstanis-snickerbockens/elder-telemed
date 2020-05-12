@@ -16,6 +16,7 @@ const PatientAppImpl: React.FC<PatientAppProps> = () => {
   const [clinicianReady] = useState(false);
   const { user, setUserTopButton } = useContext(StoryContext);
 
+  console.log("Patient App");
   const startAppointment = (encounter: Encounter, role: Role) => {
     setEncounter(encounter);
     setRole(role);
