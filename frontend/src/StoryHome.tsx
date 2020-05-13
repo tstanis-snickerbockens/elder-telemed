@@ -14,7 +14,8 @@ import Typography from "@material-ui/core/Typography";
 const styles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
-      flexGrow: 1,
+      display: 'flex',
+      flexDirection: 'column'
     },
     menuButton: {
       marginRight: theme.spacing(2),
@@ -43,6 +44,10 @@ const styles = makeStyles((theme: Theme) =>
       zIndex: theme.zIndex.drawer + 1,
       color: '#fff',
     },
+    content: {
+      flex: '1 1 auto',
+      width: '100%'
+    }
   })
 );
 
@@ -156,6 +161,7 @@ export function StoryHome({ children }: StoryHomeProps) {
           {topButton}
         </Toolbar>
       </AppBar>
+      <div className={classes.content}>
       {user ? (
         <StoryContext.Provider value={userContext}>
           {children}
@@ -163,8 +169,8 @@ export function StoryHome({ children }: StoryHomeProps) {
       ) : (
         <WelcomePage waiting={user === undefined}></WelcomePage>
       )}
+      </div>
       <AppBar
-        position="fixed"
         color="primary"
         className={classes.bottomBar}
       ></AppBar>

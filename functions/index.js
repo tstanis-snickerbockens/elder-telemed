@@ -33,6 +33,7 @@ function lazyInitTwilio() {
         return;
     }
     try {
+        console.log("Initializing Twilio");
         const twilio_creds = JSON.parse(fs.readFileSync('twilio_credentials.json'));
         twilio_client = twilio(twilio_creds.ACCOUNT_SID, twilio_creds.AUTH_TOKEN);
     } catch (e) {
@@ -551,6 +552,9 @@ exports.txtParticipant = functions.https.onRequest((request, response) => {
         const patientRef = db.collection('patients').doc(patientEmail);
         patientRef.get().then(doc => {
             const phone = doc.data().phone;
+            if (!twilio_client) {
+                response.status(500).send("Twilio Init Failed");
+            }
             twilio_client.messages
                 .create({
                     body: 'Time for your Dr. Appointment. https://app.storyhealth.ai/p/e/' + encounterId,
