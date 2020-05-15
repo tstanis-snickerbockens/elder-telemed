@@ -535,7 +535,7 @@ exports.createTranscript = functions.https.onRequest((request, response) => {
                 return;
             }
 
-            transcriptText = transcript.map((element, i) => { return element.msg.trim() }).join("<br>");    
+            transcriptText = transcript.map((element, i) => { return element.msg.trim() }).join("\n");    
             console.log("Writing transcript content");
             console.log(transcriptText);
 

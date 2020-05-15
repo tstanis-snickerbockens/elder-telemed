@@ -12,8 +12,12 @@ import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import Paper from "@material-ui/core/Paper";
 import { Encounter, EncounterState } from "./encounter";
-import Popover from "@material-ui/core/Popover";
-import PastEncounterView from "./PastEncounterView";
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import { PastEncounterView } from "./PastEncounterView";
 import Button from "@material-ui/core/Button";
 import ButtonGroup from "@material-ui/core/ButtonGroup";
 import * as firebase from "firebase/app";
@@ -40,7 +44,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     top: 20,
     width: 1,
   },
-  viewEncounterPopover: {
+  viewEncounterDialog: {
     margin: theme.spacing(1)
   }
 }));
@@ -74,8 +78,8 @@ export default function PastEncounterList({ user, refresh }: PastEncounterListPr
   console.log("PastEncounterList");
   const [encounters, setEncounters] = React.useState<Array<Encounter>>([])
   const [viewOpen, setViewOpen] = React.useState(false);
-  const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
   const [viewEncounterIndex, setViewEncounterIndex] = React.useState<number>(0);
+  const [transcript, setTranscript] = React.useState(String);
 
   const refreshEncounters = React.useCallback(() => {
     console.log("Past Encounter List: refreshEncounters");
@@ -93,6 +97,19 @@ export default function PastEncounterList({ user, refresh }: PastEncounterListPr
       });
   }, [setEncounters]);
 
+  const fetchTranscript = React.useCallback((encounterId: String) => {
+    console.log("Getting transcript");
+    let serverFunction = firebase.functions().httpsCallable("getEncounterTranscript");
+    serverFunction({userId: user.uid, encounterId: encounterId}).then(function (response) {
+        console.log("Downloaded transcript to memory");
+        console.log(response.data);
+        let newTranscript = response.data.split ('\n').map((item: React.ReactNode, i: string | number | undefined) => <div key={i}>{item}</div>); 
+        setTranscript(newTranscript);
+    }).catch((err) => {
+        console.log(err);
+    });
+  }, [encounters, transcript, setTranscript]);
+
   React.useEffect(() => {
     refreshEncounters();
     let timerHandle = setInterval(refreshEncounters, 10 * 1000);
@@ -104,10 +121,13 @@ export default function PastEncounterList({ user, refresh }: PastEncounterListPr
   }, [refreshEncounters, refresh]);
 
   const onView = React.useCallback((event: any, index: number) => {
+    fetchTranscript(encounters[index].encounterId);
     setViewOpen(true);
-    setAnchorEl(event.target);
-    setViewEncounterIndex(index);
-  }, [setViewOpen, setAnchorEl, setViewEncounterIndex]);
+  }, [encounters, setViewOpen, setViewEncounterIndex]);
+
+  const onClose = React.useCallback(() => {
+    setViewOpen(false);
+  }, [setViewOpen]);
 
   return (
     <>
@@ -156,22 +176,22 @@ export default function PastEncounterList({ user, refresh }: PastEncounterListPr
           </TableBody>
         </Table>
       </TableContainer>
-      <Popover
+      <Dialog
         open={viewOpen}
-        anchorEl={anchorEl}
-        anchorOrigin={{
-          vertical: "bottom",
-          horizontal: "center",
-        }}
-        transformOrigin={{
-          vertical: "top",
-          horizontal: "center",
-        }}
+        onClose={onClose}
       >
-        <div className={classes.viewEncounterPopover}>
-          <PastEncounterView user={user} encounterToView={encounters[viewEncounterIndex]}></PastEncounterView>
-        </div>
-      </Popover>
+        <DialogTitle>{"Transcript Text"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText component={'span'}>
+              {transcript}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
