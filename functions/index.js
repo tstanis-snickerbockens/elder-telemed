@@ -200,28 +200,10 @@ exports.getEncounter = functions.https.onRequest((request, response) => {
 exports.listEncounters = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         var userId = request.body.data.userId;
-        let encountersRef = db.collection('encounters');
-        let allEncounters = encountersRef.get()
-            .then(encounters => {
-                var returnEncounters = []
-                encounters.forEach(doc => {
-                    console.log(doc.id, '=>', doc.data());
-                    returnEncounters.push({'encounterId' : doc.id, 'encounter': rewriteEncounterReferences(doc.data())});
-                });
-                response.status(200).send({'data':returnEncounters});
-            })
-            .catch(err => {
-                console.log('Error getting documents', err);
-                response.status(500).send();
-            });
-    });
-});
+        let encountersRef = request.body.data.status ? 
+            db.collection('encounters').where('state', '==', request.body.data.status) : 
+            db.collection('encounters');
 
-exports.listEncountersByStatus = functions.https.onRequest((request, response) => {
-    return cors(request, response, () => {
-        var userId = request.body.data.userId;
-        var status = request.body.data.status;
-        let encountersRef = db.collection('encounters').where('state', '==', status);
         let allEncounters = encountersRef.get()
             .then(encounters => {
                 var returnEncounters = []

@@ -81,7 +81,7 @@ export default function PastEncounterList({ user, refresh }: PastEncounterListPr
 
   const refreshEncounters = React.useCallback(() => {
     console.log("Past Encounter List: refreshEncounters");
-    let listEncounters = firebase.functions().httpsCallable("listEncountersByStatus");
+    let listEncounters = firebase.functions().httpsCallable("listEncounters");
     listEncounters({ userId: "myuser", status: EncounterState.COMPLETE })
       .then((response) => {
         let newEncounters = response.data.map((entry: Encounter) => {
