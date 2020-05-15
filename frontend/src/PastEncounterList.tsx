@@ -77,7 +77,6 @@ export default function PastEncounterList({ user, refresh }: PastEncounterListPr
   console.log("PastEncounterList");
   const [encounters, setEncounters] = React.useState<Array<Encounter>>([])
   const [viewOpen, setViewOpen] = React.useState(false);
-  const [viewEncounterIndex, setViewEncounterIndex] = React.useState<number>(0);
   const [transcript, setTranscript] = React.useState(String);
 
   const refreshEncounters = React.useCallback(() => {
@@ -96,10 +95,10 @@ export default function PastEncounterList({ user, refresh }: PastEncounterListPr
       });
   }, [setEncounters]);
 
-  const fetchTranscript = React.useCallback((encounterId: String) => {
+  const fetchTranscript = React.useCallback((uid: String, encounterId: String) => {
     console.log("Getting transcript");
     let serverFunction = firebase.functions().httpsCallable("getEncounterTranscript");
-    serverFunction({userId: user.uid, encounterId: encounterId}).then(function (response) {
+    serverFunction({userId: uid, encounterId: encounterId}).then(function (response) {
         console.log("Downloaded transcript to memory");
         console.log(response.data);
         let newTranscript = response.data.split ('\n').map((item: React.ReactNode, i: string | number | undefined) => <div key={i}>{item}</div>); 
@@ -107,7 +106,7 @@ export default function PastEncounterList({ user, refresh }: PastEncounterListPr
     }).catch((err) => {
         console.log(err);
     });
-  }, [encounters, transcript, setTranscript]);
+  }, [setTranscript]);
 
   React.useEffect(() => {
     refreshEncounters();
@@ -120,9 +119,9 @@ export default function PastEncounterList({ user, refresh }: PastEncounterListPr
   }, [refreshEncounters, refresh]);
 
   const onView = React.useCallback((event: any, index: number) => {
-    fetchTranscript(encounters[index].encounterId);
+    fetchTranscript(user.uid, encounters[index].encounterId);
     setViewOpen(true);
-  }, [encounters, setViewOpen, setViewEncounterIndex]);
+  }, [user, encounters, fetchTranscript, setViewOpen]);
 
   const onClose = React.useCallback(() => {
     setViewOpen(false);
