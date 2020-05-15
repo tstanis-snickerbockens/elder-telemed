@@ -5,6 +5,7 @@ import "firebase/auth";
 
 import ClinicianVideo from "./ClinicianVideo";
 import EncounterPage from "./EncounterPage";
+import PastEncounterPage from "./PastEncounterPage";
 import { PatientPage } from "./PatientPage";
 import { Box, Tabs, Tab } from "@material-ui/core";
 import { StoryContext } from "./StoryHome";
@@ -47,12 +48,16 @@ const MainClinicianPanel = ({ onVisit, user }: MainClinicianPanelProps) => {
       >
         <Tab label="Encounters" />
         <Tab label="Patients" />
+        <Tab label="Previous Encounters" />
       </Tabs>
       <TabPanel value={value} index={0}>
         <EncounterPage onVisit={onVisit} user={user}></EncounterPage>
       </TabPanel>
       <TabPanel value={value} index={1}>
         <PatientPage user={user}></PatientPage>
+      </TabPanel>
+      <TabPanel value={value} index={2}>
+        <PastEncounterPage user={user}></PastEncounterPage>
       </TabPanel>
     </div>
   );

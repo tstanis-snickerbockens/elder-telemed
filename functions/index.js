@@ -7,6 +7,7 @@ admin.initializeApp();
 const express = require('express');
 const cors = require('cors')({origin: true});
 const app = express();
+const transcriptFolderName = "transcripts";
 
 app.use(cors);
 let db = admin.firestore();
@@ -199,7 +200,10 @@ exports.getEncounter = functions.https.onRequest((request, response) => {
 exports.listEncounters = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         var userId = request.body.data.userId;
-        let encountersRef = db.collection('encounters');
+        let encountersRef = request.body.data.status ? 
+            db.collection('encounters').where('state', '==', request.body.data.status) : 
+            db.collection('encounters');
+
         let allEncounters = encountersRef.get()
             .then(encounters => {
                 var returnEncounters = []
@@ -502,10 +506,10 @@ exports.createTranscript = functions.https.onRequest((request, response) => {
             const metadata = {contentType: "text/html"};
             const bucket = storage.bucket();
             var transcript = request.body.data.transcript;
-            var encounterId = request.body.data.encounterId;
+            var encounter = request.body.data.encounter;
+            var encounterId = encounter.encounterId;
             var uid = request.body.data.uid;
-            // Use uid so that we can quickly list all files for a user later
-            var fileName = "transcripts/" + uid + "_" + encounterId + ".txt";
+            var fileName = transcriptFolderName + "/" + uid + "_" + encounterId + ".txt";
             var transcriptText = "";
             if (!transcript || transcript.length === 0) {
                 console.log("Empty transcript.");
@@ -513,7 +517,9 @@ exports.createTranscript = functions.https.onRequest((request, response) => {
                 return;
             }
 
-            transcript.forEach(element => transcriptText.concat(element.msg + "\n"));
+            transcriptText = transcript.map((element, i) => { return element.msg.trim() }).join("\n");    
+            console.log("Writing transcript content");
+            console.log(transcriptText);
 
             const transcriptBuffer = new Buffer.from(transcriptText);
             var file = bucket.file(fileName);
@@ -536,7 +542,6 @@ exports.createTranscript = functions.https.onRequest((request, response) => {
     });
 });
 
-
 exports.txtParticipant = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         lazyInitTwilio();
@@ -556,5 +561,26 @@ exports.txtParticipant = functions.https.onRequest((request, response) => {
         }).catch((err) => {
             response.status(500).send(err);
         });
+    });
+});
+
+// Downloads file to memory - revisit this.
+exports.getEncounterTranscript = functions.https.onRequest((request, response) => {
+    return cors(request, response, () => {
+        try {
+            var userId = request.body.data.userId;
+            var encounterId = request.body.data.encounterId;
+            const bucket = storage.bucket();
+            var fileName = transcriptFolderName + "/" + userId + "_" + encounterId + ".txt";
+            bucket.file(fileName).download({}).then((data) => {
+                console.log(fileName);
+                console.log(data[0].toString());
+                const contents = data[0];
+                response.status(200).send({data: contents.toString()});
+              });
+        } catch(e) {
+            console.log(e);
+            response.status(500).send(e);
+        }
     });
 });
