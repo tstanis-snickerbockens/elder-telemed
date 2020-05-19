@@ -543,28 +543,50 @@ exports.createTranscript = functions.https.onRequest((request, response) => {
     });
 });
 
+function sendTxt(response, encounterId, phone, role) {
+    console.log("TXT " + phone + " " + role);
+    if (!twilio_client) {
+        response.status(500).send("Twilio Init Failed");
+    }
+    twilio_client.messages
+        .create({
+            body: 'Time for your Dr. Appointment. https://app.storyhealth.ai/' + role + '/e/' + encounterId,
+            from: '+17692077601',
+            to: '+1'+ phone
+        })
+        .then(message => console.log(message.sid));
+    response.status(200).send("ok");
+}
 
 exports.txtParticipant = functions.https.onRequest((request, response) => {
     return cors(request, response, () => {
         lazyInitTwilio();
         const encounterId = request.body.data.encounterId;
         const patientEmail = request.body.data.patientEmail;
-        const patientRef = db.collection('patients').doc(patientEmail);
-        patientRef.get().then(doc => {
-            const phone = doc.data().phone;
-            if (!twilio_client) {
-                response.status(500).send("Twilio Init Failed");
-            }
-            twilio_client.messages
-                .create({
-                    body: 'Time for your Dr. Appointment. https://app.storyhealth.ai/p/e/' + encounterId,
-                    from: '+17692077601',
-                    to: '+1'+ phone
+        const role = request.body.data.who;
+        console.log("Role: " + role)
+        if (role == "PATIENT") {
+            const patientRef = db.collection('patients').doc(patientEmail);
+            patientRef.get().then(doc => {
+                const phone = doc.data().phone;
+                sendTxt(response, encounterId, phone, "p");
+            }).catch((err) => {
+                response.status(500).send(err);
+            });
+        } else {
+            let ref = db.collection('encounters').doc(encounterId);
+            ref.get().then(doc => {
+                    if (!doc.exists) {
+                        console.log('No such document!');
+                        response.status(404).send();
+                    } else {
+                        sendTxt(response, encounterId, doc.data().advocate, "a");
+                    }
                 })
-                .then(message => console.log(message.sid));
-            response.status(200).send("ok");
-        }).catch((err) => {
-            response.status(500).send(err);
-        });
+                .catch(err => {
+                    console.log('Error getting document', err);
+                    response.status(500).send(err);
+                });
+        }
     });
 });

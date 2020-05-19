@@ -7,11 +7,13 @@ import { PatientMode } from "./PatientMode";
 import { StoryContext, StoryTopButton } from "./StoryHome";
 import { Encounter } from "./encounter";
 
-interface PatientAppProps extends RouteComponentProps<{}> {}
+interface PatientAppProps extends RouteComponentProps<{}> {
+  inputRole: Role | null;
+}
 
-const PatientAppImpl: React.FC<PatientAppProps> = () => {
+const PatientAppImpl: React.FC<PatientAppProps> = ({inputRole}: PatientAppProps) => {
   const [encounter, setEncounter] = useState<Encounter | null>(null);
-  const [role, setRole] = useState<Role>(Role.PATIENT);
+  const [role, setRole] = useState<Role>(inputRole ? inputRole: Role.PATIENT);
   const [mode, setMode] = useState(PatientMode.HOME);
   const [clinicianReady] = useState(false);
   const { user, setUserTopButton } = useContext(StoryContext);
@@ -39,7 +41,7 @@ const PatientAppImpl: React.FC<PatientAppProps> = () => {
         </StoryTopButton>
       );
     }
-  }, [mode, user, setUserTopButton]);
+  }, [mode, setUserTopButton]);
 
   if (encounter) {
     return (

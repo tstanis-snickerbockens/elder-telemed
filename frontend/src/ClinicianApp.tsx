@@ -71,13 +71,17 @@ export default function ClinicianApp() {
     setEncounter(encounter);
   }, [setEncounter]);
   console.log("ClinicianApp");
-  return encounter ? (
-    <ClinicianVideo
-      user={user}
-      encounter={encounter}
-      onClose={endVisit}
-    ></ClinicianVideo>
-  ) : (
-    <MainClinicianPanel onVisit={beginVisit} user={user}></MainClinicianPanel>
-  );
+  if (user) {
+    return encounter ? (
+      <ClinicianVideo
+        user={user}
+        encounter={encounter}
+        onClose={endVisit}
+      ></ClinicianVideo>
+    ) : (
+      <MainClinicianPanel onVisit={beginVisit} user={user}></MainClinicianPanel>
+    );
+  } else {
+    return (<span>Please Log In!</span>);
+  }
 };

@@ -5,7 +5,6 @@ import Toolbar from "@material-ui/core/Toolbar";
 import Button from "@material-ui/core/Button";
 import * as firebase from "firebase/app";
 import "firebase/auth";
-import { WelcomePage } from "./WelcomePage";
 import { yellow } from "@material-ui/core/colors";
 import Backdrop from '@material-ui/core/Backdrop';
 import CircularProgress from '@material-ui/core/CircularProgress';
@@ -56,7 +55,7 @@ export type StoryHomeProps = {
 };
 
 const defaultContext = {
-  user: (undefined as unknown) as firebase.User,
+  user: null as firebase.User | null,
   setUserTopButton: (button: React.ReactNode | null) => {},
   setBusy: (loading: boolean, msgToShow?: string | null) => {},
 };
@@ -89,7 +88,7 @@ export function StoryHome({ children }: StoryHomeProps) {
   const classes = styles();
   // user has three possible settings: the user, null (signed out), undefined (dunno)
   // the page is rendered differently in each case
-  const [user, setUser] = useState<firebase.User | null | undefined>(undefined);
+  const [user, setUser] = useState<firebase.User | null>(null);
 
   const [topButton, setTopButton] = useState<React.ReactNode | null>(null);
   const [userTopButton, setUserTopButton] = useState<React.ReactNode | null>(
@@ -142,13 +141,11 @@ export function StoryHome({ children }: StoryHomeProps) {
     setBusyMsg(msgToShow);
   }, [setBusyMode, setBusyMsg]);
 
-  const userContext: typeof defaultContext = user
-    ? {
+  const userContext: typeof defaultContext = {
         user,
         setUserTopButton,
         setBusy,
-      }
-    : defaultContext;
+      };
   return (
     <div className={classes.root}>
       <AppBar className={classes.topBar} position="static">
@@ -162,13 +159,9 @@ export function StoryHome({ children }: StoryHomeProps) {
         </Toolbar>
       </AppBar>
       <div className={classes.content}>
-      {user ? (
         <StoryContext.Provider value={userContext}>
           {children}
         </StoryContext.Provider>
-      ) : (
-        <WelcomePage waiting={user === undefined}></WelcomePage>
-      )}
       </div>
       <AppBar
         color="primary"

@@ -59,7 +59,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 }));
 
 interface PatientHomePageProps {
-  user: firebase.User;
+  user: firebase.User | null;
   onStartAppointment: (encounter: Encounter, role: Role) => void;
 };
 
@@ -87,26 +87,29 @@ export default function PatientHomePage({user, onStartAppointment} : PatientHome
     let { encounterId } = useParams();
 
     React.useEffect(() => {
-        console.log("User: " + user.email);
+
         console.log("E: " + encounterId);
         if (!encounterId) {
-            let queryEncounters = firebase.functions().httpsCallable('queryEncounters');
-            setBusy(true);
-            queryEncounters({'patientId': user.email, advocate: user.email})
-                .then(response => {
-                    console.log("Encounters: " + JSON.stringify(response.data));
-                    if (response.data && response.data.length > 0) {
-                        let advocate = response.data[0].encounter.advocate;
-                        console.log("Advocate: " + advocate);
-                        let role = user.email === advocate ? Role.ADVOCATE : Role.PATIENT;
-                        console.log("Our role:" + role);
-                        setEncounter(response.data[0]);
-                        setRole(role);
-                    }
-                })
-                .finally(() => {
-                    setBusy(false);
-                });
+            if (user) {
+                console.log("User: " + user.email);
+                let queryEncounters = firebase.functions().httpsCallable('queryEncounters');
+                setBusy(true);
+                queryEncounters({'patientId': user.email, advocate: user.email})
+                    .then(response => {
+                        console.log("Encounters: " + JSON.stringify(response.data));
+                        if (response.data && response.data.length > 0) {
+                            let advocate = response.data[0].encounter.advocate;
+                            console.log("Advocate: " + advocate);
+                            let role = user.email === advocate ? Role.ADVOCATE : Role.PATIENT;
+                            console.log("Our role:" + role);
+                            setEncounter(response.data[0]);
+                            setRole(role);
+                        }
+                    })
+                    .finally(() => {
+                        setBusy(false);
+                    });
+            }
         } else {
             let getEncounter = firebase.functions().httpsCallable('getEncounter');
             setBusy(true);
@@ -115,7 +118,7 @@ export default function PatientHomePage({user, onStartAppointment} : PatientHome
                     console.log("Encounter: " + JSON.stringify(response.data));
                     setEncounter(response.data);
                     let advocate = response.data.encounter.advocate;
-                    let role = user.email === advocate ? Role.ADVOCATE : Role.PATIENT;
+                    let role = user ? (user.email === advocate ? Role.ADVOCATE : Role.PATIENT) : Role.PATIENT;
                     setRole(role);
                 })
                 .catch(err => {
@@ -161,7 +164,7 @@ export default function PatientHomePage({user, onStartAppointment} : PatientHome
 
                         </CardContent>
                     </> : <>
-                        <Typography>No Appointments for {user.email}</Typography>
+                        <Typography>No Appointments for {user ? user.email : "no user"}</Typography>
                     </>}
                 </Card>
             </Grid>
