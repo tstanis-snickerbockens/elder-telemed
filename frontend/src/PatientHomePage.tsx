@@ -60,6 +60,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 
 interface PatientHomePageProps {
   user: firebase.User | null;
+  inputRole: Role;
   onStartAppointment: (encounter: Encounter, role: Role) => void;
 };
 
@@ -79,10 +80,10 @@ function formatScheduledTime(time: number) {
     }
 }
 
-export default function PatientHomePage({user, onStartAppointment} : PatientHomePageProps) {
+export default function PatientHomePage({user, onStartAppointment, inputRole} : PatientHomePageProps) {
     const classes = useStyles();
     const [encounter, setEncounter] = React.useState<Encounter | null>(null);
-    const [role, setRole] = React.useState<Role>(Role.PATIENT);
+    const [role, setRole] = React.useState<Role>(inputRole);
     const { setBusy } = React.useContext(StoryContext);
     let { encounterId } = useParams();
 
@@ -117,9 +118,6 @@ export default function PatientHomePage({user, onStartAppointment} : PatientHome
                 .then(response => {
                     console.log("Encounter: " + JSON.stringify(response.data));
                     setEncounter(response.data);
-                    let advocate = response.data.encounter.advocate;
-                    let role = user ? (user.email === advocate ? Role.ADVOCATE : Role.PATIENT) : Role.PATIENT;
-                    setRole(role);
                 })
                 .catch(err => {
                     console.log("Error: " + JSON.stringify(err));

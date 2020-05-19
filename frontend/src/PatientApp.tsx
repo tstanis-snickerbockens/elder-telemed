@@ -18,6 +18,7 @@ const PatientAppImpl: React.FC<PatientAppProps> = ({inputRole}: PatientAppProps)
   const [clinicianReady] = useState(false);
   const { user, setUserTopButton } = useContext(StoryContext);
 
+  console.log("Input Role: " + inputRole);
   console.log("Patient App");
   const startAppointment = (encounter: Encounter, role: Role) => {
     setEncounter(encounter);
@@ -44,6 +45,7 @@ const PatientAppImpl: React.FC<PatientAppProps> = ({inputRole}: PatientAppProps)
   }, [mode, setUserTopButton]);
 
   if (encounter) {
+    console.log("Used role: " + role);
     return (
       <UserPage
         encounter={encounter}
@@ -57,6 +59,7 @@ const PatientAppImpl: React.FC<PatientAppProps> = ({inputRole}: PatientAppProps)
       <PatientHomePage
         onStartAppointment={startAppointment}
         user={user}
+        inputRole={role}
       ></PatientHomePage>
     );
   }
